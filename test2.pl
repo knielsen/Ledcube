@@ -6,23 +6,19 @@ use warnings;
 open FH, '+<', '/dev/ttyUSB0' or die "open() failed: $!\n";
 
 select FH; $| = 1; select STDOUT;
+binmode FH;
 
 # Frame format:
 #
 # <0> <frame counter 0-63> <len_low> <len_high> <data> <checksum> <0xff>
 # Data is 1337 leds * N bits/led, rounded up to next byte.
 
+my $clunk = [0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x3f, 0x3f, 0x1f, 0x0f, 0x07, 0x03, 0x01, 0x00];
+
 my $frame = 0;
 for (;;) {
-  my $x;
-  if (int($frame / 25) % 2) {
-    $x = 0xaa;
-  } else {
-    $x = 0x55;
-  }
-  if (!($frame % 25)) {
-    print "$x\n";
-  }
+  my $x = $clunk->[int($frame / 10) % scalar(@$clunk)];
+
   my $N = 1;
   my $len = int ((1337*$N + 7)/8);
   my $len_low = $len & 0xff;
@@ -35,4 +31,13 @@ for (;;) {
   $data = $data . chr($x) x $len . chr($checksum) . chr(0xff);
   print FH $data;
   ++$frame;
+  my $rin = '';
+  vec($rin, fileno(FH), 1) = 1;
+  my $res = select($rin, undef, undef, 0);
+  if ($res > 0) {
+    my $y = '';
+    sysread(FH, $y, 128);
+    print ord(substr($y, $_, 1)), " " for (0 .. length($y)-1);
+    print "FRAME: sent ", $frame % 64, " recv ", ord(substr($y, -1)), "\n";
+  }
 }

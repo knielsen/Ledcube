@@ -226,5 +226,6 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused))) {
     old_frame = cur;
 
     shift_out_frame(&frames[cur][4]);
+    serial_write(frames[cur][1]);
   }
 }
