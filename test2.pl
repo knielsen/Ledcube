@@ -16,9 +16,12 @@ my $frame = 0;
 for (;;) {
   my $x;
   if (int($frame / 25) % 2) {
-    $x = 0x55;
-  } else {
     $x = 0xaa;
+  } else {
+    $x = 0x55;
+  }
+  if (!($frame % 25)) {
+    print "$x\n";
   }
   my $N = 1;
   my $len = int ((1337*$N + 7)/8);
@@ -31,4 +34,5 @@ for (;;) {
   }
   $data = $data . chr($x) x $len . chr($checksum) . chr(0xff);
   print FH $data;
+  ++$frame;
 }

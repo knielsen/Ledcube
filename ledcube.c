@@ -17,7 +17,8 @@
 
 #define NUM_LEDS 1337
 #define BITS_PER_LED 1
-#define FRAME_SIZE ((NUM_LEDS*BITS_PER_LED+7)/8)
+#define DATA_SIZE ((NUM_LEDS*BITS_PER_LED+7)/8)
+#define FRAME_SIZE (DATA_SIZE + 6)
 #define NUM_FRAMES 4
 
 static uint8_t frames[NUM_FRAMES][FRAME_SIZE];
@@ -42,52 +43,27 @@ my_pin13_low(void)
 
 /*
   Frame format:
-  0x7d <byte1> <byte2> ... <byteN> <checksum>
-  bytes 0x7d/0x7e are sent as 0x7e 0x00 / 0x7e 0x01.
+  <0> <frame counter 0-63> <len_low> <len_high> <data> <checksum> <0xff>
 */
+static volatile uint8_t current_frame = 0;
 serial_interrupt_rx()
 {
   uint8_t c;
-  static uint8_t current_frame = 0;
   static uint16_t current_idx = 0;
-  static uint8_t checksum = 0, escape_mode = 0;
+  uint8_t cur = current_frame;
 
-   if (current_frame % 2)
+   if (cur % 2)
      my_pin13_low();
    else
     my_pin13_high();
 
   c = serial_read();
-  if (c == 0x7d)
+  frames[cur][current_idx] = c;
+  current_idx++;
+  if (current_idx >= FRAME_SIZE)
   {
-    /* Next frame. */
-    current_frame = (current_frame + 1) % NUM_FRAMES;
     current_idx = 0;
-    escape_mode = 0;
-    checksum = 0;
-  }
-  else if (c == 0x7e)
-  {
-    escape_mode = 1;
-  }
-  else
-  {
-    if (escape_mode)
-    {
-      c = 0x7d + c;
-      escape_mode = 0;
-    }
-    if (current_idx < FRAME_SIZE)
-    {
-      frames[current_frame][current_idx] = c;
-      ++current_idx;
-      checksum ^= c;
-    }
-    else
-    {
-      if (checksum != c)
-        my_pin13_high();   /* flag checksum error */
-    }
+    current_frame = (cur + 1) % NUM_FRAMES;
   }
 }
 
@@ -188,16 +164,16 @@ shift_out_12bit(uint8_t bstate, uint8_t val_high, uint8_t val_low)
 }
 
 static void
-shift_out_24(const uint8_t *data)
+shift_out_frame(const uint8_t *data)
 {
-  uint8_t i;
+  uint16_t i;
   uint16_t v;
   uint8_t bstate;
   /*
     Bits are shifted out in reverse, from highest bit of last output to lowest
     bit of first output.
   */
-  i = 24;
+  i = NUM_LEDS;
   bstate = portb_state & 0xf0;  /* XLAT, BLANK, XCLK all 0 */
   do
   {
@@ -232,44 +208,23 @@ init(void) {
 
 int
 main(int argc __attribute__((unused)), char *argv[] __attribute__((unused))) {
-  uint8_t frame1[3], frame2[3];
-  uint8_t i;
-  uint16_t old_time, time;
-    const uint8_t *frame;
+  uint8_t old_frame = 0xff, cur = 0;
 
   init();
   sei();
 
-  timer1_mode_normal();
-  timer1_clock_d1024();  /* 16e6/1024 = 15.625KHz. */
-
   pin13_mode_output();
   my_pin13_low();
 
-  for (i = 0; i < 3; i++)
-  {
-    frame1[i] = 0x55;
-    frame2[i] = 0xaa;
-  }
-
-  old_time = timer1_count();
   for (;;)
   {
-    /*
-      Wait for next frame.
-      One frame is eg. 1 / (60fps * 11planes) = 1.515msec -> 24 timer ticks.
-    */
-    while ((time = timer1_count()) - old_time  < 24)
-      ;
-    if (time & 0x4000)
-    {
-      frame = frame1;
+    /* Wait for next frame. */
+    if (old_frame != 0xff) {
+      while ((cur = current_frame) == old_frame)
+        ;
     }
-    else
-    {
-      frame = frame2;
-    }
+    old_frame = cur;
 
-    shift_out_24(frame);
+    shift_out_frame(&frames[cur][4]);
   }
 }
