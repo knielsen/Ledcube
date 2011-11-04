@@ -45,10 +45,11 @@ my_pin13_low(void)
   Frame format:
   <0> <frame counter 0-63> <len_low> <len_high> <data> <checksum> <0xff>
 */
-static volatile uint8_t current_frame = 0;
+static volatile uint8_t show_frame = 0;
 serial_interrupt_rx()
 {
   uint8_t c;
+  static uint8_t current_frame = 0;
   static uint16_t current_idx = 0;
   uint8_t cur = current_frame;
 
@@ -63,6 +64,7 @@ serial_interrupt_rx()
   if (current_idx >= FRAME_SIZE)
   {
     current_idx = 0;
+    show_frame = cur;
     current_frame = (cur + 1) % NUM_FRAMES;
   }
 }
@@ -229,7 +231,7 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused))) {
 
   for (;;)
   {
-    cur = current_frame;
+    cur = show_frame;
     shift_out_frame(&frames[cur][4]);
     if (cur != old_frame)
     {

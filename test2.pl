@@ -41,4 +41,5 @@ for (;;) {
     print ord(substr($y, $_, 1)), " " for (0 .. length($y)-1);
     print "FRAME: sent ", $frame % 64, " recv ", ord(substr($y, -1)), "\n";
   }
+  #select(undef, undef, undef, 0.130);
 }
