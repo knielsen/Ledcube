@@ -12,7 +12,7 @@
 #define PIN_BLANK 11
 
 /* 12-bit value used for an "on" diode. */
-#define VAL_ON 4095
+#define VAL_ON 300
 
 
 #define NUM_LEDS 1337
@@ -167,14 +167,18 @@ static void
 shift_out_frame(const uint8_t *data)
 {
   uint16_t i;
+  uint8_t j;
   uint16_t v;
   uint8_t bstate;
+
+  bstate = portb_state & 0xf0;  /* XLAT, BLANK, XCLK all 0 */
+  for (j = 0; j < 11; j++)
+  {
   /*
     Bits are shifted out in reverse, from highest bit of last output to lowest
     bit of first output.
   */
-  i = NUM_LEDS;
-  bstate = portb_state & 0xf0;  /* XLAT, BLANK, XCLK all 0 */
+  i = NUM_LEDS/11;
   do
   {
     --i;
@@ -185,7 +189,11 @@ shift_out_frame(const uint8_t *data)
   pin_high(PIN_BLANK);
   pin_high(PIN_XLAT);
   pin_low(PIN_XLAT);
-  pin_low(PIN_BLANK);
+  if (j == 0)
+    pin_low(PIN_BLANK);
+  else
+    bstate |= 0x08;
+  }
 }
 
 static void
@@ -199,7 +207,10 @@ init(void) {
   pin_mode_output(PIN_BLANK);
   pin_high(PIN_BLANK);    /* All leds are off initially */
 
+//  serial_baud_9600();
   serial_baud_115200();
+//  serial_baud_230400();
+//  serial_baud_250k();
   serial_mode_8n1();
   serial_transmitter_enable();
   serial_receiver_enable();
@@ -218,14 +229,12 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused))) {
 
   for (;;)
   {
-    /* Wait for next frame. */
-    if (old_frame != 0xff) {
-      while ((cur = current_frame) == old_frame)
-        ;
-    }
-    old_frame = cur;
-
+    cur = current_frame;
     shift_out_frame(&frames[cur][4]);
-    serial_write(frames[cur][1]);
+    if (cur != old_frame)
+    {
+      serial_write(frames[cur][1]);
+      old_frame = cur;
+    }
   }
 }
