@@ -210,9 +210,10 @@ init(void) {
   pin_high(PIN_BLANK);    /* All leds are off initially */
 
 //  serial_baud_9600();
-  serial_baud_115200();
+//  serial_baud_115200();
 //  serial_baud_230400();
 //  serial_baud_250k();
+  serial_baud_500k();
   serial_mode_8n1();
   serial_transmitter_enable();
   serial_receiver_enable();

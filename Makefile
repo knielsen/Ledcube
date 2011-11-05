@@ -8,8 +8,9 @@ ARDUINO_HEADERS = .
 
 ## Change this according to your code to make the tty and cat targets work
 #BAUD     = 9600
-BAUD     = 115200
+#BAUD     = 115200
 #BAUD     = 230400
+BAUD     = 500000
 MODE     = $(MODE_RAW) $(MODE_8) $(MODE_N) $(MODE_1)# 8n1
 
 ## Uncomment your arduino version below
