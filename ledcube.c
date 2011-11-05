@@ -11,15 +11,18 @@
 #define PIN_XLAT 10
 #define PIN_BLANK 11
 
-/* 12-bit value used for an "on" diode. */
-#define VAL_ON 300
-
+/* 12-bit output values used for different pixel values. */
+uint16_t pixel2out_high[16] =
+{ 0, 0, 0, 0, 0,  0,  0,  0,  0,   0,   0, 445>>8,  775>>8,  1350>>8,  2352>>8,  4095>>8 };
+uint16_t pixel2out_low[16] =
+{ 0, 1, 3, 5, 9, 15, 27, 48, 84, 147, 255, 445&255, 775&255, 1350&255, 2352&255, 4095&255 };
 
 #define NUM_LEDS 1337
-#define BITS_PER_LED 1
+#define LEDS_PER_LAYER 121
+#define BITS_PER_LED 4
 #define DATA_SIZE ((NUM_LEDS*BITS_PER_LED+7)/8)
 #define FRAME_SIZE (DATA_SIZE + 6)
-#define NUM_FRAMES 4
+#define NUM_FRAMES 2
 
 static uint8_t frames[NUM_FRAMES][FRAME_SIZE];
 
@@ -168,33 +171,35 @@ shift_out_12bit(uint8_t bstate, uint8_t val_high, uint8_t val_low)
 static void
 shift_out_frame(const uint8_t *data)
 {
-  uint16_t i;
-  uint8_t j;
-  uint16_t v;
+  uint8_t i, j;
   uint8_t bstate;
+  uint8_t odd_even = 0;
+  uint8_t pixel;
 
   bstate = portb_state & 0xf0;  /* XLAT, BLANK, XCLK all 0 */
   for (j = 0; j < 11; j++)
   {
-  /*
-    Bits are shifted out in reverse, from highest bit of last output to lowest
-    bit of first output.
-  */
-  i = NUM_LEDS/11;
-  do
-  {
-    --i;
-    v = ( data[i/8] & (1 << (i % 8)) ? VAL_ON : 0 );
-    shift_out_12bit(bstate, v >> 8, v & 0xff);
-  } while (i);
-
-  pin_high(PIN_BLANK);
-  pin_high(PIN_XLAT);
-  pin_low(PIN_XLAT);
-  if (j == 0)
-    pin_low(PIN_BLANK);
-  else
-    bstate |= 0x08;
+    for (i = 0; i < LEDS_PER_LAYER; i++)
+    {
+      if (odd_even)
+      {
+        odd_even = 0;
+        pixel = *data++ & 0xf;
+      }
+      else
+      {
+        odd_even = 1;
+        pixel = *data >> 4;
+      }
+      shift_out_12bit(bstate, pixel2out_high[pixel], pixel2out_low[pixel]);
+    }
+    pin_high(PIN_BLANK);
+    pin_high(PIN_XLAT);
+    pin_low(PIN_XLAT);
+    if (j == 0)
+      pin_low(PIN_BLANK);
+    else
+      bstate |= 0x08;
   }
 }
 
@@ -221,7 +226,8 @@ init(void) {
 }
 
 int
-main(int argc __attribute__((unused)), char *argv[] __attribute__((unused))) {
+main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
+{
   uint8_t old_frame = 0xff, cur = 0;
 
   init();
@@ -232,12 +238,15 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused))) {
 
   for (;;)
   {
+    cli();
     cur = show_frame;
-    shift_out_frame(&frames[cur][4]);
     if (cur != old_frame)
     {
       serial_write(frames[cur][1]);
       old_frame = cur;
     }
+    sei();
+
+    shift_out_frame(&frames[cur][4]);
   }
 }
