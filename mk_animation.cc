@@ -162,13 +162,13 @@ cornercube_5(frame_xyz F, int frame, void **data)
       }
       if (corner & 4)
       {
-        cd->base_x= 4;
-        cd->dir_x= -1;
+        cd->base_z= 4;
+        cd->dir_z= -1;
       }
       else
       {
-        cd->base_x= 0;
-        cd->dir_x= 1;
+        cd->base_z= 0;
+        cd->dir_z= 1;
       }
       // And a new target colour.
       cd->col= cd->target_col;
