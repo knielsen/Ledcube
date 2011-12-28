@@ -200,6 +200,8 @@ cornercube_5(frame_xyz F, int frame, void **data)
 }
 
 
+static void (*out_function)(frame_xyz);
+
 static void
 frame_out_5(frame_xyz fb)
 {
@@ -220,6 +222,56 @@ frame_out_5(frame_xyz fb)
 }
 
 
+/*
+  Frame format:
+  <0> <frame counter 0-63> <len_low> <len_high> <data> <checksum> <0xff>
+*/
+static void
+frame_out_ledpro(frame_xyz fb)
+{
+  static uint64_t frame_count= 0;
+  uint8_t checksum= 0;
+
+  putchar(0);
+  checksum^= 0;
+  putchar(frame_count % 64);
+  checksum^= frame_count % 64;
+  ++frame_count;
+  uint16_t len= (SIDE*SIDE*SIDE*NBITS+7)/8;
+  putchar(len & 0xff);
+  checksum^= len & 0xff;
+  putchar(len >> 8);
+  checksum^= len >> 8;
+
+  int odd_even= 0;
+  uint8_t partial;
+  for (int z= 0; z < SIDE ; ++z)
+    for (int y= 0; y < SIDE; ++y)
+      for (int x= 0; x < SIDE; ++x)
+      {
+        if (odd_even)
+        {
+          putchar(partial | (fb[x][y][z] & 0xf));
+          checksum^= partial | (fb[x][y][z] & 0xf);
+          odd_even= 0;
+        }
+        else
+        {
+          partial= (fb[x][y][z] & 0xf) << 4;
+          odd_even= 1;
+        }
+      }
+  if (odd_even)
+  {
+    putchar(partial);
+    checksum^= partial;
+  }
+
+  putchar(checksum);
+  putchar(0xff);
+}
+
+
 static void
 play_animation(struct anim_piece *anim)
 {
@@ -231,7 +283,7 @@ play_animation(struct anim_piece *anim)
     for (int frame= 0; frame < anim->num_frames; frame++)
     {
       (*anim->frame_func)(framebuf, frame, &anim->data);
-      frame_out_5(framebuf);
+      (*out_function)(framebuf);
     }
     anim++;
   }
@@ -250,6 +302,9 @@ static struct anim_piece animation1[] = {
 int
 main(int argc, char *argv[])
 {
+  out_function= frame_out_5;
+  if (argc == 2 && 0 == strcmp(argv[1], "--ledpro"))
+    out_function= frame_out_ledpro;
   play_animation(animation1);
   return 0;
 }
