@@ -19,9 +19,9 @@ struct anim_piece {
 
 
 static void
-clear(frame_xyz fb)
+clear(frame_xyz fb, uint8_t col= 0)
 {
-  memset(fb, 0, sizeof(frame_xyz));
+  memset(fb, col, sizeof(frame_xyz));
 }
 
 
@@ -200,6 +200,116 @@ cornercube_5(frame_xyz F, int frame, void **data)
 }
 
 
+static void
+generic_scrolltext_5(frame_xyz F, int frame, char text[], size_t len)
+{
+  clear(F);
+
+  /* In the 5x5x5, there are 16 positions available. */
+  int pos= (frame/4) % (len + 16) - 15;
+
+  for (int i= 0; i < 16; ++i, ++pos)
+  {
+    if (pos < 0 || pos >= len)
+      continue;
+    int x, y;
+    if (i < 5)
+    {
+      x= i;
+      y= 4;
+    }
+    else if (i < 9)
+    {
+      x= 4;
+      y= 8 - i;
+    }
+    else if (i < 13)
+    {
+      x= 12 - i;
+      y = 0;
+    }
+    else
+    {
+      x= 0;
+      y= i - 13;
+    }
+    uint8_t col;
+    if (i < 3)
+      col= 3 + i*4;
+    else if (i > 12)
+      col= 3 + (15-i)*4;
+    else
+      col= 15;
+    for (int z= 0; z < 5; z++)
+    {
+      if (text[(4-z)*len+pos] != ' ')
+        F[x][y][z]= col;
+    }
+  }
+}
+
+static char scrolltext_labitat[] =
+"#    #  ##  ### ###  #  ###"
+"#   # # # #  #   #  # #  # "
+"#   ### ##   #   #  ###  # "
+"#   # # # #  #   #  # #  # "
+"### # # ##  ###  #  # #  # "
+  ;
+
+static char scrolltext_SiGNOUT[] =
+"### #  ### #   #  ##  #  # ###"
+"#     #    ##  # #  # #  #  # "
+"### # # ## # # # #  # #  #  # "
+"  # # #  # #  ## #  # #  #  # "
+"### #  ### #   #  ##   ##   # "
+  ;
+
+static void
+scrolltext_labitat_5(frame_xyz F, int frame, void **data)
+{
+  generic_scrolltext_5(F, frame, scrolltext_labitat,
+                       (sizeof(scrolltext_labitat)-1)/(5*sizeof(char)));
+}
+
+static void
+scrolltext_SiGNOUT_5(frame_xyz F, int frame, void **data)
+{
+  generic_scrolltext_5(F, frame, scrolltext_SiGNOUT,
+                       (sizeof(scrolltext_SiGNOUT)-1)/(5*sizeof(char)));
+}
+
+/* Highligt x-axis (y=z=0) */
+static void
+testimg_x_axis(frame_xyz F, int frame, void **data)
+{
+  clear(F, 7);
+  for (uint8_t x= 0; x < SIDE; ++x)
+    F[x][0][0]= 15;
+  F[0][1][0]= 12;
+  F[0][0][1]= 12;
+}
+
+static void
+testimg_y_axis(frame_xyz F, int frame, void **data)
+{
+  clear(F, 7);
+  for (uint8_t y= 0; y < SIDE; ++y)
+    F[0][y][0]= 15;
+  F[1][0][0]= 12;
+  F[0][0][1]= 12;
+}
+
+static void
+testimg_z_axis(frame_xyz F, int frame, void **data)
+{
+  clear(F, 7);
+  for (uint8_t z= 0; z < SIDE; ++z)
+    F[0][0][z]= 15;
+  F[1][0][0]= 12;
+  F[0][1][0]= 12;
+}
+
+/* ****************************************************************** */
 static void (*out_function)(frame_xyz);
 
 static void
@@ -291,6 +401,13 @@ play_animation(struct anim_piece *anim)
 
 
 static struct anim_piece animation1[] = {
+  // { testimg_x_axis, 100000, 0},
+  // { testimg_y_axis, 100000, 0},
+  // { testimg_z_axis, 100000, 0},
+  { scrolltext_labitat_5, 400, 0 },
+  { fade_out, 16, 0 },
+  { scrolltext_SiGNOUT_5, 400, 0 },
+  { fade_out, 16, 0 },
   { bubble5_a, 600, 0 },
   { fade_out, 16, 0 },
   { cornercube_5, 15*20, 0 },
