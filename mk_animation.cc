@@ -215,23 +215,23 @@ generic_scrolltext_5(frame_xyz F, int frame, char text[], size_t len)
     int x, y;
     if (i < 5)
     {
-      x= i;
-      y= 4;
+      x= 0;
+      y= 4 - i;
     }
     else if (i < 9)
     {
-      x= 4;
-      y= 8 - i;
+      x= i - 4;
+      y= 0;
     }
     else if (i < 13)
     {
-      x= 12 - i;
-      y = 0;
+      x= 4;
+      y = i - 8;
     }
     else
     {
-      x= 0;
-      y= i - 13;
+      x= 16 - i;
+      y= 4;
     }
     uint8_t col;
     if (i < 3)
