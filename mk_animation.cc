@@ -19,16 +19,42 @@ struct anim_piece {
 
 
 static void
-clear(frame_xyz fb, uint8_t col= 0)
+ef_clear(frame_xyz fb, uint8_t col= 0)
 {
   memset(fb, col, sizeof(frame_xyz));
 }
 
+static void
+ef_afterglow(frame_xyz fb, unsigned subtract)
+{
+  for (int x= 0; x < SIDE; x++)
+    for (int y= 0; y < SIDE; y++)
+      for (int z= 0; z < SIDE; z++)
+        fb[x][y][z]= fb[x][y][z] > subtract ? fb[x][y][z] - subtract : 0;
+}
+
+static void
+ef_scroll_y_up(frame_xyz fb)
+{
+  for (int x= 0; x < SIDE; ++x)
+    for (int y= SIDE-2; y >= 0; --y)
+      for (int z= 0; z < SIDE; ++z)
+        fb[x][y+1][z]= fb[x][y][z];
+}
+
+static void
+ef_scroll_y_down(frame_xyz fb)
+{
+  for (int x= 0; x < SIDE; ++x)
+    for (int y= 1; y < SIDE; ++y)
+      for (int z= 0; z < SIDE; ++z)
+        fb[x][y-1][z]= fb[x][y][z];
+}
 
 static void
 bubble5_a(frame_xyz F, int frame, void **data)
 {
-  clear(F);
+  ef_clear(F);
   for (int x= 0; x < 5; x++)
   {
     for (int y= 0; y < 5; y++)
@@ -83,7 +109,7 @@ cornercube_5(frame_xyz F, int frame, void **data)
 
   static const int base_count= 15;
 
-  clear(F);
+  ef_clear(F);
   if (frame == 0)
   {
     // Initialise first corner to expand from
@@ -203,7 +229,7 @@ cornercube_5(frame_xyz F, int frame, void **data)
 static void
 generic_scrolltext_5(frame_xyz F, int frame, char text[], size_t len)
 {
-  clear(F);
+  ef_clear(F);
 
   /* In the 5x5x5, there are 16 positions available. */
   int pos= (frame/4) % (len + 16) - 15;
@@ -278,11 +304,285 @@ scrolltext_SiGNOUT_5(frame_xyz F, int frame, void **data)
                        (sizeof(scrolltext_SiGNOUT)-1)/(5*sizeof(char)));
 }
 
+static const char *
+font5[256];
+
+static void
+init_font5()
+{
+  font5['A']=
+    " X "
+    "X X"
+    "XXX"
+    "X X"
+    "X X";
+  font5['B']=
+    "XX "
+    "X X"
+    "XX "
+    "X X"
+    "XX ";
+  font5['C']=
+    " XX"
+    "X  "
+    "X  "
+    "X  "
+    " XX";
+  font5['D']=
+    "XX "
+    "X X"
+    "X X"
+    "X X"
+    "XX ";
+  font5['E']=
+    "XXX"
+    "X  "
+    "XX "
+    "X  "
+    "XXX";
+  font5['F']=
+    "XXX"
+    "X  "
+    "XX "
+    "X  "
+    "X  ";
+  font5['G']=
+    " XXX"
+    "X   "
+    "X XX"
+    "X  X"
+    " XXX";
+  font5['H']=
+    "X X"
+    "X X"
+    "XXX"
+    "X X"
+    "X X";
+  font5['I']=
+    "XXX"
+    " X "
+    " X "
+    " X "
+    "XXX";
+  font5['J']=
+    "XXX"
+    "  X"
+    "  X"
+    "X X"
+    " X ";
+  font5['K']=
+    "X X"
+    "X X"
+    "XX "
+    "X X"
+    "X X";
+  font5['L']=
+    "X  "
+    "X  "
+    "X  "
+    "X  "
+    "XXX";
+  font5['M']=
+    "X   X"
+    "XX XX"
+    "X X X"
+    "X   X"
+    "X   X";
+  font5['N']=
+    "X   X"
+    "XX  X"
+    "X X X"
+    "X  XX"
+    "X   X";
+  font5['O']=
+    " XX "
+    "X  X"
+    "X  X"
+    "X  X"
+    " XX ";
+  font5['P']=
+    "XX "
+    "X X"
+    "XX "
+    "X  "
+    "X  ";
+  font5['Q']=
+    " XX "
+    "X  X"
+    "X  X"
+    "X XX"
+    " XXX";
+  font5['R']=
+    "XXX "
+    "X  X"
+    "XXX "
+    "X X "
+    "X  X";
+  font5['S']=
+    " XX"
+    "X  "
+    " X "
+    "  X"
+    "XX ";
+  font5['T']=
+    "XXX"
+    " X "
+    " X "
+    " X "
+    " X ";
+  font5['U']=
+    "X  X"
+    "X  X"
+    "X  X"
+    "X  X"
+    " XX ";
+  font5['V']=
+    "X X"
+    "X X"
+    "X X"
+    "X X"
+    " X ";
+  font5['W']=
+    "X   X"
+    "X   X"
+    "X   X"
+    "X X X"
+    " X X ";
+  font5['X']=
+    "X X"
+    "X X"
+    " X "
+    "X X"
+    "X X";
+  font5['Y']=
+    "X X"
+    "X X"
+    " X "
+    " X "
+    " X ";
+  font5['Z']=
+    "XXX"
+    "  X"
+    " X "
+    "X  "
+    "XXX";
+  font5['Æ']=
+    " XXXX"
+    "X X  "
+    "XXXX "
+    "X X  "
+    "X XXX";
+  font5['Ø']=
+    "XXXX "
+    "XX  X"
+    "X X X"
+    "X  XX"
+    " XXXX";
+  font5['Å']=
+    " X "
+    " X "
+    "X X"
+    "XXX"
+    "X X";
+  font5['0']=
+    " X "
+    "X X"
+    "X X"
+    "X X"
+    " X ";
+  font5['1']=
+    "X"
+    "X"
+    "X"
+    "X"
+    "X";
+  font5['2']=
+    " XX "
+    "X  X"
+    "  X "
+    " X  "
+    "XXXX";
+  font5['3']=
+    " XX "
+    "X  X"
+    "  X "
+    "X  X"
+    " XX ";
+  font5['4']=
+    "X   "
+    "X X "
+    "XXXX"
+    "  X "
+    "  X ";
+  font5['5']=
+    "XXX"
+    "X  "
+    "XX "
+    "  X"
+    "XX ";
+  font5['6']=
+    "XXX"
+    "X  "
+    "XXX"
+    "X X"
+    "XXX";
+  font5['7']=
+    "XXX"
+    "  X"
+    "  X"
+    " X "
+    " X ";
+  font5['8']=
+    " XX "
+    "X  X"
+    " XX "
+    "X  X"
+    " XX ";
+  font5['9']=
+    "XXX"
+    "X X"
+    "XXX"
+    "  X"
+    "XXX";
+}
+
+static void
+an_flytext5(frame_xyz F, int frame, void **data)
+{
+  static const int inter_letter_spacing= 6;
+  const char *text= (const char *)*data;
+  if ((frame % 2) == 0)
+    ef_afterglow(F, 5);
+
+  frame/= 2;
+  for (int y= 0; y < 5 ; ++y)
+  {
+    if (((y - frame) % inter_letter_spacing) != 0)
+      continue;
+    int idx= (frame + (4-y))/inter_letter_spacing;
+    int ch= text[idx % strlen(text)];
+
+    const char *glyph= font5[ch];
+    if (!glyph)
+      continue;
+    int glyph_size= strlen(glyph);
+    int glyph_width= glyph_size/5;
+    for (int z= 4; z >= 0; --z)
+    {
+      for (int i= 0; i < glyph_width; ++i)
+      {
+        if (*glyph++ != ' ')
+          F[i+(5-glyph_width)/2][y][z]= 15;
+      }
+    }
+  }
+}
+
 /* Highligt x-axis (y=z=0) */
 static void
 testimg_x_axis(frame_xyz F, int frame, void **data)
 {
-  clear(F, 7);
+  ef_clear(F, 7);
   for (uint8_t x= 0; x < SIDE; ++x)
     F[x][0][0]= 15;
   F[0][1][0]= 12;
@@ -292,7 +592,7 @@ testimg_x_axis(frame_xyz F, int frame, void **data)
 static void
 testimg_y_axis(frame_xyz F, int frame, void **data)
 {
-  clear(F, 7);
+  ef_clear(F, 7);
   for (uint8_t y= 0; y < SIDE; ++y)
     F[0][y][0]= 15;
   F[1][0][0]= 12;
@@ -302,7 +602,7 @@ testimg_y_axis(frame_xyz F, int frame, void **data)
 static void
 testimg_z_axis(frame_xyz F, int frame, void **data)
 {
-  clear(F, 7);
+  ef_clear(F, 7);
   for (uint8_t z= 0; z < SIDE; ++z)
     F[0][0][z]= 15;
   F[1][0][0]= 12;
@@ -311,6 +611,7 @@ testimg_z_axis(frame_xyz F, int frame, void **data)
 
 /* ****************************************************************** */
 static void (*out_function)(frame_xyz);
+static int frame_repeat= 1;
 
 static void
 frame_out_5(frame_xyz fb)
@@ -387,13 +688,14 @@ play_animation(struct anim_piece *anim)
 {
   frame_xyz framebuf;
 
-  clear(framebuf);
+  ef_clear(framebuf);
   while (anim->frame_func)
   {
     for (int frame= 0; frame < anim->num_frames; frame++)
     {
       (*anim->frame_func)(framebuf, frame, &anim->data);
-      (*out_function)(framebuf);
+      for (int i= 0; i < frame_repeat; ++i)
+        (*out_function)(framebuf);
     }
     anim++;
   }
@@ -412,6 +714,7 @@ static struct anim_piece animation1[] = {
   { fade_out, 16, 0 },
   { cornercube_5, 15*20, 0 },
   { fade_out, 16, 0 },
+  { an_flytext5, 500, (void *)" LABITAT  " },
   { 0, 0, 0}
 };
 
@@ -419,9 +722,26 @@ static struct anim_piece animation1[] = {
 int
 main(int argc, char *argv[])
 {
+  init_font5();
+
   out_function= frame_out_5;
-  if (argc == 2 && 0 == strcmp(argv[1], "--ledpro"))
-    out_function= frame_out_ledpro;
+  while (--argc > 0)
+  {
+    ++argv;
+    if (0 == strcmp(argv[0], "--ledpro"))
+      out_function= frame_out_ledpro;
+    else if (0 == strncmp(argv[0], "--repeat=", 9))
+    {
+      frame_repeat= atoi(&argv[0][9]);
+      if (frame_repeat < 1)
+        frame_repeat= 1;
+    }
+    else
+    {
+      fprintf(stderr, "Unknown option '%s'\n", argv[0]);
+      exit(1);
+    }
+  }
   play_animation(animation1);
   return 0;
 }
