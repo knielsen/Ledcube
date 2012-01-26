@@ -236,7 +236,7 @@ generic_scrolltext_5(frame_xyz F, int frame, char text[], size_t len)
 
   for (int i= 0; i < 16; ++i, ++pos)
   {
-    if (pos < 0 || pos >= len)
+    if (pos < 0 || (size_t)pos >= len)
       continue;
     int x, y;
     if (i < 5)
@@ -466,19 +466,19 @@ init_font5()
     " X "
     "X  "
     "XXX";
-  font5['Æ']=
+  font5[(unsigned char)'Æ']=
     " XXXX"
     "X X  "
     "XXXX "
     "X X  "
     "X XXX";
-  font5['Ø']=
+  font5[(unsigned char)'Ø']=
     "XXXX "
     "XX  X"
     "X X X"
     "X  XX"
     " XXXX";
-  font5['Å']=
+  font5[(unsigned char)'Å']=
     " X "
     " X "
     "X X"
@@ -552,7 +552,7 @@ an_flytext5(frame_xyz F, int frame, void **data)
   static const int inter_letter_spacing= 6;
   const char *text= (const char *)*data;
   if ((frame % 2) == 0)
-    ef_afterglow(F, 5);
+    ef_afterglow(F, 4);
 
   frame/= 2;
   for (int y= 0; y < 5 ; ++y)
@@ -574,6 +574,80 @@ an_flytext5(frame_xyz F, int frame, void **data)
         if (*glyph++ != ' ')
           F[i+(5-glyph_width)/2][y][z]= 15;
       }
+    }
+  }
+}
+
+static void
+an_icicles_5(frame_xyz F, int frame, void **data)
+{
+  static const int maxN= 10;
+  static const int stage2= 6;
+  struct st_icicle {
+    int count;
+    int start_frame[maxN];
+    int end_frame[maxN];
+    int x[maxN];
+    int y[maxN];
+    double height[maxN];
+  };
+
+  if (!*data)
+  {
+    *data= static_cast<void *>(new struct st_icicle);
+    memset(*data, 0, sizeof(struct st_icicle));
+  }
+  struct st_icicle *cd= static_cast<struct st_icicle *>(*data);
+
+  if ((cd->count < maxN) && (cd->count == 0 || rand() % 45 == 0))
+  {
+    /* Add a new one. */
+    cd->start_frame[cd->count]= frame;
+    cd->end_frame[cd->count]= frame + 50 + rand()/(RAND_MAX/50);
+    cd->x[cd->count]= rand() % 5;
+    cd->y[cd->count]= rand() % 5;
+    cd->height[cd->count]= 1.5 + (double)rand() / ((double)RAND_MAX/1.6);
+    ++cd->count;
+  }
+
+  ef_clear(F);
+
+  for (int i= 0; i < cd->count; )
+  {
+    if (frame <= cd->end_frame[i] - stage2)
+    {
+      /* Slowly growing. */
+      double progress= ((double)frame - (double)cd->start_frame[i]) /
+        ((double)cd->end_frame[i] - stage2 - (double)cd->start_frame[i]);
+      double height= progress * cd->height[i];
+      int colour= 3 + 5.5 * progress;
+      int z;
+      for (z= 0; z < height; ++z)
+        F[cd->x[i]][cd->y[i]][z]= colour;
+      F[cd->x[i]][cd->y[i]][z]= colour * (height - (z-1));
+      ++i;
+    }
+    else if (frame <= cd->end_frame[i])
+    {
+      double progress= 1.0 - (double)(cd->end_frame[i] - frame)/(double)stage2;
+      int colour= progress > 0.2 ? 15 : 11 + 18 * progress;
+      int z= progress * 4;
+      while (z <= 4)
+      {
+        F[cd->x[i]][cd->y[i]][z]= colour;
+        ++z;
+      }
+      ++i;
+    }
+    else
+    {
+      /* Delete this one, it's done. */
+      --cd->count;
+      cd->start_frame[i]= cd->start_frame[cd->count];
+      cd->end_frame[i]= cd->end_frame[cd->count];
+      cd->x[i]= cd->x[cd->count];
+      cd->y[i]= cd->y[cd->count];
+      cd->height[i]= cd->height[cd->count];
     }
   }
 }
@@ -706,6 +780,7 @@ static struct anim_piece animation1[] = {
   // { testimg_x_axis, 100000, 0},
   // { testimg_y_axis, 100000, 0},
   // { testimg_z_axis, 100000, 0},
+  { an_icicles_5, 600, 0 },
   { scrolltext_labitat_5, 400, 0 },
   { fade_out, 16, 0 },
   { scrolltext_SiGNOUT_5, 400, 0 },
