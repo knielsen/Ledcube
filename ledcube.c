@@ -193,13 +193,22 @@ shift_out_frame(const uint8_t *data)
       }
       shift_out_12bit(bstate, pixel2out_high[pixel], pixel2out_low[pixel]);
     }
+
+    pin2_low(); pin3_low(); pin4_low(); pin5_low(); pin6_low();
     pin_high(PIN_BLANK);
     pin_high(PIN_XLAT);
     pin_low(PIN_XLAT);
-    if (j == 0)
+    if (j <= 0)
       pin_low(PIN_BLANK);
     else
       bstate |= 0x08;
+    switch(j) {
+    case 0: pin2_high(); break;
+    case 1: pin3_high(); break;
+    case 2: pin4_high(); break;
+    case 3: pin5_high(); break;
+    case 4: pin6_high(); break;
+    }
   }
 }
 
@@ -213,6 +222,17 @@ init(void) {
   pin_low(PIN_XLAT);
   pin_mode_output(PIN_BLANK);
   pin_high(PIN_BLANK);    /* All leds are off initially */
+
+  pin_low(2);
+  pin_mode_output(2);
+  pin_low(3);
+  pin_mode_output(3);
+  pin_low(4);
+  pin_mode_output(4);
+  pin_low(5);
+  pin_mode_output(5);
+  pin_low(6);
+  pin_mode_output(6);
 
 //  serial_baud_9600();
 //  serial_baud_115200();
