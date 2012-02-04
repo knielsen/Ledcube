@@ -683,6 +683,34 @@ testimg_z_axis(frame_xyz F, int frame, void **data)
   F[0][1][0]= 12;
 }
 
+static void
+testimg_solid(frame_xyz F, int frame, void **data)
+{
+  //ef_clear(F, (frame/30) % 16);
+  ef_clear(F, 13);
+}
+
+static void
+testimg_rect5(frame_xyz F, int frame, void **data)
+{
+  ef_clear(F, 0);
+  for (int i= 0; i < 5; i++)
+  {
+    F[i][0][0]= 15;
+    F[i][4][0]= 15;
+    F[0][i][0]= 15;
+    F[4][i][0]= 15;
+  }
+}
+
+static void
+testimg_xxx(frame_xyz F, int frame, void **data)
+{
+  ef_clear(F, 0);
+  int v= frame / 30;
+  F[v % 5][(v/5) % 5][0] = 15;
+}
+
 /* ****************************************************************** */
 static void (*out_function)(frame_xyz);
 static int frame_repeat= 1;
@@ -758,6 +786,62 @@ frame_out_ledpro(frame_xyz fb)
 
 
 static void
+frame_out_ledpro5(frame_xyz fb)
+{
+  static uint64_t frame_count= 0;
+  uint8_t checksum= 0;
+
+  putchar(0);
+  checksum^= 0;
+  putchar(frame_count % 64);
+  checksum^= frame_count % 64;
+  ++frame_count;
+  uint16_t len= (SIDE*SIDE*SIDE*NBITS+7)/8;
+  putchar(len & 0xff);
+  checksum^= len & 0xff;
+  putchar(len >> 8);
+  checksum^= len >> 8;
+
+  int odd_even= 0;
+  uint8_t partial;
+  for (int z= 0; z < SIDE ; ++z)
+  {
+    for (int i= 120; i >= 0; --i)
+    {
+      unsigned val;
+      if (i >= 25)
+        val= 0;
+      else
+      {
+        int x= i % 5;
+        int y= i / 5;
+        val= fb[x][y][z];
+      }
+      if (odd_even)
+      {
+        putchar(partial | (val & 0xf));
+        checksum^= partial | (val & 0xf);
+        odd_even= 0;
+      }
+      else
+      {
+        partial= (val & 0xf) << 4;
+        odd_even= 1;
+      }
+    }
+  }
+  if (odd_even)
+  {
+    putchar(partial);
+    checksum^= partial;
+  }
+
+  putchar(checksum);
+  putchar(0xff);
+}
+
+
+static void
 play_animation(struct anim_piece *anim)
 {
   frame_xyz framebuf;
@@ -780,6 +864,9 @@ static struct anim_piece animation1[] = {
   // { testimg_x_axis, 100000, 0},
   // { testimg_y_axis, 100000, 0},
   // { testimg_z_axis, 100000, 0},
+  // { testimg_solid, 100000, 0},
+  // { testimg_rect5, 100000, 0},
+  // { testimg_xxx, 100000, 0},
   { an_icicles_5, 600, 0 },
   { scrolltext_labitat_5, 400, 0 },
   { fade_out, 16, 0 },
@@ -805,6 +892,8 @@ main(int argc, char *argv[])
     ++argv;
     if (0 == strcmp(argv[0], "--ledpro"))
       out_function= frame_out_ledpro;
+    else if (0 == strcmp(argv[0], "--ledpro5"))
+      out_function= frame_out_ledpro5;
     else if (0 == strncmp(argv[0], "--repeat=", 9))
     {
       frame_repeat= atoi(&argv[0][9]);
