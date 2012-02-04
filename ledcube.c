@@ -173,24 +173,26 @@ shift_out_frame(const uint8_t *data)
 {
   uint8_t i, j;
   uint8_t bstate;
-  uint8_t odd_even = 0;
-  uint8_t pixel;
 
   bstate = portb_state & 0xf0;  /* XLAT, BLANK, XCLK all 0 */
   for (j = 0; j < 11; j++)
   {
-    for (i = 0; i < LEDS_PER_LAYER; i++)
+    if ((LEDS_PER_LAYER % 2) && (j % 2))
     {
-      if (odd_even)
-      {
-        odd_even = 0;
-        pixel = *data++ & 0xf;
-      }
-      else
-      {
-        odd_even = 1;
-        pixel = *data >> 4;
-      }
+      uint8_t pixel = *data++ & 0xf;
+      shift_out_12bit(bstate, pixel2out_high[pixel], pixel2out_low[pixel]);
+    }
+    for (i = 0; i < LEDS_PER_LAYER/2; i++)
+    {
+      uint8_t v = *data++;
+      uint8_t first = v >> 4;
+      uint8_t second = v & 0xf;
+      shift_out_12bit(bstate, pixel2out_high[first], pixel2out_low[first]);
+      shift_out_12bit(bstate, pixel2out_high[second], pixel2out_low[second]);
+    }
+    if ((LEDS_PER_LAYER % 2) && !(j % 2))
+    {
+      uint8_t pixel = *data >> 4;
       shift_out_12bit(bstate, pixel2out_high[pixel], pixel2out_low[pixel]);
     }
 
