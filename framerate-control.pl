@@ -37,7 +37,19 @@ for (;;) {
     print FH $buf;
     $sofar+= $res;
   }
-  print ++$cnt, "\n";
+  ++$cnt;
+
+  # Check what arduino reports back
+  my $rin = '';
+  vec($rin, fileno(FH), 1) = 1;
+  my $res = select($rin, undef, undef, 0);
+  if ($res > 0) {
+    my $y = '';
+    sysread(FH, $y, 128);
+    print ord(substr($y, $_, 1)), " " for (0 .. length($y)-1);
+    print "FRAME: sent ", $cnt % 64, " recv ", ord(substr($y, -1)), "\n";
+  }
+
   my $cur_time= [Time::HiRes::gettimeofday()];
   my $elapsed= Time::HiRes::tv_interval($old_time, $cur_time);
   if ($elapsed < $inter_frame_delay) {
