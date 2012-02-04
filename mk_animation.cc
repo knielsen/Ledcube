@@ -703,12 +703,36 @@ testimg_rect5(frame_xyz F, int frame, void **data)
   }
 }
 
+/* Cycle each LED in the bottom layer. */
 static void
-testimg_xxx(frame_xyz F, int frame, void **data)
+testimg_walk_bottom_5(frame_xyz F, int frame, void **data)
 {
   ef_clear(F, 0);
   int v= frame / 30;
   F[v % 5][(v/5) % 5][0] = 15;
+}
+
+/* Show the different grey scales for easy comparison. */
+static void
+testimg_show_greyscales_5(frame_xyz F, int frame, void **data)
+{
+  ef_clear(F, 0);
+  for (int z=0; z<5; ++z)
+  {
+    F[0][0][z]= F[1][0][z]= F[0][1][z]= F[1][1][z]= z+1;
+    F[0][3][z]= F[1][3][z]= F[0][4][z]= F[1][4][z]= z+4;
+    F[3][0][z]= F[4][0][z]= F[3][1][z]= F[4][1][z]= z+7;
+    F[3][3][z]= F[4][3][z]= F[3][4][z]= F[4][4][z]= z+11;
+  }
+}
+
+static void
+testimg_show_greyscales_bottom_5(frame_xyz F, int frame, void **data)
+{
+  ef_clear(F, 0);
+  for (int x=0; x<5; ++x)
+    for (int y=0; y<5; ++y)
+      F[x][y][0]= 0*frame/100 + (x*3+y) % 16;
 }
 
 /* ****************************************************************** */
@@ -866,7 +890,9 @@ static struct anim_piece animation1[] = {
   // { testimg_z_axis, 100000, 0},
   // { testimg_solid, 100000, 0},
   // { testimg_rect5, 100000, 0},
-  // { testimg_xxx, 100000, 0},
+  // { testimg_walk_bottom_5, 100000, 0},
+  // { testimg_show_greyscales_5, 100000, 0},
+  // { testimg_show_greyscales_bottom_5, 100000, 0},
   { an_icicles_5, 600, 0 },
   { scrolltext_labitat_5, 400, 0 },
   { fade_out, 16, 0 },
