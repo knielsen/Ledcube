@@ -21,7 +21,7 @@ for (;;) {
 #  my $x = $clunk->[int($frame / 10) % scalar(@$clunk)];
 
   my $N = 4;
-  my $len = int ((1337*$N + 7)/8);
+  my $len = int ((1331*$N + 7)/8);
   my $len_low = $len & 0xff;
   my $len_high = $len >> 8;
   my $data = chr(0) . chr($frame % 64) . chr($len_low) . chr($len_high);

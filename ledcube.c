@@ -17,7 +17,7 @@ uint16_t pixel2out_high[16] =
 uint16_t pixel2out_low[16] =
 { 0, 1, 3, 5, 9, 15, 27, 48, 84, 147, 255, 445&255, 775&255, 1350&255, 2352&255, 4095&255 };
 
-#define NUM_LEDS 1337
+#define NUM_LEDS 1331
 #define LEDS_PER_LAYER 121
 #define BITS_PER_LED 4
 #define DATA_SIZE ((NUM_LEDS*BITS_PER_LED+7)/8)
