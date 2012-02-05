@@ -732,7 +732,7 @@ testimg_show_greyscales_bottom_5(frame_xyz F, int frame, void **data)
   ef_clear(F, 0);
   for (int x=0; x<5; ++x)
     for (int y=0; y<5; ++y)
-      F[x][y][0]= 0*frame/100 + (x*3+y) % 16;
+      F[x][y][0]= frame/30 + (x*3+y) % 16;
 }
 
 /* ****************************************************************** */
