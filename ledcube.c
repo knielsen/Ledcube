@@ -4,6 +4,7 @@
 #include <arduino/pins.h>
 #include <arduino/serial.h>
 #include <arduino/timer1.h>
+#include <arduino/sleep.h>
 
 
 #define PIN_SCLK 8
@@ -18,6 +19,7 @@ uint16_t pixel2out_low[16] =
 { 0, 1, 3, 5, 9, 15, 27, 48, 84, 147, 255, 445&255, 775&255, 1350&255, 2352&255, 4095&255 };
 
 #define NUM_LEDS 1331
+#define NUM_LAYERS 11
 #define LEDS_PER_LAYER 121
 #define BITS_PER_LED 4
 #define DATA_SIZE ((NUM_LEDS*BITS_PER_LED+7)/8)
@@ -168,51 +170,86 @@ shift_out_12bit(uint8_t bstate, uint8_t val_high, uint8_t val_low)
   );
 }
 
-static void
-shift_out_frame(const uint8_t *data)
+static uint8_t old_frame= 0xff;
+static uint8_t cur_layer= NUM_LAYERS;
+timer1_interrupt_a()
 {
-  uint8_t i, j;
+  uint8_t i;
   uint8_t bstate;
+  static uint8_t *data;
 
-  bstate = portb_state & 0xf0;  /* XLAT, BLANK, XCLK all 0 */
-  for (j = 0; j < 11; j++)
+  sei();
+
+  /* First, switch layer, so we get a stable timing for this important step. */
+  /* But skip the very first time, when we have no data yet. */
+  if (cur_layer < NUM_LAYERS)
   {
-    if ((LEDS_PER_LAYER % 2) && (j % 2))
-    {
-      uint8_t pixel = *data++ & 0xf;
-      shift_out_12bit(bstate, pixel2out_high[pixel], pixel2out_low[pixel]);
-    }
-    for (i = 0; i < LEDS_PER_LAYER/2; i++)
-    {
-      uint8_t v = *data++;
-      uint8_t first = v >> 4;
-      uint8_t second = v & 0xf;
-      shift_out_12bit(bstate, pixel2out_high[first], pixel2out_low[first]);
-      shift_out_12bit(bstate, pixel2out_high[second], pixel2out_low[second]);
-    }
-    if ((LEDS_PER_LAYER % 2) && !(j % 2))
-    {
-      uint8_t pixel = *data >> 4;
-      shift_out_12bit(bstate, pixel2out_high[pixel], pixel2out_low[pixel]);
-    }
-
-    pin2_low(); pin3_low(); pin4_low(); pin5_low(); pin6_low();
     pin_high(PIN_BLANK);
     pin_high(PIN_XLAT);
     pin_low(PIN_XLAT);
-    if (j <= 0)
-      pin_low(PIN_BLANK);
-    else
-      bstate |= 0x08;
-    switch(j) {
-    case 0: pin2_high(); break;
-    case 1: pin3_high(); break;
-    case 2: pin4_high(); break;
-    case 3: pin5_high(); break;
-    case 4: pin6_high(); break;
+
+    /* Switch the MOSFETs to the next layer. */
+    switch (cur_layer)
+    {
+    case 0: pinA5_low(); pin2_high();
+    case 1: pin2_low(); pin3_high();
+    case 2: pin3_low(); pin4_high();
+    case 3: pin4_low(); pin5_high();
+    case 4: pin5_low(); pin6_high();
+    case 5: pin6_low(); pin7_high();
+    case 6: pin7_low(); pinA0_high();
+    case 7: pinA0_low(); pinA1_high();
+    case 8: pinA1_low(); pinA2_high();
+    case 9: pinA2_low(); pinA3_high();
+    case 10:pinA3_low(); pinA4_high();
     }
+    /* ToDo: Hack for now: only display lowest layer. */
+    if (cur_layer <= 0)
+    {
+      pin_low(PIN_BLANK);
+      portb_state &= 0xf7;  /* fix BLANK low. */
+    }
+    else
+      portb_state |= 0x08;  /* fix BLANK high. */
+  }
+
+  cur_layer++;
+  if (cur_layer >= NUM_LAYERS)
+    cur_layer= 0;
+
+  if (cur_layer == 0) {
+    /* Check for a new frame. */
+    uint8_t cur_frame = show_frame;
+    if (cur_frame != old_frame)
+    {
+      serial_write(frames[cur_frame][1]);
+      old_frame= cur_frame;
+    }
+    data= &frames[cur_frame][4];
+  }
+
+  /* Now shift out one layer. */
+  bstate = portb_state & 0xf8;  /* XLAT, XCLK both 0 */
+  if ((LEDS_PER_LAYER % 2) && (cur_layer % 2))
+  {
+    uint8_t pixel = *data++ & 0xf;
+    shift_out_12bit(bstate, pixel2out_high[pixel], pixel2out_low[pixel]);
+  }
+  for (i = 0; i < LEDS_PER_LAYER/2; i++)
+  {
+    uint8_t v = *data++;
+    uint8_t first = v >> 4;
+    uint8_t second = v & 0xf;
+    shift_out_12bit(bstate, pixel2out_high[first], pixel2out_low[first]);
+    shift_out_12bit(bstate, pixel2out_high[second], pixel2out_low[second]);
+  }
+  if ((LEDS_PER_LAYER % 2) && !(cur_layer % 2))
+  {
+    uint8_t pixel = *data >> 4;
+    shift_out_12bit(bstate, pixel2out_high[pixel], pixel2out_low[pixel]);
   }
 }
+
 
 static void
 init(void) {
@@ -235,6 +272,18 @@ init(void) {
   pin_mode_output(5);
   pin_low(6);
   pin_mode_output(6);
+  pin_low(7);
+  pin_mode_output(7);
+  pin_low(A0);
+  pin_mode_output(A0);
+  pin_low(A1);
+  pin_mode_output(A1);
+  pin_low(A2);
+  pin_mode_output(A2);
+  pin_low(A3);
+  pin_mode_output(A3);
+  pin_low(A4);
+  pin_mode_output(A4);
 
 //  serial_baud_9600();
 //  serial_baud_115200();
@@ -245,30 +294,32 @@ init(void) {
   serial_transmitter_enable();
   serial_receiver_enable();
   serial_interrupt_rx_enable();
+
+  /* Use the 16-bit timer1 at the full 16MHz resolution. */
+  timer1_count_set(0);
+  timer1_clock_d1();
+  timer1_mode_ctc();
+  timer1_compare_a_set(17778);   /* 16MHz / 177778 -> 900Hz. */
+  //timer1_compare_a_set(35955);   /* 16MHz / 35955 -> 445Hz. */
+  timer1_interrupt_a_enable();
 }
 
 int
 main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
 {
-  uint8_t old_frame = 0xff, cur = 0;
-
   init();
   sei();
 
   pin13_mode_output();
   my_pin13_low();
 
+  sleep_mode_idle();
   for (;;)
   {
-    cli();
-    cur = show_frame;
-    if (cur != old_frame)
-    {
-      serial_write(frames[cur][1]);
-      old_frame = cur;
-    }
-    sei();
-
-    shift_out_frame(&frames[cur][4]);
+/*
+    sleep_enable();
+    sleep_cpu();
+    sleep_disable();
+*/
   }
 }
