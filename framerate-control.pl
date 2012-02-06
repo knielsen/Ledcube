@@ -5,7 +5,7 @@ use warnings;
 
 use Time::HiRes;
 
-my $FRAMERATE= 25;
+my $FRAMERATE= 35;
 
 open FH, '+<', '/dev/ttyUSB0' or die "open() failed: $!\n";
 
