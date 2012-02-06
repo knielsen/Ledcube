@@ -62,7 +62,7 @@ bubble5_a(frame_xyz F, int frame, void **data)
       for (int z= 0; z < 5; z++)
       {
         double d= sqrt((x-2)*(x-2)+(y-2)*(y-2)+(z-2)*(z-2));
-        double h= (double)frame / 4 + d*4;
+        double h= (double)frame / 2.4 + d*4;
         int col= (int)h % GLVLS;
         F[x][y][z]= col;
       }
@@ -107,7 +107,7 @@ cornercube_5(frame_xyz F, int frame, void **data)
     *data= static_cast<void *>(new struct cornercube_data);
   struct cornercube_data *cd= static_cast<struct cornercube_data *>(*data);
 
-  static const int base_count= 15;
+  static const int base_count= 10;
 
   ef_clear(F);
   if (frame == 0)
@@ -552,7 +552,7 @@ an_flytext5(frame_xyz F, int frame, void **data)
   static const int inter_letter_spacing= 6;
   const char *text= (const char *)*data;
   if ((frame % 2) == 0)
-    ef_afterglow(F, 4);
+    ef_afterglow(F, 2);
 
   frame/= 2;
   for (int y= 0; y < 5 ; ++y)
@@ -598,7 +598,7 @@ an_icicles_5(frame_xyz F, int frame, void **data)
     memset(*data, 0, sizeof(struct st_icicle));
   struct st_icicle *cd= static_cast<struct st_icicle *>(*data);
 
-  if ((cd->count < maxN) && (cd->count == 0 || rand() % 45 == 0))
+  if ((cd->count < maxN) && (cd->count == 0 || rand() % 29 == 0))
   {
     /* Add a new one. */
     cd->start_frame[cd->count]= frame;
