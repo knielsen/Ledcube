@@ -738,6 +738,7 @@ testimg_show_greyscales_bottom_5(frame_xyz F, int frame, void **data)
 /* ****************************************************************** */
 static void (*out_function)(frame_xyz);
 static int frame_repeat= 1;
+static int loop= 0;
 
 static void
 frame_out_5(frame_xyz fb)
@@ -866,10 +867,12 @@ frame_out_ledpro5(frame_xyz fb)
 
 
 static void
-play_animation(struct anim_piece *anim)
+play_animation(struct anim_piece *animation)
 {
   frame_xyz framebuf;
 
+loop:
+  struct anim_piece *anim= animation;
   ef_clear(framebuf);
   while (anim->frame_func)
   {
@@ -881,6 +884,8 @@ play_animation(struct anim_piece *anim)
     }
     anim++;
   }
+  if (loop)
+    goto loop;
 }
 
 
@@ -920,6 +925,8 @@ main(int argc, char *argv[])
       out_function= frame_out_ledpro;
     else if (0 == strcmp(argv[0], "--ledpro5"))
       out_function= frame_out_ledpro5;
+    else if (0 == strcmp(argv[0], "--loop"))
+      loop= 1;
     else if (0 == strncmp(argv[0], "--repeat=", 9))
     {
       frame_repeat= atoi(&argv[0][9]);
