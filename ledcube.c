@@ -311,20 +311,20 @@ timer1_interrupt_a()
     /* Switch the MOSFETs to the next layer. */
     switch (cur_layer)
     {
-    case 0: pinA5_low(); pin2_high(); break;
-    case 1: pin2_low(); pin3_high(); break;
-    case 2: pin3_low(); pin4_high(); break;
-    case 3: pin4_low(); pin5_high(); break;
-    case 4: pin5_low(); pin6_high(); break;
-    case 5: pin6_low(); pin7_high(); break;
-    case 6: pin7_low(); pinA0_high(); break;
-    case 7: pinA0_low(); pinA1_high(); break;
-    case 8: pinA1_low(); pinA2_high(); break;
-    case 9: pinA2_low(); pinA3_high(); break;
-    case 10:pinA3_low(); pinA4_high(); break;
+    case 0: pinA5_high(); pin2_low(); break;
+    case 1: pin2_high(); pin3_low(); break;
+    case 2: pin3_high(); pin4_low(); break;
+    case 3: pin4_high(); pin5_low(); break;
+    case 4: pin5_high(); pin6_low(); break;
+    case 5: pin6_high(); pin7_low(); break;
+    case 6: pin7_high(); pinA0_low(); break;
+    case 7: pinA0_high(); pinA1_low(); break;
+    case 8: pinA1_high(); pinA2_low(); break;
+    case 9: pinA2_high(); pinA3_low(); break;
+    case 10:pinA3_high(); pinA4_low(); break;
     }
-    /* ToDo: Hack for now: only display lowest layer. */
-    if (cur_layer <= 0)
+    /* ToDo: Hack for now: only display lowest layers. */
+    if (cur_layer <= 4)
     {
       pin_low(PIN_BLANK);
       portb_state &= 0xf7;  /* fix BLANK low. */
@@ -382,27 +382,27 @@ init(void) {
   pin_mode_output(PIN_BLANK);
   pin_high(PIN_BLANK);    /* All leds are off initially */
 
-  pin_low(2);
+  pin_high(2);
   pin_mode_output(2);
-  pin_low(3);
+  pin_high(3);
   pin_mode_output(3);
-  pin_low(4);
+  pin_high(4);
   pin_mode_output(4);
-  pin_low(5);
+  pin_high(5);
   pin_mode_output(5);
-  pin_low(6);
+  pin_high(6);
   pin_mode_output(6);
-  pin_low(7);
+  pin_high(7);
   pin_mode_output(7);
-  pin_low(A0);
+  pin_high(A0);
   pin_mode_output(A0);
-  pin_low(A1);
+  pin_high(A1);
   pin_mode_output(A1);
-  pin_low(A2);
+  pin_high(A2);
   pin_mode_output(A2);
-  pin_low(A3);
+  pin_high(A3);
   pin_mode_output(A3);
-  pin_low(A4);
+  pin_high(A4);
   pin_mode_output(A4);
 
 //  serial_baud_9600();
