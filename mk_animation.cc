@@ -593,10 +593,9 @@ an_icicles_5(frame_xyz F, int frame, void **data)
   };
 
   if (!*data)
-  {
     *data= static_cast<void *>(new struct st_icicle);
+  if (!frame)
     memset(*data, 0, sizeof(struct st_icicle));
-  }
   struct st_icicle *cd= static_cast<struct st_icicle *>(*data);
 
   if ((cd->count < maxN) && (cd->count == 0 || rand() % 45 == 0))
