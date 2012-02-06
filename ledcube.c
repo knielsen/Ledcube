@@ -50,23 +50,143 @@ my_pin13_low(void)
   Frame format:
   <0> <frame counter 0-63> <len_low> <len_high> <data> <checksum> <0xff>
 */
+
+/*
+  The last frame fully loaded, to be shifted out to the cube by the timer
+  interrupt.
+
+  Declared volatile, as reads must not be cached - the serial interrupt
+  handler modifies it asynchroneously.
+*/
 static volatile uint8_t show_frame = 0;
+/* The frame currently being received over serial. */
+static uint8_t current_frame = 0;
+/* The count of bytes already received in current frame. */
+static uint16_t current_idx = 0;
+/* Count of bytes (<=255) to receive using the "fast path" code. */
+static uint8_t remain_bytes= 0;
+/* Position to write next byte received in the "fast path" code. */
+static uint8_t *cur_data_ptr;
+
+/*
+  Do the less often run serial stuff here, to keep the most serial interrupts
+  lean-and-mean (avoid having to push tons of registers in the fast case).
+
+  Idea is to code this really minimal, and then do it in hand-crafted
+  assembler.
+
+  If we do it in C, the compiler pushes a whole lot of regs (the caller-save
+  ones) due to the nested call, and it does this always. But in asm, we can
+  avoid saving all the regs in the fast path.
+*/
+
+/*
 serial_interrupt_rx()
 {
+  int8_t r = remain_bytes;
+  if (r > 0)
+  {
+    remain_bytes= r-1;
+    *cur_data_ptr++ = serial_read();
+  }
+  else
+    serial_interrupt_slow_part();
+}
+*/
+
+static void serial_interrupt_slow_part(void) __attribute__((noinline));
+serial_interrupt_rx_naked()
+{
+//  ++remain_bytes;
+  asm volatile(
+    "push r0\n\t"
+    "in   r0, 0x3f\n\t"
+    "push r0\n\t"
+    "push r30\n\t"
+    "push r31\n\t"
+
+    "lds  r30, remain_bytes\n\t"
+    "subi r30, 1\n\t"
+    "brcs 1f\n\t"              /* if remain_bytes was 0, do it the slow way */
+    "sts  remain_bytes, r30\n\t"
+    "lds  r30, cur_data_ptr\n\t"
+    "lds  r31, cur_data_ptr+1\n\t"
+    "lds  r0,198\n\t"                           /* serial_read() */
+    "st   Z+, r0\n\t"
+    "sts  cur_data_ptr, r30\n\t"
+    "sts  cur_data_ptr+1, r31\n\t"
+
+    "pop  r31\n\t"
+    "pop  r30\n\t"
+    "pop  r0\n\t"
+    "out  0x3f, r0\n\t"
+    "pop  r0\n\t"
+    "reti\n"
+
+    "1:\n\t"
+    "push r1\n\t"
+    "clr  r1\n\t"
+    "push r18\n\t"
+    "push r19\n\t"
+    "push r20\n\t"
+    "push r21\n\t"
+    "push r22\n\t"
+    "push r23\n\t"
+    "push r24\n\t"
+    "push r25\n\t"
+    "push r26\n\t"
+    "push r27\n\t"
+    "call serial_interrupt_slow_part\n\t"
+    "pop  r27\n\t"
+    "pop  r26\n\t"
+    "pop  r25\n\t"
+    "pop  r24\n\t"
+    "pop  r23\n\t"
+    "pop  r22\n\t"
+    "pop  r21\n\t"
+    "pop  r20\n\t"
+    "pop  r19\n\t"
+    "pop  r18\n\t"
+    "pop  r1\n\t"
+    "pop  r31\n\t"
+    "pop  r30\n\t"
+    "pop  r0\n\t"
+    "out  0x3f, r0\n\t"
+    "pop  r0\n\t"
+    "reti\n");
+
+  /*
+    Not reached - we return from interrupt inside the asm.
+    But we have to refer to the function, or it will be optimised out.
+  */
+  serial_interrupt_slow_part();
+}
+
+static void
+serial_interrupt_slow_part(void)
+{
   uint8_t c;
-  static uint8_t current_frame = 0;
-  static uint16_t current_idx = 0;
   uint8_t cur = current_frame;
 
-   if (cur % 2)
-     my_pin13_low();
-   else
+  if (cur % 2)
+    my_pin13_low();
+  else
     my_pin13_high();
 
   c = serial_read();
   frames[cur][current_idx] = c;
   current_idx++;
-  if (current_idx >= FRAME_SIZE)
+
+  if (current_idx >= 4 && current_idx < FRAME_SIZE-2)
+  {
+    /* Use the fast path for the next up-to-255 data bytes. */
+    uint16_t total= (FRAME_SIZE-2) - current_idx;
+    remain_bytes= total > 255 ? 255 : total;
+    cur_data_ptr= &frames[cur][current_idx];
+    current_idx+= remain_bytes;
+    return;
+  }
+  else if (current_idx >= FRAME_SIZE)
   {
     current_idx = 0;
     show_frame = cur;
@@ -191,17 +311,17 @@ timer1_interrupt_a()
     /* Switch the MOSFETs to the next layer. */
     switch (cur_layer)
     {
-    case 0: pinA5_low(); pin2_high();
-    case 1: pin2_low(); pin3_high();
-    case 2: pin3_low(); pin4_high();
-    case 3: pin4_low(); pin5_high();
-    case 4: pin5_low(); pin6_high();
-    case 5: pin6_low(); pin7_high();
-    case 6: pin7_low(); pinA0_high();
-    case 7: pinA0_low(); pinA1_high();
-    case 8: pinA1_low(); pinA2_high();
-    case 9: pinA2_low(); pinA3_high();
-    case 10:pinA3_low(); pinA4_high();
+    case 0: pinA5_low(); pin2_high(); break;
+    case 1: pin2_low(); pin3_high(); break;
+    case 2: pin3_low(); pin4_high(); break;
+    case 3: pin4_low(); pin5_high(); break;
+    case 4: pin5_low(); pin6_high(); break;
+    case 5: pin6_low(); pin7_high(); break;
+    case 6: pin7_low(); pinA0_high(); break;
+    case 7: pinA0_low(); pinA1_high(); break;
+    case 8: pinA1_low(); pinA2_high(); break;
+    case 9: pinA2_low(); pinA3_high(); break;
+    case 10:pinA3_low(); pinA4_high(); break;
     }
     /* ToDo: Hack for now: only display lowest layer. */
     if (cur_layer <= 0)
