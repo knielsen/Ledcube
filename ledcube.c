@@ -168,11 +168,6 @@ serial_interrupt_slow_part(void)
   uint8_t c;
   uint8_t cur = current_frame;
 
-  if (cur % 2)
-    my_pin13_low();
-  else
-    my_pin13_high();
-
   c = serial_read();
   frames[cur][current_idx] = c;
   current_idx++;
@@ -299,6 +294,7 @@ timer1_interrupt_a()
   static uint8_t *data;
 
   sei();
+  my_pin13_high();
 
   /* First, switch layer, so we get a stable timing for this important step. */
   /* But skip the very first time, when we have no data yet. */
@@ -368,6 +364,8 @@ timer1_interrupt_a()
     uint8_t pixel = *data >> 4;
     shift_out_12bit(bstate, pixel2out_high[pixel], pixel2out_low[pixel]);
   }
+
+  my_pin13_low();
 }
 
 
