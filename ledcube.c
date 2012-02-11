@@ -1,5 +1,6 @@
 #include <util/delay.h>
 #include <avr/sleep.h>
+#include <stdlib.h>
 
 #include <arduino/pins.h>
 #include <arduino/serial.h>
@@ -432,6 +433,8 @@ init(void) {
   timer1_interrupt_a_enable();
 }
 
+static void cornercube_5(uint8_t f);
+
 int
 main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
 {
@@ -489,11 +492,178 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
 
     if (onboard_animation)
     {
-      /* ToDo: generate the next frame of animation ... in frames[generate_frame] */
-      int i;
-      for (i = 0; i < DATA_SIZE; ++i)
-        frames[generate_frame][i+4] = 0x11 * ((generate_counter/16) % 16);
+      cornercube_5(generate_frame);
     }
     ++generate_counter;
   }
+}
+
+static void
+fast_clear(uint8_t frame)
+{
+  uint8_t *p= &frames[frame][4];
+  for (uint8_t i= 0; i < FRAME_SIZE/16; i++)
+  {
+    *p++= 0; *p++= 0; *p++= 0; *p++= 0; *p++= 0; *p++= 0; *p++= 0; *p++= 0;
+    *p++= 0; *p++= 0; *p++= 0; *p++= 0; *p++= 0; *p++= 0; *p++= 0; *p++= 0;
+  }
+  for (uint8_t i= 0; i < FRAME_SIZE % 16; i++)
+    *p++= 0;
+}
+
+static void
+pixel5(uint8_t f, uint8_t x, uint8_t y, uint8_t z, uint8_t val)
+{
+  uint8_t *p;
+  uint8_t v;
+  int idx= LEDS_PER_LAYER * z;
+  idx += LEDS_PER_LAYER - 25;
+  idx += (4-x);
+  idx += (4-y)*5;
+
+  p = &frames[f][4] + idx/2;
+  v = *p;
+  if (idx % 2)
+    *p = (v & 0xf0) | (val & 0xf);
+  else
+    *p = (v & 0x0f) | (val & 0xf)<<4;
+}
+
+#define RAND_N(n) (rand()/(RAND_MAX/(n)+1))
+
+/* Animation: corner-cube */
+
+struct cornercube_data {
+  int base_x, base_y, base_z;
+  int dir_x, dir_y, dir_z;
+  int col, target_col;
+  int corner;
+};
+
+static struct cornercube_data ccd;
+static int cc_frame= -1;
+
+static void
+cornercube_5(uint8_t f)
+{
+  static const int base_count= 23;
+
+  fast_clear(f);
+  if (cc_frame < 0)
+  {
+    // Initialise first corner to expand from
+    ccd.col= 0;
+    ccd.target_col= 11 + RAND_N(5);
+    ccd.base_x= 0;
+    ccd.base_y= 0;
+    ccd.base_z= 0;
+    ccd.dir_x= 1;
+    ccd.dir_y= 1;
+    ccd.dir_z= 1;
+    ccd.corner= 0;
+    cc_frame = 0;
+  }
+
+  if ((cc_frame / (base_count+1))%2 == 0)
+  {
+    // Cube expanding from corner.
+    if ((cc_frame % (base_count+1)) == 0)
+    {
+      ccd.col= ccd.target_col;
+      ccd.target_col= 11 + RAND_N(5);
+    }
+    float expand_factor= (float)(cc_frame % (base_count+1)) / base_count;
+    int col= (int)((float)ccd.col +
+                   expand_factor * ((float)ccd.target_col - (float)ccd.col) + 0.5);
+    int side_len= (int)(expand_factor * 4 + 0.5);
+    for (int i= 0; i <= side_len; i++)
+    {
+      int end_x= ccd.base_x+ccd.dir_x*side_len;
+      int end_y= ccd.base_y+ccd.dir_y*side_len;
+      int end_z= ccd.base_z+ccd.dir_z*side_len;
+      pixel5(f,ccd.base_x + i*ccd.dir_x, ccd.base_y, ccd.base_z, col);
+      pixel5(f, ccd.base_x + i*ccd.dir_x, end_y, ccd.base_z, col);
+      pixel5(f, ccd.base_x + i*ccd.dir_x, ccd.base_y, end_z, col);
+      pixel5(f, ccd.base_x + i*ccd.dir_x, end_y, end_z, col);
+      pixel5(f, ccd.base_x, ccd.base_y + i*ccd.dir_y, ccd.base_z, col);
+      pixel5(f, end_x, ccd.base_y + i*ccd.dir_y, ccd.base_z, col);
+      pixel5(f, ccd.base_x, ccd.base_y + i*ccd.dir_y, end_z, col);
+      pixel5(f, end_x, ccd.base_y + i*ccd.dir_y, end_z, col);
+      pixel5(f, ccd.base_x, ccd.base_y, ccd.base_z + i*ccd.dir_z, col);
+      pixel5(f, end_x, ccd.base_y, ccd.base_z + i*ccd.dir_z, col);
+      pixel5(f, ccd.base_x, end_y, ccd.base_z + i*ccd.dir_z, col);
+      pixel5(f, end_x, end_y, ccd.base_z + i*ccd.dir_z, col);
+    }
+  }
+  else
+  {
+    // Cube retreating to other corner.
+    if ((cc_frame % (base_count+1)) == 0)
+    {
+      // At first frame, select new base point.
+      int corner;
+      do
+        corner= RAND_N(8);
+      while (corner == ccd.corner);
+      ccd.corner= corner;
+      if (corner & 1)
+      {
+        ccd.base_x= 4;
+        ccd.dir_x= -1;
+      }
+      else
+      {
+        ccd.base_x= 0;
+        ccd.dir_x= 1;
+      }
+      if (corner & 2)
+      {
+        ccd.base_y= 4;
+        ccd.dir_y= -1;
+      }
+      else
+      {
+        ccd.base_y= 0;
+        ccd.dir_y= 1;
+      }
+      if (corner & 4)
+      {
+        ccd.base_z= 4;
+        ccd.dir_z= -1;
+      }
+      else
+      {
+        ccd.base_z= 0;
+        ccd.dir_z= 1;
+      }
+      // And a new target colour.
+      ccd.col= ccd.target_col;
+      ccd.target_col= 11 + RAND_N(5);
+    }
+    float expand_factor= (float)(base_count - (cc_frame % (base_count + 1))) / base_count;
+    int col= (int)((float)ccd.col +
+                   expand_factor * ((float)ccd.target_col - (float)ccd.col) + 0.5);
+    int side_len= (int)(expand_factor * 4 + 0.5);
+    for (int i= 0; i <= side_len; i++)
+    {
+      int end_x= ccd.base_x+ccd.dir_x*side_len;
+      int end_y= ccd.base_y+ccd.dir_y*side_len;
+      int end_z= ccd.base_z+ccd.dir_z*side_len;
+      pixel5(f, ccd.base_x + i*ccd.dir_x, ccd.base_y, ccd.base_z, col);
+      pixel5(f, ccd.base_x + i*ccd.dir_x, end_y, ccd.base_z, col);
+      pixel5(f, ccd.base_x + i*ccd.dir_x, ccd.base_y, end_z, col);
+      pixel5(f, ccd.base_x + i*ccd.dir_x, end_y, end_z, col);
+      pixel5(f, ccd.base_x, ccd.base_y + i*ccd.dir_y, ccd.base_z, col);
+      pixel5(f, end_x, ccd.base_y + i*ccd.dir_y, ccd.base_z, col);
+      pixel5(f, ccd.base_x, ccd.base_y + i*ccd.dir_y, end_z, col);
+      pixel5(f, end_x, ccd.base_y + i*ccd.dir_y, end_z, col);
+      pixel5(f, ccd.base_x, ccd.base_y, ccd.base_z + i*ccd.dir_z, col);
+      pixel5(f, end_x, ccd.base_y, ccd.base_z + i*ccd.dir_z, col);
+      pixel5(f, ccd.base_x, end_y, ccd.base_z + i*ccd.dir_z, col);
+      pixel5(f, end_x, end_y, ccd.base_z + i*ccd.dir_z, col);
+    }
+  }
+  ++cc_frame;
+  if (cc_frame >= 2*(base_count+1))
+    cc_frame= 0;
 }
