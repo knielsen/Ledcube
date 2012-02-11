@@ -433,6 +433,7 @@ init(void) {
   timer1_interrupt_a_enable();
 }
 
+static void anim_solid(uint8_t f, uint8_t val);
 static void cornercube_5(uint8_t f);
 
 int
@@ -492,6 +493,7 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
 
     if (onboard_animation)
     {
+//      anim_solid(generate_frame, 15);
       cornercube_5(generate_frame);
     }
     ++generate_counter;
@@ -499,15 +501,16 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
 }
 
 static void
-fast_clear(uint8_t frame)
+fast_clear(uint8_t frame, uint8_t val)
 {
+  uint8_t v = (uint8_t)0x11 * (val & 0xf);
   uint8_t *p= &frames[frame][4];
-  for (uint8_t i= 0; i < FRAME_SIZE/16; i++)
+  for (uint8_t i= 0; i < DATA_SIZE/16; i++)
   {
-    *p++= 0; *p++= 0; *p++= 0; *p++= 0; *p++= 0; *p++= 0; *p++= 0; *p++= 0;
-    *p++= 0; *p++= 0; *p++= 0; *p++= 0; *p++= 0; *p++= 0; *p++= 0; *p++= 0;
+    *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v;
+    *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v;
   }
-  for (uint8_t i= 0; i < FRAME_SIZE % 16; i++)
+  for (uint8_t i= 0; i < DATA_SIZE % 16; i++)
     *p++= 0;
 }
 
@@ -548,7 +551,7 @@ cornercube_5(uint8_t f)
 {
   static const int base_count= 23;
 
-  fast_clear(f);
+  fast_clear(f, 0);
   if (cc_frame < 0)
   {
     // Initialise first corner to expand from
@@ -666,4 +669,10 @@ cornercube_5(uint8_t f)
   ++cc_frame;
   if (cc_frame >= 2*(base_count+1))
     cc_frame= 0;
+}
+
+static void
+anim_solid(uint8_t f, uint8_t val)
+{
+  fast_clear(f, val);
 }
