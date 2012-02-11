@@ -162,6 +162,7 @@ serial_interrupt_rx_naked()
   serial_interrupt_slow_part();
 }
 
+static volatile uint8_t frame_receive_counter= 0;
 static void
 serial_interrupt_slow_part(void)
 {
@@ -183,10 +184,20 @@ serial_interrupt_slow_part(void)
   }
   else if (current_idx >= FRAME_SIZE)
   {
+    ++frame_receive_counter;
     current_idx = 0;
     show_frame = cur;
     current_frame = (cur + 1) % NUM_FRAMES;
   }
+}
+
+static void
+serial_reset(void)
+{
+  cli();
+  current_idx = 0;
+  remain_bytes = 0;
+  sei();
 }
 
 /*
@@ -287,6 +298,7 @@ shift_out_12bit(uint8_t bstate, uint8_t val_high, uint8_t val_low)
 
 static uint8_t old_frame= 0xff;
 static uint8_t cur_layer= NUM_LAYERS;
+static volatile uint8_t frame_refresh_counter= 0;
 timer1_interrupt_a()
 {
   uint8_t i;
@@ -294,7 +306,6 @@ timer1_interrupt_a()
   static uint8_t *data;
 
   sei();
-  my_pin13_high();
 
   /* First, switch layer, so we get a stable timing for this important step. */
   /* But skip the very first time, when we have no data yet. */
@@ -320,7 +331,7 @@ timer1_interrupt_a()
     case 10:pinA3_high(); pinA4_low(); break;
     }
     /* ToDo: Hack for now: only display lowest layers. */
-    if (cur_layer <= 4)
+    if (cur_layer <= 11)
     {
       pin_low(PIN_BLANK);
       portb_state &= 0xf7;  /* fix BLANK low. */
@@ -334,6 +345,7 @@ timer1_interrupt_a()
     cur_layer= 0;
 
   if (cur_layer == 0) {
+    ++frame_refresh_counter;
     /* Check for a new frame. */
     uint8_t cur_frame = show_frame;
     if (cur_frame != old_frame)
@@ -364,8 +376,6 @@ timer1_interrupt_a()
     uint8_t pixel = *data >> 4;
     shift_out_12bit(bstate, pixel2out_high[pixel], pixel2out_low[pixel]);
   }
-
-  my_pin13_low();
 }
 
 
@@ -425,6 +435,15 @@ init(void) {
 int
 main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
 {
+  uint8_t previous_refresh_counter;
+  uint8_t generate_frame = 0;
+  uint8_t cur_refresh_counter;
+  uint8_t onboard_animation = 0;
+  uint8_t cur_receive_counter;
+  uint8_t previous_receive_counter = 0;
+  uint8_t previous_receive_timestamp = 0;
+  uint8_t generate_counter= 0;
+
   init();
   sei();
 
@@ -434,10 +453,47 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
   sleep_mode_idle();
   for (;;)
   {
-/*
-    sleep_enable();
-    sleep_cpu();
-    sleep_disable();
-*/
+    if (onboard_animation)
+      my_pin13_high();
+    else
+      my_pin13_low();
+    if (onboard_animation)
+      show_frame = generate_frame;
+    previous_refresh_counter= frame_refresh_counter;
+    /* Wait for refresh handler to start on a new frame. */
+    while ((cur_refresh_counter = frame_refresh_counter) == previous_refresh_counter)
+      ;
+    if (onboard_animation)
+      generate_frame = (generate_frame + 1) % NUM_FRAMES;
+
+    cur_receive_counter = frame_receive_counter;
+    if (cur_receive_counter != previous_receive_counter)
+    {
+      /* We received a new frame on serial. */
+      onboard_animation= 0;
+      previous_receive_counter = cur_receive_counter;
+      previous_receive_timestamp = cur_refresh_counter;
+    }
+    else if (!onboard_animation &&
+             (uint8_t)(cur_refresh_counter - previous_receive_timestamp) > 30)
+    {
+      /*
+        Nothing received on serial for a while.
+        Switch to on-board animation, and reset the serial state so that it
+        will recover when communication resumes.
+      */
+      serial_reset();
+      onboard_animation = 1;
+      generate_frame = (show_frame + (NUM_FRAMES - 1)) % NUM_FRAMES;
+    }
+
+    if (onboard_animation)
+    {
+      /* ToDo: generate the next frame of animation ... in frames[generate_frame] */
+      int i;
+      for (i = 0; i < DATA_SIZE; ++i)
+        frames[generate_frame][i+4] = 0x11 * ((generate_counter/16) % 16);
+    }
+    ++generate_counter;
   }
 }
