@@ -1,3 +1,4 @@
+#define __USE_XOPEN 1
 #include <stdint.h>
 #include <math.h>
 #include <string.h>
@@ -651,6 +652,54 @@ an_icicles_5(frame_xyz F, int frame, void **data)
   }
 }
 
+
+static void
+an_rotate_planeN(frame_xyz F, int frame, const char *str_angspeed, int sidelen)
+{
+  double angspeed = 0.2;
+  if (str_angspeed)
+  {
+    angspeed = atof(str_angspeed);
+    if (angspeed <= 0)
+      angspeed = 0.2;
+  }
+
+  double angle = fmod(frame * angspeed, M_PI) - M_PI/4;
+  ef_clear(F, 3);
+  if (angle <= M_PI/4)
+  {
+    double slope = tan(angle);
+    for (int i = 0; i < sidelen; ++i)
+    {
+      int a = round(((double)sidelen-1)/2 + slope*((double)i-((double)sidelen-1)/2));
+      for (int j= 0; j < sidelen; ++j)
+        F[i][a][j] = 15;
+    }
+  }
+  else
+  {
+    double slope = 1/tan(angle);
+    for (int i = 0; i < sidelen; ++i)
+    {
+      int a = round(((double)sidelen-1)/2 + slope*((double)i-((double)sidelen-1)/2));
+      for (int j= 0; j < sidelen; ++j)
+        F[a][i][j] = 15;
+    }
+  }
+}
+
+static void
+an_rotate_plane5(frame_xyz F, int frame, void **data)
+{
+  an_rotate_planeN(F, frame, (const char *)*data, 5);
+}
+
+static void
+an_rotate_plane(frame_xyz F, int frame, void **data)
+{
+  an_rotate_planeN(F, frame, (const char *)*data, 11);
+}
+
 /* A plane that scans the 3 directions. */
 static void
 an_scanplane_N(frame_xyz F, int frame, const char *str_slowdown, int sidelen)
@@ -944,6 +993,7 @@ static struct anim_piece animation5[] = {
   // { testimg_walk_bottom_5, 100000, 0},
   // { testimg_show_greyscales_5, 100000, 0},
   // { testimg_show_greyscales_bottom_5, 100000, 0},
+  { an_rotate_plane5, 600, (void *)"0.14" },
   { an_scanplane5, 600, (void *)"3" },
   { an_icicles_5, 600, 0 },
   { scrolltext_labitat_5, 400, 0 },
@@ -959,6 +1009,7 @@ static struct anim_piece animation5[] = {
 };
 
 static struct anim_piece animation[] = {
+  { an_rotate_plane, 600, (void *)"0.17" },
   { an_scanplane, 600, (void *)"2" },
   { 0, 0, 0}
 };
