@@ -665,6 +665,7 @@ an_rotate_planeN(frame_xyz F, int frame, const char *str_angspeed, int sidelen)
   }
 
   double angle = fmod(frame * angspeed, M_PI) - M_PI/4;
+  int orientation = floor(fmod(frame * angspeed, 3*4*2*M_PI) / (4*2*M_PI));
   ef_clear(F, 3);
   if (angle <= M_PI/4)
   {
@@ -673,7 +674,14 @@ an_rotate_planeN(frame_xyz F, int frame, const char *str_angspeed, int sidelen)
     {
       int a = round(((double)sidelen-1)/2 + slope*((double)i-((double)sidelen-1)/2));
       for (int j= 0; j < sidelen; ++j)
-        F[i][a][j] = 15;
+      {
+        switch (orientation)
+        {
+        case 0: F[i][a][j] = 15; break;
+        case 1: F[i][j][a] = 15; break;
+        case 2: F[j][i][a] = 15; break;
+        }
+      }
     }
   }
   else
@@ -683,7 +691,14 @@ an_rotate_planeN(frame_xyz F, int frame, const char *str_angspeed, int sidelen)
     {
       int a = round(((double)sidelen-1)/2 + slope*((double)i-((double)sidelen-1)/2));
       for (int j= 0; j < sidelen; ++j)
-        F[a][i][j] = 15;
+      {
+        switch (orientation)
+        {
+        case 0: F[a][i][j] = 15; break;
+        case 1: F[a][j][i] = 15; break;
+        case 2: F[j][a][i] = 15; break;
+        }
+      }
     }
   }
 }
@@ -993,7 +1008,7 @@ static struct anim_piece animation5[] = {
   // { testimg_walk_bottom_5, 100000, 0},
   // { testimg_show_greyscales_5, 100000, 0},
   // { testimg_show_greyscales_bottom_5, 100000, 0},
-  { an_rotate_plane5, 600, (void *)"0.14" },
+  { an_rotate_plane5, 900, (void *)"0.14" },
   { an_scanplane5, 600, (void *)"3" },
   { an_icicles_5, 600, 0 },
   { scrolltext_labitat_5, 400, 0 },
@@ -1009,7 +1024,7 @@ static struct anim_piece animation5[] = {
 };
 
 static struct anim_piece animation[] = {
-  { an_rotate_plane, 600, (void *)"0.17" },
+  { an_rotate_plane, 900, (void *)"0.17" },
   { an_scanplane, 600, (void *)"2" },
   { 0, 0, 0}
 };
