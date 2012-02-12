@@ -651,6 +651,53 @@ an_icicles_5(frame_xyz F, int frame, void **data)
   }
 }
 
+/* A plane that scans the 3 directions. */
+static void
+an_scanplane_N(frame_xyz F, int frame, const char *str_slowdown, int sidelen)
+{
+  ef_clear(F, 0);
+  int slowdown = 5;
+  if (str_slowdown)
+  {
+    slowdown = atoi(str_slowdown);
+    if (slowdown < 1)
+      slowdown = 5;
+  }
+  int c = (frame / slowdown) % (3*(2*sidelen-1));
+  int direction = c / (2*sidelen-1);
+  int pos = c % (2*sidelen-1);
+  if (pos >= sidelen)
+    pos = 2*sidelen-2-pos;
+  for (int i= 0; i < sidelen; ++i)
+  {
+    for (int j = 0; j < sidelen; ++j)
+    {
+      switch (direction)
+      {
+      case 0:
+        F[i][j][pos] = 15; break;
+      case 1:
+        F[i][pos][j] = 15; break;
+      case 2:
+        F[pos][i][j] = 15; break;
+      }
+    }
+  }
+}
+
+static void
+an_scanplane5(frame_xyz F, int frame, void **data)
+{
+  return an_scanplane_N(F, frame, (const char *)*data, 5);
+}
+
+static void
+an_scanplane(frame_xyz F, int frame, void **data)
+{
+  return an_scanplane_N(F, frame, (const char *)*data, SIDE);
+}
+
+
 /* Highligt x-axis (y=z=0) */
 static void
 testimg_x_axis(frame_xyz F, int frame, void **data)
@@ -888,7 +935,7 @@ loop:
 }
 
 
-static struct anim_piece animation1[] = {
+static struct anim_piece animation5[] = {
   // { testimg_x_axis, 100000, 0},
   // { testimg_y_axis, 100000, 0},
   // { testimg_z_axis, 100000, 0},
@@ -897,6 +944,7 @@ static struct anim_piece animation1[] = {
   // { testimg_walk_bottom_5, 100000, 0},
   // { testimg_show_greyscales_5, 100000, 0},
   // { testimg_show_greyscales_bottom_5, 100000, 0},
+  { an_scanplane5, 600, (void *)"3" },
   { an_icicles_5, 600, 0 },
   { scrolltext_labitat_5, 400, 0 },
   { fade_out, 16, 0 },
@@ -907,6 +955,11 @@ static struct anim_piece animation1[] = {
   { cornercube_5, 15*20, 0 },
   { fade_out, 16, 0 },
   { an_flytext5, 500, (void *)" LABITAT  " },
+  { 0, 0, 0}
+};
+
+static struct anim_piece animation[] = {
+  { an_scanplane, 600, (void *)"2" },
   { 0, 0, 0}
 };
 
@@ -938,6 +991,7 @@ main(int argc, char *argv[])
       exit(1);
     }
   }
-  play_animation(animation1);
+  play_animation(animation5);
+  //play_animation(animation);
   return 0;
 }
