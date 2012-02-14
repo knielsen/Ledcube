@@ -94,6 +94,80 @@ fade_out(frame_xyz F, int frame, void **data)
 }
 
 
+/*
+  Draw a plane given starting point R0 and normal vector N.
+  For now, requires that the plane is "mostly horizontal", meaning that the
+  largest component of the normal is in the z direction. Later we will
+  generalise to arbitrary normal, by selecting the two driving directions
+  to be the smaller two components of the normal.
+*/
+static void
+draw_plane(double x0, double y0, double z0, double nx, double ny, double nz,
+           frame_xyz F, int sidelen)
+{
+  if (nx > nz || ny > nz)
+    return; /* ToDo */
+
+  /*
+    We span the plane with the two vectors A=(1,0,-nx/nz) and B=(0,1,-ny/nz).
+
+    These are normal to N and linearly independent, so they _do_span the plane.
+    And they are convenient for scan conversion, as they have unit component
+    in the x respectively y direction.
+
+    We shift the starting point to
+        Q0 = R0 - x0*A - y0*B = (0, 0, z0-x0*nx/nz-y0*ny/nz)
+    Then we can generate the points of the plane as simply
+        R = Q0 + u*A + v*B = (u, v, z0+(u-x0)*nx/nz+(v-y0)*ny/nz)
+    This makes it easy to scan-convert with one voxel per column.
+  */
+
+  for (int i = 0; i < sidelen; ++i)
+  {
+    for (int j = 0; j < sidelen; ++j)
+    {
+      int k = round(z0 + (i-x0)*nx/nz + (j-y0)*ny/nz);
+      if (k >= 0 && k < sidelen)
+        F[i][j][k] = 15;
+    }
+  }
+}
+
+
+static void
+an_wobbly_plane(frame_xyz F, int frame, int sidelen)
+{
+  static const double spin_factor = 0.1;
+  static const int start_up_down = 250;
+  static const double up_down_factor = spin_factor/2;
+  static const double wobble_factor = spin_factor/6;
+  static const double wobble_amplitude = 0.5;
+
+  ef_clear(F);
+  double nx = wobble_amplitude*sin(wobble_factor*frame)*cos(frame * spin_factor);
+  double ny = wobble_amplitude*sin(wobble_factor*frame)*sin(frame * spin_factor);
+  double nz = 1;
+  double x0 = ((double)sidelen -1)/2;
+  double y0 = ((double)sidelen -1)/2;
+  double z0 = ((double)sidelen -1)/2;
+  if (frame >= start_up_down)
+    z0 += (double)sidelen/4*sin(frame * up_down_factor);
+  draw_plane(x0, y0, z0, nx, ny, nz, F, sidelen);
+}
+
+static void
+an_wobbly_plane11(frame_xyz F, int frame, void **data)
+{
+  an_wobbly_plane(F, frame, 11);
+}
+
+static void
+an_wobbly_plane5(frame_xyz F, int frame, void **data)
+{
+  an_wobbly_plane(F, frame, 5);
+}
+
+
 struct cornercube_data {
   int base_x, base_y, base_z;
   int dir_x, dir_y, dir_z;
@@ -1008,6 +1082,7 @@ static struct anim_piece animation5[] = {
   // { testimg_walk_bottom_5, 100000, 0},
   // { testimg_show_greyscales_5, 100000, 0},
   // { testimg_show_greyscales_bottom_5, 100000, 0},
+  { an_wobbly_plane5, 800, 0 },
   { an_rotate_plane5, 900, (void *)"0.14" },
   { an_scanplane5, 600, (void *)"3" },
   { an_icicles_5, 600, 0 },
@@ -1024,6 +1099,7 @@ static struct anim_piece animation5[] = {
 };
 
 static struct anim_piece animation[] = {
+  { an_wobbly_plane11, 900, 0 },
   { an_rotate_plane, 900, (void *)"0.17" },
   { an_scanplane, 600, (void *)"2" },
   { 0, 0, 0}
