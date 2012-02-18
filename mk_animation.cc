@@ -133,6 +133,133 @@ draw_plane(double x0, double y0, double z0, double nx, double ny, double nz,
   }
 }
 
+struct st_game_of_life {
+  int unchanged;                 // How many iterations have we been unchanged
+  int duration;
+  int seed_index;
+  int p[SIDE*SIDE*SIDE];
+  int q[SIDE*SIDE*SIDE];
+};
+
+static const int ut_game_of_life_interesting_seeds[] = {
+  42, 198, 2439, 216, 242, 2715, 285, 336, 400, 563, 622, 623, 779, 826,
+  1406, 1615, 1672, 1763, 2300, 2496, 2641, 2705, 2786, 2909, 3000, 3043, 3196,
+  3244, 3312, 3362, 3412, 3627, 3660, 3681, 3692, 4110, 4188, 4558, 4663, 4696,
+  5053, 5068, 5129, 5212, 5633, 5886
+};
+#define SEEDS_END (sizeof(ut_game_of_life_interesting_seeds)/ \
+                   sizeof(ut_game_of_life_interesting_seeds[0]))
+
+static void
+ut_game_of_life_reset(struct st_game_of_life *c)
+{
+  if (c->seed_index < SEEDS_END)
+    srand(ut_game_of_life_interesting_seeds[c->seed_index++]);
+  else
+  {
+    // When we run out of pre-selected seeds, start looking for new ones.
+    if (c->seed_index == SEEDS_END)
+      c->seed_index = 1 + ut_game_of_life_interesting_seeds[SEEDS_END - 1];
+    //fprintf(stderr, "Next seed: %d prev duration: %d\n", c->seed_index, c->duration);
+    srand(c->seed_index++);
+  }
+  c->unchanged = 0;
+  c->duration = 0;
+  for (int i= 0; i < SIDE*SIDE*SIDE; i++)
+    c->p[i] = (rand() < RAND_MAX/6.6);
+}
+
+static void
+an_game_of_life(frame_xyz F, int frame, void **data)
+{
+  static int unchanged;
+
+  if (frame == 0)
+    *data = malloc(sizeof(struct st_game_of_life));
+  struct st_game_of_life *c= static_cast<struct st_game_of_life *>(*data);
+
+  if (frame == 0)
+  {
+    c->seed_index = 0;
+    ut_game_of_life_reset(c);
+  }
+
+  ef_afterglow(F, 3);
+  //ef_clear(F);
+  if (frame % 8)
+  {
+    for (int x = 0; x < SIDE; ++x)
+      for (int y = 0; y < SIDE; ++y)
+        for (int z = 0; z < SIDE; ++z)
+          if (c->p[x*SIDE*SIDE+y*SIDE+z])
+            F[x][y][z] = 15;
+    return;
+  }
+  int total = 0;
+  for (int x = 0; x < SIDE; ++x)
+  {
+    for (int y = 0; y < SIDE; ++y)
+    {
+      for (int z = 0; z < SIDE; ++z)
+      {
+        int neigh = 0;
+        for (int i0 = x - 1; i0 <= x + 1; ++i0)
+        {
+          int i= i0;
+          if (i < 0)
+            i = SIDE-1;
+          else if (i >= SIDE)
+            i = 0;
+          for (int j0 = y - 1; j0 <= y + 1; ++j0)
+          {
+            int j= j0;
+            if (j < 0)
+              j = SIDE-1;
+            else if (j >= SIDE)
+              j = 0;
+            for (int k0 = z - 1; k0 <= z + 1; ++k0)
+            {
+              int k= k0;
+              if (k < 0)
+                k = SIDE-1;
+              else if (k >= SIDE)
+                k = 0;
+              if (i == x && j == y && k == z)
+                continue;
+              if (c->p[i*SIDE*SIDE+j*SIDE+k])
+                ++neigh;
+            }
+          }
+        }
+        if (!(x >= 0 && x < SIDE && y >= 0 && y < SIDE && z >= 0 && z < SIDE))
+          abort();
+        if (c->p[x*SIDE*SIDE+y*SIDE+z])
+          c->q[x*SIDE*SIDE+y*SIDE+z] = (neigh >= 5 && neigh <= 7);
+        else
+          c->q[x*SIDE*SIDE+y*SIDE+z] = (neigh >= 6 && neigh <= 6);
+        if (c->q[x*SIDE*SIDE+y*SIDE+z])
+        {
+          ++total;
+          F[x][y][z] = 15;
+        }
+      }
+    }
+  }
+  if (total == 0 || c->duration++ > 58)
+    ut_game_of_life_reset(c);
+  else if (0 == memcmp(c->p, c->q, sizeof(int)*SIDE*SIDE*SIDE))
+  {
+    ++c->unchanged;
+    if (c->unchanged > 8)
+      ut_game_of_life_reset(c);
+  }
+  else
+  {
+    c->unchanged = 0;
+    memcpy(c->p, c->q, sizeof(int)*SIDE*SIDE*SIDE);
+  }
+}
+#undef SEEDS_END
 
 static void
 an_wobbly_plane(frame_xyz F, int frame, int sidelen)
@@ -144,8 +271,11 @@ an_wobbly_plane(frame_xyz F, int frame, int sidelen)
   static const double wobble_amplitude = 0.5;
 
   ef_clear(F);
-  double nx = wobble_amplitude*sin(wobble_factor*frame)*cos(frame * spin_factor);
-  double ny = wobble_amplitude*sin(wobble_factor*frame)*sin(frame * spin_factor);
+  double amp_delta = frame / 100.0;
+  if (amp_delta > 0.4)
+    amp_delta = 0.4;
+  double nx = wobble_amplitude*(amp_delta+fabs(sin(wobble_factor*frame)))*cos(frame * spin_factor);
+  double ny = wobble_amplitude*(amp_delta+fabs(sin(wobble_factor*frame)))*sin(frame * spin_factor);
   double nz = 1;
   double x0 = ((double)sidelen -1)/2;
   double y0 = ((double)sidelen -1)/2;
@@ -740,7 +870,7 @@ an_rotate_planeN(frame_xyz F, int frame, const char *str_angspeed, int sidelen)
 
   double angle = fmod(frame * angspeed, M_PI) - M_PI/4;
   int orientation = floor(fmod(frame * angspeed, 3*4*2*M_PI) / (4*2*M_PI));
-  ef_clear(F, 3);
+  ef_afterglow(F, 1);
   if (angle <= M_PI/4)
   {
     double slope = tan(angle);
@@ -1100,6 +1230,7 @@ static struct anim_piece animation5[] = {
 
 static struct anim_piece animation[] = {
   { an_wobbly_plane11, 900, 0 },
+  { an_game_of_life, 3200, 0 },
   { an_rotate_plane, 900, (void *)"0.17" },
   { an_scanplane, 600, (void *)"2" },
   { 0, 0, 0}
@@ -1133,7 +1264,7 @@ main(int argc, char *argv[])
       exit(1);
     }
   }
-  play_animation(animation5);
-  //play_animation(animation);
+  //play_animation(animation5);
+  play_animation(animation);
   return 0;
 }
