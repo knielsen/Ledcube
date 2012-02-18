@@ -172,8 +172,6 @@ ut_game_of_life_reset(struct st_game_of_life *c)
 static void
 an_game_of_life(frame_xyz F, int frame, void **data)
 {
-  static int unchanged;
-
   if (frame == 0)
     *data = malloc(sizeof(struct st_game_of_life));
   struct st_game_of_life *c= static_cast<struct st_game_of_life *>(*data);
@@ -1228,13 +1226,103 @@ static struct anim_piece animation5[] = {
   { 0, 0, 0}
 };
 
+static void an_cube5_times_8(frame_xyz F, int frame, void **data);
 static struct anim_piece animation[] = {
   { an_wobbly_plane11, 900, 0 },
+  { fade_out, 16, 0 },
+  { an_cube5_times_8, 2000, 0 },
+  { fade_out, 16, 0 },
   { an_game_of_life, 3200, 0 },
   { an_rotate_plane, 900, (void *)"0.17" },
   { an_scanplane, 600, (void *)"2" },
   { 0, 0, 0}
 };
+
+
+/*
+  An animation where, in the 11x11x11 cube, we successively add up to 8
+  different 5x5x5 cube-animations, running each in their own corner!
+*/
+
+struct st_cube5_times_8 {
+  int num_anims;
+  int frame_counter[8];
+  struct {frame_xyz f;} framebuffers[8];
+  int offx[8];
+  int offy[8];
+  int offz[8];
+};
+
+static struct {int x,y,z;} corners_cube5_times_8[7] = {
+  { 1,1,1 },
+  { 0,1,0 },
+  { 1,1,0 },
+  { 0,1,1 },
+  { 1,0,1 },
+  { 0,0,1 },
+  { 1,0,0 }
+};
+static struct anim_piece animations_cube5_times_8[] = {
+  { an_wobbly_plane5, 0, 0 },
+  { an_rotate_plane5, 0, (void *)"0.14" },
+  { an_scanplane5, 0, (void *)"3" },
+  { scrolltext_labitat_5, 0, 0 },
+  { scrolltext_SiGNOUT_5, 0, 0 },
+  { bubble5_a, 0, 0 },
+  { cornercube_5, 0, 0 },
+  { an_flytext5, 0, (void *)" LABITAT  " },
+};
+
+static void
+an_cube5_times_8(frame_xyz F, int frame, void **data)
+{
+  static const int new_piece = 180;
+  static const int move_in_place_time = 15;
+
+  if (frame == 0)
+    *data = malloc(sizeof(struct st_cube5_times_8));
+  struct st_cube5_times_8 *c = static_cast<struct st_cube5_times_8 *>(*data);
+
+  if (frame == 0)
+  {
+    c->num_anims = 0;
+  }
+
+  /* Add a new piece? */
+  if (c->num_anims < 8 && (frame % new_piece) == 0)
+  {
+    int i = c->num_anims++;
+    c->frame_counter[i] = 0;
+    ef_clear(c->framebuffers[i].f);
+    c->offx[i] = 0;
+    c->offy[i] = 0;
+    c->offz[i] = 0;
+  }
+  /* Move in place? */
+  if (frame < 7 * new_piece &&
+      (frame % new_piece) >= new_piece - move_in_place_time)
+  {
+    int i = c->num_anims - 1;
+    int pos = (frame % new_piece) - (new_piece - move_in_place_time);
+    c->offx[i] = corners_cube5_times_8[i].x*6*pos/(move_in_place_time-1);
+    c->offy[i] = corners_cube5_times_8[i].y*6*pos/(move_in_place_time-1);
+    c->offz[i] = corners_cube5_times_8[i].z*6*pos/(move_in_place_time-1);
+  }
+
+  ef_clear(F);
+  for (int i = 0; i < c->num_anims; ++i)
+  {
+    /* Run the individual animation one frame. */
+    struct anim_piece *an = &animations_cube5_times_8[i];
+    (*an->frame_func)(c->framebuffers[i].f, (c->frame_counter[i])++, &an->data);
+    /* Copy the individual animation into place. */
+    for (int x = 0; x < 5; ++x)
+      for (int y = 0; y < 5; ++y)
+        for (int z = 0; z < 5; ++z)
+          F[x+c->offx[i]][y+c->offy[i]][z+c->offz[i]] =
+            c->framebuffers[i].f[x][y][z];
+  }
+}
 
 
 int
