@@ -319,7 +319,7 @@ timer1_interrupt_a()
     /* Switch the MOSFETs to the next layer. */
     switch (cur_layer)
     {
-    case 0: pinA5_high(); pin2_low(); break;
+    case 0: pinA4_high(); pin2_low(); break;
     case 1: pin2_high(); pin3_low(); break;
     case 2: pin3_high(); pin4_low(); break;
     case 3: pin4_high(); pin5_low(); break;
