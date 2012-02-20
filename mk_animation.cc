@@ -1230,7 +1230,7 @@ static void an_cube5_times_8(frame_xyz F, int frame, void **data);
 static struct anim_piece animation[] = {
   { an_wobbly_plane11, 900, 0 },
   { fade_out, 16, 0 },
-  { an_cube5_times_8, 2000, 0 },
+  { an_cube5_times_8, 2300, 0 },
   { fade_out, 16, 0 },
   { an_game_of_life, 3200, 0 },
   { an_rotate_plane, 900, (void *)"0.17" },
@@ -1276,7 +1276,7 @@ static struct anim_piece animations_cube5_times_8[] = {
 static void
 an_cube5_times_8(frame_xyz F, int frame, void **data)
 {
-  static const int new_piece = 180;
+  static const int new_piece = 235;
   static const int move_in_place_time = 15;
 
   if (frame == 0)
