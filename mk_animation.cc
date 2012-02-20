@@ -10,6 +10,18 @@
 #define NBITS 4
 #define GLVLS (1<<NBITS)
 
+static int
+irand(int n)
+{
+  return rand() / (RAND_MAX/n+1);
+}
+
+static double
+drand(double n)
+{
+  return (double)rand() / ((double)RAND_MAX/n);
+}
+
 typedef uint8_t frame_xyz[SIDE][SIDE][SIDE];
 
 struct anim_piece {
@@ -132,6 +144,273 @@ draw_plane(double x0, double y0, double z0, double nx, double ny, double nz,
     }
   }
 }
+
+
+/* Draw a line from start to end. Handles clipping. */
+static void
+draw_line(frame_xyz F, double x0, double y0, double z0,
+          double x1, double y1, double z1, int val)
+{
+  /*
+    Find the major axis (x, y, or z) along which the line direction has the
+    largest component. We will draw the line so that a plane normal to this
+    axis intersects the drawn line in exactly one voxel.
+  */
+  double dx = x1 - x0;
+  double dy = y1 - y0;
+  double dz = z1 - z0;
+
+  double d, start, end, a, b, d1, d2;
+  int dir;
+  if (fabs(dx) >= fabs(dy) && fabs(dx) >= fabs(dz))
+  {
+    /*
+      The equation for the line is
+          (x,y,z) = (x0,y0,z0) + t(dx,dy,dz)
+      Let u = t*dx to rewrite this as
+          (x,y,z) = (x0,y0,z0) + u*(1,dy/dx,dz/dx)
+      Use this to draw along the x-axis in unit steps.
+      (Similar for the y and z directions).
+    */
+    d = dx; d1 = dy; d2 = dz;
+    start = x0; end = x1;
+    a = y0; b = z0;
+    dir = 0;
+  }
+  else if (fabs(dy) >= fabs(dx) && fabs(dy) >= fabs(dz))
+  {
+    d = dy; d1 = dx; d2 = dz;
+    start = y0; end = y1;
+    a = x0; b = z0;
+    dir = 1;
+  }
+  else
+  {
+    d = dz; d1 = dx; d2 = dy;
+    start = z0; end = z1;
+    a = x0;
+    b = y0;
+    dir = 2;
+  }
+  if (d < 0)
+  {
+    /* Swap so we can draw "left-to-right" to simplify bounds conditions. */
+    double tmp;
+    tmp = start; start = end; end = tmp;
+    a += d1; b += d2;
+    d = -d; d1 = -d1; d2 = -d2;
+  }
+  int i = round(start);
+  if (i < 0)
+    i = 0;
+  int last_i = round(end);
+  if (last_i >= SIDE)
+    last_i = SIDE-1;
+  /* Adjust starting point for rounding and possibly clipping of i. */
+  a = a + (i - start) * (d1/d);
+  b = b + (i - start) * (d2/d);
+  while (i <= last_i)
+  {
+    int j = round(a);
+    int k = round(b);
+    if (j >= 0 && j < SIDE && k >= 0 && k < SIDE)
+    {
+      switch (dir)
+      {
+      case 0: F[i][j][k] = val; break;
+      case 1: F[j][i][k] = val; break;
+      case 2: F[j][k][i] = val; break;
+      }
+    }
+    a += d1/d;
+    b += d2/d;
+    ++i;
+  }
+}
+
+
+static const int num_quinx = 11;
+static const int quinx_duration = 300;
+static const double quinx_grav = 0.06;
+struct st_quinx {
+  struct { double x0,y0,z0,x1,y1,z1,dx0,dy0,dz0,dx1,dy1,dz1; } q[num_quinx];
+  int first, count;
+  double grav;
+};
+
+/*
+  Given a point and a direction (velocity), compute the position after the
+  next time step, taking into account any (possibly multiple) bounces off
+  of a wall.
+*/
+static void
+quinx_bounce(double &x0, double &y0, double &z0, double &dx, double &dy, double &dz)
+{
+  double x1 = x0 + dx;
+  double y1 = y0 + dy;
+  double z1 = z0 + dz;
+
+  for (int counter = 0; ; ++counter)
+  {
+    int dir = 0;
+    double dist;
+
+    /* Find the direction that we hit the nearest wall in, if any. */
+    if (x1 < -0.5)
+    {
+      dir = -1;
+      dist = (-0.5 - x0)/dx;
+    }
+    else if (x1 > SIDE - 0.5)
+    {
+      dir = 1;
+      dist = ((SIDE - 0.5) - x0)/dx;
+    }
+    if (y1 < -0.5 && (!dir || (-0.5 - y0)/dy < dist))
+    {
+      dir = -2;
+      dist = (-0.5 - y0)/dy;
+    }
+    else if (y1 > SIDE - 0.5 && (!dir || ((SIDE - 0.5) - y0)/dy < dist))
+    {
+      dir = 2;
+      dist = ((SIDE - 0.5) - y0)/dy;
+    }
+    if (z1 < -0.5 && (!dir || (-0.5 - z0)/dz < dist))
+    {
+      dir = -3;
+      dist = (-0.5 - z0)/dz;
+    }
+    else if (z1 > SIDE - 0.5 && (!dir || ((SIDE - 0.5) - z0)/dz < dist))
+    {
+      dir = 3;
+      dist = ((SIDE - 0.5) - z0)/dz;
+    }
+
+    if (!dir)
+      break;
+
+    if (counter >= 3)
+      return;                                   // Shouldn't happen.
+
+    /* Bounce of the wall that we hit. */
+    switch (dir)
+    {
+    case -1:
+      x1 = 2*(-0.5) - x1;
+      dx = -dx;
+      break;
+    case 1:
+      x1 = 2*(SIDE - 0.5) - x1;
+      dx = -dx;
+      break;
+    case -2:
+      y1 = 2*(-0.5) - y1;
+      dy = -dy;
+      break;
+    case 2:
+      y1 = 2*(SIDE - 0.5) - y1;
+      dy = -dy;
+      break;
+    case -3:
+      z1 = 2*(-0.5) - z1;
+      dz = -dz;
+      break;
+    case 3:
+      z1 = 2*(SIDE - 0.5) - z1;
+      dz = -dz;
+      break;
+    }
+  }
+  x0 = x1;
+  y0 = y1;
+  z0 = z1;
+}
+
+static void
+an_quinx(frame_xyz F, int frame, void **data)
+{
+  if (frame == 0)
+    *data = malloc(sizeof(struct st_quinx));
+  struct st_quinx *c= static_cast<struct st_quinx *>(*data);
+
+  if ((frame % quinx_duration) == 0)
+  {
+    c->first = 0;
+    c->count = 1;
+    c->grav = drand(quinx_grav);
+    double lx, ly, lz;
+
+    /* Choose end-points, not too close together. */
+    do
+    {
+      c->q[0].x0 = drand(SIDE-1);
+      c->q[0].y0 = drand(SIDE-1);
+      c->q[0].z0 = drand(SIDE-1);
+      c->q[0].x1 = drand(SIDE-1);
+      c->q[0].y1 = drand(SIDE-1);
+      c->q[0].z1 = drand(SIDE-1);
+      lx = c->q[0].x1 - c->q[0].x0;
+      ly = c->q[0].y1 - c->q[0].y0;
+      lz = c->q[0].z1 - c->q[0].z0;
+    } while (lx*lx + ly*ly + lz*lz < 3*3);
+
+    /* Choose directions, not too parallel with line and not too short. */
+    for (int i = 0; i < 2; ++i)
+    {
+      double cos_v, v;
+      c->q[0].dx1 = c->q[0].dx0;
+      c->q[0].dy1 = c->q[0].dy0;
+      c->q[0].dz1 = c->q[0].dz0;
+      do
+      {
+        c->q[0].dx0 = drand(3) - 1.5;
+        c->q[0].dy0 = drand(3) - 1.5;
+        c->q[0].dz0 = drand(3) - 1.5;
+        v = sqrt(c->q[0].dx0*c->q[0].dx0 + c->q[0].dy0*c->q[0].dy0 +
+                 c->q[0].dz0*c->q[0].dz0);
+        cos_v = (lx*c->q[0].dx0 + ly*c->q[0].dy0 + lz*c->q[0].dz0) /
+          sqrt(lx*lx+ly*ly+lz*lz) / v;
+      } while (v < 0.7 && cos_v > 0.8);
+    }
+  }
+  else
+  {
+    /* See if we should add a new line. */
+    if ((frame*9/10) != ((frame+1)*9/10))
+    {
+      int i = (c->first + c->count - 1) % num_quinx;
+      int j = (i+1) % num_quinx;
+
+      c->q[j] = c->q[i];
+      quinx_bounce(c->q[j].x0, c->q[j].y0, c->q[j].z0,
+                   c->q[j].dx0, c->q[j].dy0, c->q[j].dz0);
+      quinx_bounce(c->q[j].x1, c->q[j].y1, c->q[j].z1,
+                   c->q[j].dx1, c->q[j].dy1, c->q[j].dz1);
+
+      /* Add a bit of gravity. */
+      c->q[j].dz0 -= c->grav;
+      c->q[j].dz1 -= c->grav;
+
+      if (c->count < num_quinx)
+        ++c->count;
+      else
+        c->first = (c->first + 1) % num_quinx;
+    }
+  }
+
+  ef_clear(F);
+  for (int i = 0; i < c->count; ++i)
+  {
+    int j = (c->first + i) % num_quinx;
+    draw_line(F,
+              c->q[j].x0, c->q[j].y0, c->q[j].z0,
+              c->q[j].x1, c->q[j].y1, c->q[j].z1,
+              5 + 10*(i+1)/c->count
+              /*15-10*(num_quinx-i-1)/num_quinx*/);
+  }
+}
+
 
 struct st_game_of_life {
   int unchanged;                 // How many iterations have we been unchanged
@@ -1047,6 +1326,15 @@ testimg_show_greyscales_bottom_5(frame_xyz F, int frame, void **data)
       F[x][y][0]= frame/30 + (x*3+y) % 16;
 }
 
+static void
+testimg_test_lines(frame_xyz F, int frame, void **data)
+{
+  ef_clear(F, 0);
+  draw_line(F, 2, 2, 2, 10, 3, 5, (frame/2)%16);
+  draw_line(F, 3, 10, 5, 2, 2, 2, (frame/2+10)%16);
+  draw_line(F, 3, 5, 10, 2, 2, 2, (frame/2+20)%16);
+}
+
 /* ****************************************************************** */
 static void (*out_function)(frame_xyz);
 static int frame_repeat= 1;
@@ -1228,6 +1516,8 @@ static struct anim_piece animation5[] = {
 
 static void an_cube5_times_8(frame_xyz F, int frame, void **data);
 static struct anim_piece animation[] = {
+  //{ testimg_test_lines, 100000, 0 },
+  { an_quinx, 1500, 0 },
   { an_wobbly_plane11, 900, 0 },
   { fade_out, 16, 0 },
   { an_cube5_times_8, 2300, 0 },
