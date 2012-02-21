@@ -1602,10 +1602,11 @@ static struct anim_piece animation5[] = {
 
 static struct anim_piece animation[] = {
   //{ testimg_test_lines, 100000, 0 },
-  { an_quinx, 1500, 0 },
   { an_wobbly_plane11, 900, 0 },
   { fade_out, 16, 0 },
   { an_cube5_times_8, 2300, 0 },
+  { fade_out, 16, 0 },
+  { an_quinx, 1500, 0 },
   { fade_out, 16, 0 },
   { an_game_of_life, 3200, 0 },
   { an_rotate_plane, 900, (void *)"0.17" },
