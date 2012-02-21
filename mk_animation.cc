@@ -229,6 +229,27 @@ draw_line(frame_xyz F, double x0, double y0, double z0,
 }
 
 
+static void
+an_cosine_plane(frame_xyz F, int frame, void **data)
+{
+  ef_afterglow(F, 3);
+  for (int i = 0; i <SIDE; ++i)
+  {
+    for (int j = 0; j<SIDE; ++j)
+    {
+      double x = i - ((double)SIDE-1)/2;
+      double y = j - ((double)SIDE-1)/2;
+      double r = pow(x*x+y*y, 0.65);
+      double z = 0.95*SIDE/2.0*cos(0.48*M_PI - frame/23.0*M_PI +
+                              r/pow(SIDE*SIDE/4.0, 0.65)*0.6*M_PI);
+      int k = round(z + ((double)SIDE-1)/2);
+      if (k >= 0 && k < SIDE)
+        F[i][j][k] = 15;
+    }
+  }
+}
+
+
 static const int num_quinx = 11;
 static const int quinx_duration = 300;
 static const double quinx_grav = 0.06;
@@ -1609,6 +1630,9 @@ static struct anim_piece animation[] = {
   { an_quinx, 1500, 0 },
   { fade_out, 16, 0 },
   { an_game_of_life, 3200, 0 },
+  { fade_out, 16, 0 },
+  { an_cosine_plane, 900, 0 },
+  { fade_out, 16, 0 },
   { an_rotate_plane, 900, (void *)"0.17" },
   { an_scanplane, 600, (void *)"2" },
   { 0, 0, 0}
