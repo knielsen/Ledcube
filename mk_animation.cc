@@ -231,14 +231,147 @@ draw_line(frame_xyz F, double x0, double y0, double z0,
 }
 
 
+static const char *
+font9[256];
+
+static void
+init_font9()
+{
+  font9['A']=
+    "    X    "
+    "   XXX   "
+    "   XXX   "
+    "  XX XX  "
+    "  XX XX  "
+    " XXXXXXX "
+    " XXXXXXX "
+    "XX     XX"
+    "XX     XX";
+  font9['B']=
+    "XXXXX "
+    "XXXXXX"
+    "XX  XX"
+    "XX  XX"
+    "XXXXX "
+    "XX  XX"
+    "XX  XX"
+    "XXXXXX"
+    "XXXXX ";
+  font9['I']=
+    "XXXXXX"
+    "XXXXXX"
+    "  XX  "
+    "  XX  "
+    "  XX  "
+    "  XX  "
+    "  XX  "
+    "XXXXXX"
+    "XXXXXX";
+  font9['L']=
+    "XX     "
+    "XX     "
+    "XX     "
+    "XX     "
+    "XX     "
+    "XX     "
+    "XX     "
+    "XXXXXXX"
+    "XXXXXXX";
+  font9['T']=
+    "XXXXXXXX"
+    "XXXXXXXX"
+    "   XX   "
+    "   XX   "
+    "   XX   "
+    "   XX   "
+    "   XX   "
+    "   XX   "
+    "   XX   ";
+}
+
 struct st_migrating_dots {
-  struct { double x,y,z,v; int target; int delay; } dots[SIDE*SIDE];
+  struct { double x,y,z,v; int target, delay, col, new_col; } dots[SIDE*SIDE];
   /* 0/1 is bottom/top, 2/3 is left/right, 4/5 is front/back. */
   int start_plane, end_plane;
   int base_frame;
   int wait;
   int stage1;
+  int text_idx;
 };
+
+static const int migrating_dots_col1 = 15;
+static const int migrating_dots_col2 = 9;
+
+static int
+ut_migrating_dots_get_colour(struct st_migrating_dots *c, int idx,
+                             const char *glyph, int glyph_width)
+{
+  if (!glyph)
+    return migrating_dots_col1;
+  int x, y;
+  switch(c->end_plane)
+  {
+  case 0:
+  case 1:
+    if (c->start_plane/2 == 1)
+    {
+      x = c->dots[idx].target;
+      y = (SIDE-1) - c->dots[idx].y;
+    }
+    else
+    {
+      x = c->dots[idx].x;
+      y = (SIDE-1) - c->dots[idx].target;
+    }
+    break;
+  case 2:
+    if (c->start_plane/2 == 0)
+    {
+      x = (SIDE-1) - c->dots[idx].y;
+      y = (SIDE-1) - c->dots[idx].target;
+    }
+    else
+    {
+      x = (SIDE-1) - c->dots[idx].target;
+      y = (SIDE-1) - c->dots[idx].z;
+    }
+    break;
+  case 3:
+    if (c->start_plane/2 == 0)
+    {
+      x = c->dots[idx].y;
+      y = (SIDE-1) - c->dots[idx].target;
+    }
+    else
+    {
+      x = c->dots[idx].target;
+      y = (SIDE-1) - c->dots[idx].z;
+    }
+    break;
+  case 4:
+  case 5:
+    if (c->start_plane/2 == 0)
+    {
+      x = c->dots[idx].x;
+      y = (SIDE-1) - c->dots[idx].target;
+    }
+    else
+    {
+      x = c->dots[idx].target;
+      y = (SIDE-1) - c->dots[idx].z;
+    }
+    break;
+  }
+  x = x - (SIDE-glyph_width)/2;
+  y = y - (SIDE-9)/2;
+  int col;
+  if (x < 0 || x >= glyph_width || y < 0 || y >= 9 ||
+        glyph[x + glyph_width*y] == ' ')
+    col = migrating_dots_col1;
+  else
+    col = migrating_dots_col2;
+  return col;
+}
 
 static void
 an_migrating_dots(frame_xyz F, int frame, void **data)
@@ -248,6 +381,7 @@ an_migrating_dots(frame_xyz F, int frame, void **data)
   static const double v_range = 1.2;
   static const double grav = -0.07;
   static const int stage_pause = 8;
+  static const char *text = "LABITAT";
 
   if (frame == 0)
     *data = malloc(sizeof(struct st_migrating_dots));
@@ -259,6 +393,9 @@ an_migrating_dots(frame_xyz F, int frame, void **data)
     c->end_plane = 1;         /* Top; we will copy this to start_plane below. */
     c->wait = stage_pause+1;  /* Will trigger start of new round. */
     c->stage1 = 0;            /* Pretend that we are at the end of stage2. */
+    c->text_idx = -3;
+    for (int i = 0; i < SIDE*SIDE; ++i)
+      c->dots[i].new_col = migrating_dots_col1;
   }
 
   if (c->wait > stage_pause)
@@ -296,6 +433,12 @@ an_migrating_dots(frame_xyz F, int frame, void **data)
       do
         c->end_plane = irand(6);
       while ((c->end_plane/2) == (c->start_plane/2));
+
+      const char *glyph = c->text_idx >= 0 ? font9[text[c->text_idx]] : NULL;
+      ++c->text_idx;
+      if (c->text_idx >= strlen(text))
+        c->text_idx = -1;           /* -1 => One blank before we start over */
+      int glyph_width = glyph ? strlen(glyph)/9 : 0;
 
       int idx = 0;
       for (int i = 0; i < SIDE; ++i)
@@ -357,6 +500,9 @@ an_migrating_dots(frame_xyz F, int frame, void **data)
             break;
           }
           c->dots[idx].delay = irand(start_spread);
+          c->dots[idx].col = c->dots[idx].new_col;
+          c->dots[idx].new_col =
+            ut_migrating_dots_get_colour(c, idx, glyph, glyph_width);
           if (c->start_plane == 1)
             c->dots[idx].v = 0;
           else if (c->start_plane == 0)
@@ -394,11 +540,15 @@ an_migrating_dots(frame_xyz F, int frame, void **data)
     *m += c->dots[i].v;
     if ((plane % 2 != c->stage1 && *m >= c->dots[i].target) ||
         (plane % 2 == c->stage1 && *m <= c->dots[i].target))
+    {
       *m = c->dots[i].target;
+    }
     else
+    {
       ++moving;
-    if (plane <= 1)
-      c->dots[i].v += grav;
+      if (plane <= 1)
+        c->dots[i].v += grav;
+    }
   }
   if (moving == 0)
     ++c->wait;
@@ -411,7 +561,14 @@ an_migrating_dots(frame_xyz F, int frame, void **data)
     int x = round(c->dots[i].x);
     int y = round(c->dots[i].y);
     int z = round(c->dots[i].z);
-    F[x][y][z] = 15;
+    int col;
+    if (c->stage1)
+      col = c->dots[i].col;
+    else if (d < c->dots[i].delay)
+      col = c->dots[i].col + (c->dots[i].new_col - c->dots[i].col)*d/c->dots[i].delay;
+    else
+      col = c->dots[i].new_col;
+    F[x][y][z] = col;
   }
 }
 
@@ -1810,7 +1967,8 @@ static struct anim_piece animation5[] = {
 
 static struct anim_piece animation[] = {
   //{ testimg_test_lines, 100000, 0 },
-  { an_migrating_dots, 600, 0 },
+  { an_migrating_dots, 900, 0 },
+  { fade_out, 16, 0 },
   { an_wobbly_plane11, 900, 0 },
   { fade_out, 16, 0 },
   { an_cube5_times_8, 2300, 0 },
@@ -1831,6 +1989,7 @@ int
 main(int argc, char *argv[])
 {
   init_font5();
+  init_font9();
 
   out_function= frame_out_5;
   while (--argc > 0)
