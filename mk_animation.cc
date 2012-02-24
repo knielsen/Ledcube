@@ -10,12 +10,14 @@
 #define NBITS 4
 #define GLVLS (1<<NBITS)
 
+/* Random integer 0 <= x < N. */
 static int
 irand(int n)
 {
   return rand() / (RAND_MAX/n+1);
 }
 
+/* Random double 0 <= x <= N. */
 static double
 drand(double n)
 {
@@ -225,6 +227,191 @@ draw_line(frame_xyz F, double x0, double y0, double z0,
     a += d1/d;
     b += d2/d;
     ++i;
+  }
+}
+
+
+struct st_migrating_dots {
+  struct { double x,y,z,v; int target; int delay; } dots[SIDE*SIDE];
+  /* 0/1 is bottom/top, 2/3 is left/right, 4/5 is front/back. */
+  int start_plane, end_plane;
+  int base_frame;
+  int wait;
+  int stage1;
+};
+
+static void
+an_migrating_dots(frame_xyz F, int frame, void **data)
+{
+  static const int start_spread = 12;
+  static const double v_min = 0.9;
+  static const double v_range = 1.2;
+  static const double grav = -0.07;
+  static const int stage_pause = 8;
+
+  if (frame == 0)
+    *data = malloc(sizeof(struct st_migrating_dots));
+  struct st_migrating_dots *c= static_cast<struct st_migrating_dots *>(*data);
+
+  if (frame == 0)
+  {
+    /* Initialise. */
+    c->end_plane = 1;         /* Top; we will copy this to start_plane below. */
+    c->wait = stage_pause+1;  /* Will trigger start of new round. */
+    c->stage1 = 0;            /* Pretend that we are at the end of stage2. */
+  }
+
+  if (c->wait > stage_pause)
+  {
+    c->base_frame = frame;
+    c->wait = 0;
+
+    if (c->stage1)
+    {
+      /* Move to stage 2. */
+      c->stage1 = 0;
+      for (int i = 0; i < SIDE*SIDE; ++i)
+      {
+        c->dots[i].delay = irand(start_spread);
+        if (c->end_plane == 0)
+          c->dots[i].v = 0;
+        else if (c->end_plane == 1)
+          c->dots[i].v = 2 + drand(v_range);
+        else
+          c->dots[i].v = (2*(c->end_plane%2)-1) * (v_min + drand(v_range));
+        c->dots[i].target = (SIDE-1)*(c->end_plane%2);
+      }
+    }
+    else
+    {
+      /* Start a new round. */
+      c->stage1 = 1;
+
+      /* We start where we last ended. */
+      c->start_plane = c->end_plane;
+      /*
+        Choose a plane to move to, but not the same or the one directly
+        opposite.
+      */
+      do
+        c->end_plane = irand(6);
+      while ((c->end_plane/2) == (c->start_plane/2));
+
+      int idx = 0;
+      for (int i = 0; i < SIDE; ++i)
+      {
+        /*
+          We will make a random permutation of each row of dots as they migrate
+          to a different plane.
+        */
+        int permute[SIDE];
+        for (int j = 0; j < SIDE; ++j)
+          permute[j] = j;
+        int num_left = SIDE;
+        for (int j = 0; j < SIDE; ++j)
+        {
+          int k = irand(num_left);
+          c->dots[idx].target = permute[k];
+          permute[k] = permute[--num_left];
+          int m = (SIDE-1)*(c->start_plane%2);
+          switch (c->start_plane)
+          {
+          case 0: case 1:
+            if (c->end_plane/2 == 1)
+            {
+              c->dots[idx].y = i;
+              c->dots[idx].x = j;
+            }
+            else
+            {
+              c->dots[idx].x = i;
+              c->dots[idx].y = j;
+            }
+            c->dots[idx].z = m;
+            break;
+          case 2: case 3:
+            if (c->end_plane/2 == 0)
+            {
+              c->dots[idx].y = i;
+              c->dots[idx].z = j;
+            }
+            else
+            {
+              c->dots[idx].z = i;
+              c->dots[idx].y = j;
+            }
+            c->dots[idx].x = m;
+            break;
+          case 4: case 5:
+            if (c->end_plane/2 == 0)
+            {
+              c->dots[idx].x = i;
+              c->dots[idx].z = j;
+            }
+            else
+            {
+              c->dots[idx].z = i;
+              c->dots[idx].x = j;
+            }
+            c->dots[idx].y = m;
+            break;
+          }
+          c->dots[idx].delay = irand(start_spread);
+          if (c->start_plane == 1)
+            c->dots[idx].v = 0;
+          else if (c->start_plane == 0)
+            c->dots[idx].v = 2 + v_range;
+          else
+            c->dots[idx].v = (1-2*(c->start_plane%2)) * (v_min + drand(v_range));
+          ++idx;
+        }
+      }
+    }
+  }
+
+  int d = frame - c->base_frame;
+  int moving = 0;
+  for (int i = 0; i < SIDE*SIDE; ++i)
+  {
+    if (d < c->dots[i].delay)
+      continue;
+
+    int plane = c->stage1 ? c->start_plane : c->end_plane;
+    double *m;
+    switch(plane)
+    {
+    case 0: case 1:
+      m = &c->dots[i].z;
+      break;
+    case 2: case 3:
+      m = &c->dots[i].x;
+      break;
+    case 4: case 5:
+      m = &c->dots[i].y;
+      break;
+    }
+
+    *m += c->dots[i].v;
+    if ((plane % 2 != c->stage1 && *m >= c->dots[i].target) ||
+        (plane % 2 == c->stage1 && *m <= c->dots[i].target))
+      *m = c->dots[i].target;
+    else
+      ++moving;
+    if (plane <= 1)
+      c->dots[i].v += grav;
+  }
+  if (moving == 0)
+    ++c->wait;
+
+  /* Draw the lot. */
+  //ef_clear(F);
+  ef_afterglow(F, 2);
+  for (int i = 0; i < SIDE*SIDE; ++i)
+  {
+    int x = round(c->dots[i].x);
+    int y = round(c->dots[i].y);
+    int z = round(c->dots[i].z);
+    F[x][y][z] = 15;
   }
 }
 
@@ -1623,6 +1810,7 @@ static struct anim_piece animation5[] = {
 
 static struct anim_piece animation[] = {
   //{ testimg_test_lines, 100000, 0 },
+  { an_migrating_dots, 600, 0 },
   { an_wobbly_plane11, 900, 0 },
   { fade_out, 16, 0 },
   { an_cube5_times_8, 2300, 0 },
