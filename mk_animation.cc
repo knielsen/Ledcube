@@ -584,7 +584,7 @@ an_cosine_plane(frame_xyz F, int frame, void **data)
       double x = i - ((double)SIDE-1)/2;
       double y = j - ((double)SIDE-1)/2;
       double r = pow(x*x+y*y, 0.65);
-      double z = 0.95*SIDE/2.0*cos(0.48*M_PI - frame/23.0*M_PI +
+      double z = 0.95*SIDE/2.0*cos(0.48*M_PI - frame/30.0*M_PI +
                               r/pow(SIDE*SIDE/4.0, 0.65)*0.6*M_PI);
       int k = round(z + ((double)SIDE-1)/2);
       if (k >= 0 && k < SIDE)
