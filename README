@@ -1,0 +1,18 @@
+Ledcube Arduino pinout
+
+SCLK   8
+SIN    9
+XLAT  10
+BLANK 11
+
+FET1    2
+FET2    3
+FET3    4
+FET4    5
+FET5    6
+FET6    7
+FET7   A0
+FET8   A1
+FET9   A2
+FET10  A3
+FET11  A4
