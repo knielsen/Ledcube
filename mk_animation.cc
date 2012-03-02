@@ -231,6 +231,196 @@ draw_line(frame_xyz F, double x0, double y0, double z0,
 }
 
 
+struct st_fireworks {
+  int num_phase1;
+  int num_phase2;
+  struct { double x[3],y[3],z[3],vx,vy,vz,s,col; int base_frame, delay;
+           double gl_base, gl_period, gl_amp; } p1[10];
+  struct { double x,y,z,vx,vy,vz,col; int base_frame, delay;
+           double fade_factor; } p2[300];
+};
+
+static void
+ut_fireworks_shiftem(struct st_fireworks *c, int i)
+{
+  for (int j = sizeof(c->p1[0].x)/sizeof(c->p1[0].x[0]) - 1; j > 0; --j)
+  {
+    c->p1[i].x[j] = c->p1[i].x[j-1];
+    c->p1[i].y[j] = c->p1[i].y[j-1];
+    c->p1[i].z[j] = c->p1[i].z[j-1];
+  }
+}
+
+static void
+an_fireworks(frame_xyz F, int frame, void **data)
+{
+  if (frame == 0)
+    *data = malloc(sizeof(struct st_fireworks));
+  struct st_fireworks *c= static_cast<struct st_fireworks *>(*data);
+
+  static const int max_phase1 = sizeof(c->p1)/sizeof(c->p1[0]);
+  static const int max_phase2 = sizeof(c->p2)/sizeof(c->p2[0]);
+  static const double g = 0.045;
+  static const int new_freq = 85;
+  static const double min_height = 6;
+  static const double max_height = 10;
+  static const int min_start_delay = 32;
+  static const int max_start_delay = 67;
+  static const int min_end_delay = 50;
+  static const int max_end_delay = 100;
+  const double V = 0.5;
+  static const double resist = 0.11;
+  static const double min_fade_factor = 0.22;
+  static const double max_fade_factor = 0.27;
+
+  if (frame == 0)
+  {
+    c->num_phase1 = 0;
+    c->num_phase2 = 0;
+  }
+
+  /* Start a new one occasionally. */
+  if (c->num_phase1 == 0 || (c->num_phase1 < max_phase1 && irand(new_freq) == 0))
+  {
+    int i = c->num_phase1++;
+    c->p1[i].x[0] = SIDE/2.0 - 2.0 + drand(4);
+    c->p1[i].y[0] = SIDE/2.0 - 2.0 + drand(4);
+    c->p1[i].z[0] = 0;
+    for (int j = 0; j < sizeof(c->p1[0].x)/sizeof(c->p1[0].x[0]) - 1; ++j)
+      ut_fireworks_shiftem(c, i);
+
+    c->p1[i].vx = drand(0.4) - 0.2;
+    c->p1[i].vy = drand(0.4) - 0.2;
+    c->p1[i].s = min_height + drand(max_height - min_height);
+    c->p1[i].vz = sqrt(2*g*c->p1[i].s);
+    c->p1[i].col = 8;
+    c->p1[i].base_frame = frame;
+    c->p1[i].delay = min_start_delay + irand(max_start_delay - min_start_delay);
+    c->p1[i].gl_base = frame;
+    c->p1[i].gl_period = 0;
+  }
+
+  for (int i = 0; i < c->num_phase1; )
+  {
+    int d = frame - c->p1[i].base_frame;
+    if (d < c->p1[i].delay)
+    {
+      /* Waiting for launch - make fuse glow effect. */
+      int gl_delta = frame - c->p1[i].gl_base;
+      if (gl_delta >= c->p1[i].gl_period)
+      {
+        c->p1[i].gl_base = frame;
+        c->p1[i].gl_period = 8 + irand(6);
+        c->p1[i].gl_amp = 0.7 + drand(0.3);
+        gl_delta = 0;
+      }
+      double glow = c->p1[i].gl_amp*sin((double)gl_delta/c->p1[i].gl_period*M_PI);
+      c->p1[i].col = round(7.0 + 5.0*glow);
+      ++i;
+    }
+    else if (c->p1[i].z[0] > c->p1[i].s)
+    {
+      /* Kaboom! */
+      /* Delete this one, and create a bunch of phase2 ones (if room). */
+      int k = 10 + irand(20);
+      while (k-- > 0)
+      {
+        if (c->num_phase2 >= max_phase2)
+          break;            /* No more room */
+        int j = c->num_phase2++;
+        /*
+          Sample a random direction uniformly.
+          Uses the fact that cylinder projection of the sphere is area
+          preserving, so sample uniformly the cylinder, and project onto
+          the sphere.
+        */
+        double v = drand(2*M_PI);
+        double u = drand(2.0) - 1.0;
+        double r = sqrt(1.0 - u*u);
+        double vx = V*r*cos(v);
+        double vy = V*r*sin(v);
+        double vz = V*u;
+        c->p2[j].x = c->p1[i].x[0];
+        c->p2[j].y = c->p1[i].y[0];
+        c->p2[j].z = c->p1[i].z[0];
+        c->p2[j].vx = c->p1[i].vx + vx;
+        c->p2[j].vy = c->p1[i].vy + vy;
+        c->p2[j].vz = c->p1[i].vz + vz;
+        c->p2[j].col = 15;
+        c->p2[j].base_frame = frame;
+        c->p2[j].delay = min_end_delay + irand(max_end_delay - min_end_delay);
+        c->p2[j].fade_factor =
+          min_fade_factor + drand(max_fade_factor - min_fade_factor);
+      }
+      c->p1[i] = c->p1[--c->num_phase1];
+    }
+    else
+    {
+      ut_fireworks_shiftem(c, i);
+      c->p1[i].col =12;
+      c->p1[i].x[0] += c->p1[i].vx;
+      c->p1[i].y[0] += c->p1[i].vy;
+      c->p1[i].z[0] += c->p1[i].vz;
+      c->p1[i].vz -= g;
+      ++i;
+    }
+  }
+
+  for (int i = 0; i < c->num_phase2;)
+  {
+    c->p2[i].x += c->p2[i].vx;
+    c->p2[i].y += c->p2[i].vy;
+    c->p2[i].z += c->p2[i].vz;
+
+    c->p2[i].vx -= resist*c->p2[i].vx;
+    c->p2[i].vy -= resist*c->p2[i].vy;
+    c->p2[i].vz -= resist*c->p2[i].vz + g;
+
+    double col = 15 - c->p2[i].fade_factor*(frame - c->p2[i].base_frame);
+    c->p2[i].col = col < 0 ? 0 : round(col);
+
+    if (c->p2[i].z <= 0)
+    {
+      c->p2[i].z = 0;
+      if (c->p2[i].delay-- <= 0)
+      {
+        /* Delete it. */
+        c->p2[i] = c->p2[--c->num_phase2];
+      }
+      else
+        ++i;
+    }
+    else
+      ++i;
+  }
+
+  ef_clear(F);
+  /*
+    Draw stage2 first, so we don't overwrite a new rocket with an old, dark
+    ember.
+  */
+  for (int i = 0; i < c->num_phase2; ++i)
+  {
+    int x = round(c->p2[i].x);
+    int y = round(c->p2[i].y);
+    int z = round(c->p2[i].z);
+    if (x >= 0 && x < SIDE && y >= 0 && y < SIDE && z >= 0 && z < SIDE)
+      F[x][y][z] = round(c->p2[i].col);
+  }
+  for (int i = 0; i < c->num_phase1; ++i)
+  {
+    for (int j = 0; j < sizeof(c->p1[0].x)/sizeof(c->p1[0].x[0]); ++j)
+    {
+      int x = round(c->p1[i].x[j]);
+      int y = round(c->p1[i].y[j]);
+      int z = round(c->p1[i].z[j]);
+      if (x >= 0 && x < SIDE && y >= 0 && y < SIDE && z >= 0 && z < SIDE)
+        F[x][y][z] = round(c->p1[i].col);
+    }
+  }
+}
+
+
 static const char *
 font9[256];
 
@@ -574,23 +764,35 @@ an_migrating_dots(frame_xyz F, int frame, void **data)
 
 
 static void
-an_cosine_plane(frame_xyz F, int frame, void **data)
+an_cosine_plane_N(frame_xyz F, int frame, int side_len, double speed)
 {
   ef_afterglow(F, 3);
-  for (int i = 0; i <SIDE; ++i)
+  for (int i = 0; i <side_len; ++i)
   {
-    for (int j = 0; j<SIDE; ++j)
+    for (int j = 0; j<side_len; ++j)
     {
-      double x = i - ((double)SIDE-1)/2;
-      double y = j - ((double)SIDE-1)/2;
+      double x = i - ((double)side_len-1)/2;
+      double y = j - ((double)side_len-1)/2;
       double r = pow(x*x+y*y, 0.65);
-      double z = 0.95*SIDE/2.0*cos(0.48*M_PI - frame/30.0*M_PI +
-                              r/pow(SIDE*SIDE/4.0, 0.65)*0.6*M_PI);
-      int k = round(z + ((double)SIDE-1)/2);
-      if (k >= 0 && k < SIDE)
+      double z = 0.95*side_len/2.0*cos(0.48*M_PI - frame/speed*M_PI +
+                              r/pow(side_len*side_len/4.0, 0.65)*0.6*M_PI);
+      int k = round(z + ((double)side_len-1)/2);
+      if (k >= 0 && k < side_len)
         F[i][j][k] = 15;
     }
   }
+}
+
+static void
+an_cosine_plane(frame_xyz F, int frame, void **data)
+{
+  an_cosine_plane_N(F, frame, SIDE, 30.0);
+}
+
+static void
+an_cosine_plane5(frame_xyz F, int frame, void **data)
+{
+  an_cosine_plane_N(F, frame, 5, 22.0);
 }
 
 
@@ -1949,8 +2151,12 @@ static struct anim_piece animation5[] = {
   // { testimg_walk_bottom_5, 100000, 0},
   // { testimg_show_greyscales_5, 100000, 0},
   // { testimg_show_greyscales_bottom_5, 100000, 0},
+  { an_cosine_plane5, 600, 0 },
+  { fade_out, 16, 0 },
   { an_wobbly_plane5, 800, 0 },
+  { fade_out, 16, 0 },
   { an_rotate_plane5, 900, (void *)"0.14" },
+  { fade_out, 16, 0 },
   { an_scanplane5, 600, (void *)"3" },
   { an_icicles_5, 600, 0 },
   { scrolltext_labitat_5, 400, 0 },
@@ -1967,7 +2173,9 @@ static struct anim_piece animation5[] = {
 
 static struct anim_piece animation[] = {
   //{ testimg_test_lines, 100000, 0 },
-  { an_migrating_dots, 900, 0 },
+  { an_fireworks, 1200, 0 },
+  { fade_out, 16, 0 },
+  { an_migrating_dots, 1200, 0 },
   { fade_out, 16, 0 },
   { an_wobbly_plane11, 900, 0 },
   { fade_out, 16, 0 },
