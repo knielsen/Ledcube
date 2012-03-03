@@ -231,6 +231,203 @@ draw_line(frame_xyz F, double x0, double y0, double z0,
 }
 
 
+/* Rotate plane coordinates a given angle V. */
+static void ut_rotate(double *x, double *y, double v)
+{
+  double x2 = cos(v) * *x - sin(v) * *y;
+  *y = sin(v) * *x + cos(v) * *y;
+  *x = x2;
+}
+
+
+/* Animation with misc. wireframe objects. */
+struct st_wireframe {
+  struct { double x1,y1,z1,x2,y2,z2; } lines[50];
+  int num;
+};
+
+static void
+ut_wireframe_add_line(struct st_wireframe *c,
+                      double x1, double y1, double z1,
+                      double x2, double y2, double z2)
+{
+  int i = c->num;
+  if (i < sizeof(c->lines)/sizeof(c->lines[0]))
+  {
+    c->lines[i].x1 = x1;
+    c->lines[i].y1 = y1;
+    c->lines[i].z1 = z1;
+    c->lines[i].x2 = x2;
+    c->lines[i].y2 = y2;
+    c->lines[i].z2 = z2;
+    c->num = i+1;
+  }
+}
+
+static void
+an_wireframe(frame_xyz F, int frame, void **data)
+{
+  static const double omega1 = 1.45/15.38;
+  static const double omega2 = 1.45/11.71;
+  static const double omega3 = 1.45/28.44;
+  static const int stage_dur = 175;
+  static const int fade_dur = 30;
+
+  if (frame == 0)
+    *data = malloc(sizeof(struct st_wireframe));
+  struct st_wireframe *c= static_cast<struct st_wireframe *>(*data);
+
+
+  if (frame == 0)
+  {
+    c->num = 0;
+  }
+
+  if (frame % stage_dur == 0)
+  {
+    c->num = 0;
+    switch ((frame/stage_dur) % 9)
+    {
+    case 0:
+      /* Cube. */
+      ut_wireframe_add_line(c, -3, -3, -3, 3, -3, -3);
+      ut_wireframe_add_line(c, -3, 3, -3, 3, 3, -3);
+      ut_wireframe_add_line(c, -3, -3, 3, 3, -3, 3);
+      ut_wireframe_add_line(c, -3, 3, 3, 3, 3, 3);
+      ut_wireframe_add_line(c, -3, -3, -3, -3, 3, -3);
+      ut_wireframe_add_line(c, 3, -3, -3, 3, 3, -3);
+      ut_wireframe_add_line(c, -3, -3, 3, -3, 3, 3);
+      ut_wireframe_add_line(c, 3, -3, 3, 3, 3, 3);
+      ut_wireframe_add_line(c, -3, -3, -3, -3, -3, 3);
+      ut_wireframe_add_line(c, 3, -3, -3, 3, -3, 3);
+      ut_wireframe_add_line(c, -3, 3, -3, -3, 3, 3);
+      ut_wireframe_add_line(c, 3, 3, -3, 3, 3, 3);
+      break;
+    case 1:
+    {
+      /* Tetraeder */
+      static const double M = 4.5;
+      double a = M*sqrt(3)/2.0;
+      ut_wireframe_add_line(c, -a, -0.5*M, -0.5*M, a, -0.5*M, -0.5*M);
+      ut_wireframe_add_line(c, -a, -0.5*M, -0.5*M, 0, M, -0.5*M);
+      ut_wireframe_add_line(c, 0, M, -0.5*M, a, -0.5*M, -0.5*M);
+      ut_wireframe_add_line(c, -a, -0.5*M, -0.5*M, 0, 0, M);
+      ut_wireframe_add_line(c, a, -0.5*M, -0.5*M, 0, 0, M);
+      ut_wireframe_add_line(c, 0, M, -0.5*M, 0, 0, M);
+      break;
+    }
+    case 2:
+    {
+      /* "L" */
+      double A = -2.5;
+      double B = 4;
+      ut_wireframe_add_line(c, -A, 0, B, -A, 0, -B);
+      ut_wireframe_add_line(c, -A, 0, -B, A, 0, -B);
+      break;
+    }
+    case 3:
+    case 7:
+    {
+      /* "A" */
+      double A = 3.4;
+      double B = 4;
+      double C = -1;
+      double D = A*(B-C)/(2*B);
+      ut_wireframe_add_line(c, -A, 0, -B, 0, 0, B);
+      ut_wireframe_add_line(c, A, 0, -B, 0, 0, B);
+      ut_wireframe_add_line(c, -D, 0, C, D, 0, C);
+      break;
+    }
+    case 4:
+    {
+      /* "B" */
+      double A = 3;
+      double B = 4;
+      double C = 2;
+      ut_wireframe_add_line(c, -A, 0, B, 0, 0, B);
+      ut_wireframe_add_line(c, 0, 0, B, A, 0, C);
+      ut_wireframe_add_line(c, A, 0, C, 0, 0, 0);
+      ut_wireframe_add_line(c, 0, 0, 0, A, 0, -C);
+      ut_wireframe_add_line(c, A, 0, -C, 0, 0, -B);
+      ut_wireframe_add_line(c, 0, 0, -B, -A, 0, -B);
+      ut_wireframe_add_line(c, -A, 0, -B, -A, 0, B);
+      break;
+    }
+    case 5:
+    {
+      /* I */
+      double A = -2;
+      double B = 4;
+      ut_wireframe_add_line(c, -A, 0, B, A, 0, B);
+      ut_wireframe_add_line(c, -A, 0, -B, A, 0, -B);
+      ut_wireframe_add_line(c, 0, 0, -B, 0, 0, B);
+      break;
+    }
+    case 6:
+    case 8:
+    {
+      /* T */
+      double A = -2.5;
+      double B = 4;
+      ut_wireframe_add_line(c, -A, 0, B, A, 0, B);
+      ut_wireframe_add_line(c, 0, 0, -B, 0, 0, B);
+      break;
+    }
+    default:
+      fprintf(stderr, "an_wireframe: error: fix modulus in switch() "
+              "to match number of objects.\n");
+      abort();
+    }
+  }
+
+  ef_clear(F);
+  for (int i = 0 ; i < c->num; ++i)
+  {
+    double x1 = c->lines[i].x1;
+    double y1 = c->lines[i].y1;
+    double z1 = c->lines[i].z1;
+    double x2 = c->lines[i].x2;
+    double y2 = c->lines[i].y2;
+    double z2 = c->lines[i].z2;
+    ut_rotate(&x1, &z1, (double)frame*omega3);
+    ut_rotate(&x2, &z2, (double)frame*omega3);
+    ut_rotate(&x1, &y1, (double)frame*omega1);
+    ut_rotate(&x2, &y2, (double)frame*omega1);
+    ut_rotate(&y1, &z1, (double)frame*omega2);
+    ut_rotate(&y2, &z2, (double)frame*omega2);
+
+    /* Handle fade-in / fade-out. */
+    int col;
+    double factor = -1;
+    int d = frame % stage_dur;
+    if (d < fade_dur)
+      factor = (double)d / (double)fade_dur;
+    else if (stage_dur - d < fade_dur)
+      factor = (double)(stage_dur - d) / (double)fade_dur;
+    if (factor >= 0)
+    {
+      col = round(15.49*factor);
+      x1 *= factor;
+      y1 *= factor;
+      z1 *= factor;
+      x2 *= factor;
+      y2 *= factor;
+      z2 *= factor;
+    }
+    else
+      col = 15;
+
+    x1 += ((double)SIDE-1)/2;
+    y1 += ((double)SIDE-1)/2;
+    z1 += ((double)SIDE-1)/2;
+    x2 += ((double)SIDE-1)/2;
+    y2 += ((double)SIDE-1)/2;
+    z2 += ((double)SIDE-1)/2;
+
+    draw_line(F, x1, y1, z1, x2, y2, z2, col);
+  }
+}
+
 struct st_fireworks {
   int num_phase1;
   int num_phase2;
@@ -2173,6 +2370,8 @@ static struct anim_piece animation5[] = {
 
 static struct anim_piece animation[] = {
   //{ testimg_test_lines, 100000, 0 },
+  { an_wireframe, 3150, 0 },
+  { fade_out, 16, 0 },
   { an_fireworks, 1200, 0 },
   { fade_out, 16, 0 },
   { an_migrating_dots, 1200, 0 },
