@@ -428,6 +428,94 @@ an_wireframe(frame_xyz F, int frame, void **data)
   }
 }
 
+
+struct st_fountain {
+  int num;
+  double count;
+  struct { double x, y, z, vx, vy, vz, damp; int base; } p[200];
+};
+
+static void
+an_fountain(frame_xyz F, int frame, void **data)
+{
+  static const int rate = 1.7;
+  static const double spread = 0.19*M_PI/2.0;
+  static const double min_damp = 0.12;
+  static const double max_damp = 0.35;
+  static const double min_height = 6.5;
+  static const double max_height = 10.2;
+  static const double radius = 0.8;
+  static const double g = 0.057;
+  static const double v_damp = 0.012;
+
+  if (frame == 0)
+    *data = malloc(sizeof(struct st_fountain));
+  struct st_fountain *c= static_cast<struct st_fountain *>(*data);
+
+  if (frame == 0)
+  {
+    c->num = 0;
+  }
+
+  c->count += drand(rate);
+  while (c->count > 0 && c->num < sizeof(c->p)/sizeof(c->p[0]))
+  {
+    /* Add a new one. */
+    /*
+      We don't want to take a uniform distribution of the vertical
+      angle - that would give too much bias to mostly vertical directions.
+    */
+    double v = spread*(1 - pow(drand(1), 1.5));
+    double u = drand(2*M_PI);
+    double h = min_height + drand(max_height - min_height);
+    double V = sqrt(2*g*h);
+    double r = drand(radius);
+
+    int i = c->num++;
+    c->p[i].vx = V*cos(u)*sin(v);
+    c->p[i].vy = V*sin(u)*sin(v);
+    c->p[i].vz = V*cos(v);
+    c->p[i].x = r*cos(u) + ((double)SIDE-1)/2;
+    c->p[i].y = r*sin(u) + ((double)SIDE-1)/2;
+    c->p[i].z = -2;
+    c->p[i].base = frame;
+    c->p[i].damp = min_damp + drand(max_damp - min_damp);
+
+    --c->count;
+  }
+
+  for (int i = 0; i < c->num; ++i)
+  {
+    c->p[i].x += c->p[i].vx;
+    c->p[i].y += c->p[i].vy;
+    c->p[i].z += c->p[i].vz;
+    c->p[i].vz -= g;
+    c->p[i].vx -= v_damp*c->p[i].vx;
+    c->p[i].vy -= v_damp*c->p[i].vy;
+    if (c->p[i].z < 0 && frame - c->p[i].base > 5)
+      c->p[i].z = 0;
+  }
+
+  ef_clear(F);
+  for (int i = 0; i < c->num; )
+  {
+    int x = round(c->p[i].x);
+    int y = round(c->p[i].y);
+    int z = round(c->p[i].z);
+    double col = 15.0 - c->p[i].damp * (frame - c->p[i].base);
+    if (col <= 0)
+    {
+      /* Delete it. */
+      c->p[i] = c->p[--c->num];
+      continue;
+    }
+    if (x >= 0 && x < SIDE && y >= 0 && y < SIDE && z >= 0 && z < SIDE)
+      F[x][y][z] = round(col);
+    ++i;
+  }
+}
+
+
 struct st_fireworks {
   int num_phase1;
   int num_phase2;
@@ -2498,6 +2586,8 @@ static struct anim_piece animation[] = {
   { an_wobbly_plane11, 900, 0 },
   { fade_out, 16, 0 },
   { an_flytext9, 800, (void *)" LABITAT" },
+  { fade_out, 16, 0 },
+  { an_fountain, 900, 0 },
   { fade_out, 16, 0 },
   { an_cube5_times_8, 2300, 0 },
   { fade_out, 16, 0 },
