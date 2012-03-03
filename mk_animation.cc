@@ -2300,6 +2300,83 @@ an_cube5_times_8(frame_xyz F, int frame, void **data)
 }
 
 
+static void
+an_stripes(frame_xyz F, int frame, void **data)
+{
+  static const double rate = 0.5;
+  static const int N = 13;
+
+  for (int i = 0; i < SIDE; ++i)
+  {
+    for (int j = 0; j < SIDE; ++j)
+    {
+      for (int k = 0; k < SIDE; ++k)
+      {
+        int d = (i+j+k+(int)round(frame*rate)) % (2*N-1);
+        int col;
+        if (d <= N)
+          col = d + (15-N);
+        else
+          col = (2*N-1)+15-d;
+        F[i][j][k] = col;
+      }
+    }
+  }
+}
+
+
+static void
+an_stripe_ball(frame_xyz F, int frame, void **data)
+{
+  static const double rate = 0.5;
+  static const double width = 4.2;
+  static const int N = 15;
+
+  for (int i = 0; i < SIDE; ++i)
+  {
+    for (int j = 0; j < SIDE; ++j)
+    {
+      for (int k = 0; k < SIDE; ++k)
+      {
+        double x = i - (SIDE-1)/2.0;
+        double y = j - (SIDE-1)/2.0;
+        double z = k - (SIDE-1)/2.0;
+        double r = sqrt(x*x+y*y+z*z);
+        int d = ((int)round(1e9 - r/width*N + frame*rate)) % (2*N-1);
+        int col;
+        if (r > 0.5 + (SIDE-1)/2.0)
+          col = 0;
+        else if (d <= N)
+          col = d + (15-N);
+        else
+          col = (2*N-1)+15-d;
+        F[i][j][k] = col;
+      }
+    }
+  }
+}
+
+
+static void
+an_smoketail(frame_xyz F, int frame, void **data)
+{
+  double x = 1;
+  double y = 0;
+  double z = 0;
+  ut_rotate(&x, &y, frame/100.0*2*M_PI);
+  ut_rotate(&x, &z, frame/77.3*2*M_PI);
+  ut_rotate(&z, &y, frame/111.11*2*M_PI);
+  double r = (SIDE-1)/5.0 + (SIDE-1)/3.5*(1.0+sin(frame/140.0*2*M_PI))/2.0;
+  int i = round(x*r + (SIDE-1)/2.0);
+  int j = round(y*r + (SIDE-1)/2.0);
+  int k = round(z*r + (SIDE-1)/2.0);
+
+  ef_afterglow(F, 1);
+  if (i >= 0 && i < SIDE && j >= 0 && k < SIDE && j >= 0 && k < SIDE)
+    F[i][j][k] = 15;
+}
+
+
 /* Highligt x-axis (y=z=0) */
 static void
 testimg_x_axis(frame_xyz F, int frame, void **data)
@@ -2577,13 +2654,18 @@ static struct anim_piece animation5[] = {
 
 static struct anim_piece animation[] = {
   //{ testimg_test_lines, 100000, 0 },
+  //{ an_smoketail, 1000000, 0 },
   { an_wireframe, 3150, 0 },
+  { fade_out, 16, 0 },
+  { an_stripe_ball, 900, 0 },
   { fade_out, 16, 0 },
   { an_fireworks, 1200, 0 },
   { fade_out, 16, 0 },
   { an_migrating_dots, 1200, 0 },
   { fade_out, 16, 0 },
   { an_wobbly_plane11, 900, 0 },
+  { fade_out, 16, 0 },
+  { an_stripes, 1100, 0 },
   { fade_out, 16, 0 },
   { an_flytext9, 800, (void *)" LABITAT" },
   { fade_out, 16, 0 },
