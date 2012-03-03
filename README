@@ -45,4 +45,8 @@ bruge den udgang.
 
 Der skal pull-UP på indgangene på den 11 MOSFET.
 
+Der er pull-DOWN på BLANK. Det er egentlig forkert, for BLANK er aktiv
+høj - det skulle være pull-UP. Men når vi sætter pull-up på
+MOSFET'erne så gør det ikke noget, så slukker vi den vej hvis der ikke
+kører kontrolsoftware på Arduinoen.
 
