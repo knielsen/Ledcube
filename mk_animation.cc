@@ -710,6 +710,90 @@ an_flytext9(frame_xyz F, int frame, void **data)
 }
 
 
+static void
+an_scrolltext_9(frame_xyz F, int frame, void **data)
+{
+  const char *text= (const char *)*data;
+
+  /* Find the total text length, in pixels. */
+  size_t len = 0;
+  const char *p = text;
+  while (*p)
+  {
+    const char *glyph = font9[*p++];
+    if (!glyph)
+      continue;
+    len += strlen(glyph)/9 + 2;
+  }
+
+  ef_clear(F);
+
+  /* There are 4*(SIDE-1) positions available. */
+  int pos= (frame/2) % (len + 4*(SIDE-1)) - (4*(SIDE-1)-1);
+
+  int cur_pos = -1;
+  int cur_glyph_pos = -1;
+  int glyph_width = -2;
+  int cur_idx = -1;
+  const char *cur_glyph;
+  for (int i= 0; i < 4*(SIDE-1); ++i, ++pos)
+  {
+    if (pos < 0 || (size_t)pos >= len)
+      continue;
+    int x, y;
+    if (i < SIDE)
+    {
+      x= 0;
+      y= (SIDE-1) - i;
+    }
+    else if (i < 2*SIDE-1)
+    {
+      x= i - (SIDE-1);
+      y= 0;
+    }
+    else if (i < 3*SIDE-2)
+    {
+      x= (SIDE-1);
+      y = i - (2*SIDE-2);
+    }
+    else
+    {
+      x= 4*(SIDE-1) - i;
+      y= (SIDE-1);
+    }
+    uint8_t col;
+    if (i < 3)
+      col= 3 + i*4;
+    else if (i > 4*(SIDE-1)-4)
+      col= 3 + (4*(SIDE-1)-3-i)*4;
+    else
+      col= 15;
+
+    /* Find the correct glyph position, possibly moving to the next glyph. */
+    while (cur_pos < pos)
+    {
+      ++cur_pos;
+      ++cur_glyph_pos;
+      while (cur_glyph_pos >= glyph_width+2)
+      {
+        cur_idx = (cur_idx + 1) % strlen(text);
+        cur_glyph = font9[text[cur_idx]];
+        cur_glyph_pos = 0;
+        if (cur_glyph)
+          glyph_width = strlen(cur_glyph)/9;
+        else
+          glyph_width = -2;
+      }
+    }
+    for (int z= 0; z < 9; z++)
+    {
+      if (cur_glyph_pos < glyph_width &&
+          cur_glyph[(8-z)*glyph_width + cur_glyph_pos] != ' ')
+        F[x][y][z+1]= col;
+    }
+  }
+}
+
 
 struct st_migrating_dots {
   struct { double x,y,z,v; int target, delay, col, new_col; } dots[SIDE*SIDE];
@@ -2424,6 +2508,7 @@ static struct anim_piece animation[] = {
   { an_cosine_plane, 900, 0 },
   { fade_out, 16, 0 },
   { an_rotate_plane, 900, (void *)"0.17" },
+  { an_scrolltext_9, 850, (void *)"LABITAT" },
   { an_scanplane, 600, (void *)"2" },
   { 0, 0, 0}
 };
