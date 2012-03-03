@@ -676,6 +676,41 @@ init_font9()
     "   XX   ";
 }
 
+
+static void
+an_flytext9(frame_xyz F, int frame, void **data)
+{
+  static const int inter_letter_spacing= 8;
+  const char *text= (const char *)*data;
+  if ((frame % 2) == 0)
+    ef_afterglow(F, 2);
+
+  frame/= 2;
+  for (int y= 0; y < SIDE ; ++y)
+  {
+    if (((y - frame) % inter_letter_spacing) != 0)
+      continue;
+    int idx= (frame + (SIDE-1-y))/inter_letter_spacing;
+    int ch= text[idx % strlen(text)];
+
+    const char *glyph= font9[ch];
+    if (!glyph)
+      continue;
+    int glyph_size= strlen(glyph);
+    int glyph_width= glyph_size/9;
+    for (int z= 9; z >= 1; --z)
+    {
+      for (int i= 0; i < glyph_width; ++i)
+      {
+        if (*glyph++ != ' ')
+          F[i+(SIDE-glyph_width)/2][y][z]= 15;
+      }
+    }
+  }
+}
+
+
+
 struct st_migrating_dots {
   struct { double x,y,z,v; int target, delay, col, new_col; } dots[SIDE*SIDE];
   /* 0/1 is bottom/top, 2/3 is left/right, 4/5 is front/back. */
@@ -2377,6 +2412,8 @@ static struct anim_piece animation[] = {
   { an_migrating_dots, 1200, 0 },
   { fade_out, 16, 0 },
   { an_wobbly_plane11, 900, 0 },
+  { fade_out, 16, 0 },
+  { an_flytext9, 800, (void *)" LABITAT" },
   { fade_out, 16, 0 },
   { an_cube5_times_8, 2300, 0 },
   { fade_out, 16, 0 },
