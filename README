@@ -1,3 +1,41 @@
+The software for the Arduino / Ledcube is Free Software, it may be
+distributed under the GPL Licence, either version 2, or (at your
+option) a later version of the GPL. See the file COPYING for details.
+
+Elements:
+
+ledcube.c - this is the controller software. It is written for the 16
+MHz atmega328p Avr microcontroller. There is a Makefile for this - `make
+upload` installs the program over USB. `make tty` prepares the serial port.
+
+
+mk_animation.cc - this generates the animations. Compile with `g++
+mk_animation.cc`. The output can be in different formats, --ledpro5 matches
+the wiring for the 5x5x5 cube, --ledpro is the protocol for the 11x11x11 (may
+still need adjustments for the final wiring). --ledpro can also be used to
+pipe to the OpenGL visualisation tool
+https://github.com/knielsen/ledcube-viewer. --loop repeats the animation
+infinitely.
+
+
+framerate-control.pl - this program reads the output from mk_animation.cc from
+stdin (eg. from a pipe), and sends it to the microcontroller over the serial
+port (remember `make tty` to set correct speed etc). It adjusts the framerate
+to the nominal 50 frames per second (apart from that, writing the animation
+directly to the serial port should also work - just the animation will play
+around 50% faster).
+
+
+Example:
+
+    make upload
+    make tty
+    ./a.out --ledpro --loop| perl framerate-control.pl
+
+    g++ -g mk_animation.cc && ./a.out --ledpro --loop  | ledcube-viewer --11
+
+-----------------------------------------------------------------------
+
 Ledcube Arduino pinout
 
 SCLK   8
@@ -35,18 +73,13 @@ Print pinout:
 
 Print:
 
-TLC 1-5 er alle funktionelle.
-
-TLC 6: blinker, fordi BLANK ikke er forbundet. Det skal fixes (det er pin 2 på TLC 6).
+TLC 1-6 er alle funktionelle.
 
 TLC 6 udgang 12 virker ikke, den virker på benet på chippen, men der
 er fejl på lodningen eller noget. Det betyder ikke noget, vi skal ikke
 bruge den udgang.
 
-Der skal pull-UP på indgangene på den 11 MOSFET.
-
 Der er pull-DOWN på BLANK. Det er egentlig forkert, for BLANK er aktiv
-høj - det skulle være pull-UP. Men når vi sætter pull-up på
-MOSFET'erne så gør det ikke noget, så slukker vi den vej hvis der ikke
-kører kontrolsoftware på Arduinoen.
-
+høj - det skulle være pull-UP. Men da vi har pull-up på MOSFET'erne så
+gør det ikke noget, så slukker vi den vej hvis der ikke kører
+kontrolsoftware på Arduinoen.
