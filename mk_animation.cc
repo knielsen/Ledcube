@@ -231,12 +231,79 @@ draw_line(frame_xyz F, double x0, double y0, double z0,
 }
 
 
+/* Cross product. */
+static void
+ut_cross_prod(double x1, double y1, double z1,
+              double x2, double y2, double z2,
+              double *rx, double *ry, double *rz)
+{
+  *rx = y1*z2-y2*z1;
+  *ry = z1*x2-z2*x1;
+  *rz = x1*y2-x2*y1;
+}
+
 /* Rotate plane coordinates a given angle V. */
 static void ut_rotate(double *x, double *y, double v)
 {
   double x2 = cos(v) * *x - sin(v) * *y;
   *y = sin(v) * *x + cos(v) * *y;
   *x = x2;
+}
+
+/* Rotate a vector around an axis. */
+static void
+ut_rotate_axis(double ax, double ay, double az,
+               double *px, double *py, double *pz, double v)
+{
+  /*
+    First we construct two unit normals to the given axis.
+    We do this by starting with a vector parallel to the x/y/z axis that
+    has the smallest component along the given axis, and then doing
+    cross-producs.
+    Then we project the vector to rotate onto the normal plane spanned by
+    the two normals.
+    We then rotate the vector in that plane, and finally contruct the
+    rotated vector back from the two normals and original vector.
+  */
+  double a = sqrt(ax*ax+ay*ay+az*az);
+  ax /= a;
+  ay /= a;
+  az /= a;
+  double n1x, n1y, n1z, n2x, n2y, n2z, n1, n2;
+  if (fabs(ax) <= fabs(ay) && fabs(ax) <= fabs(az))
+  {
+    n1x = 1; n1y = 0; n1z = 0;
+  }
+  else if (fabs(ay) <= fabs(ax) && fabs(ay) <= fabs(az))
+  {
+    n1x = 0; n1y = 1; n1z = 0;
+  }
+  else if (fabs(az) <= fabs(ax) && fabs(az) <= fabs(ay))
+  {
+    n1x = 0; n1y = 0; n1z = 1;
+  }
+  ut_cross_prod(ax, ay, az, n1x, n1y, n1z, &n2x, &n2y, &n2z);
+  n2 = sqrt(n2x*n2x+n2y*n2y+n2z*n2z);
+  n2x /= n2;
+  n2y /= n2;
+  n2z /= n2;
+  ut_cross_prod(ax, ay, az, n2x, n2y, n2z, &n1x, &n1y, &n1z);
+  /*
+    n1 will be a unit vector already, as it is the cross product of two
+    perpendicular unit vectors. So this normalisation is really redundant ...
+  */
+  n1 = sqrt(n1x*n1x+n1y*n1y+n1z*n1z);
+  n1x /= n1;
+  n1y /= n1;
+  n1z /= n1;
+  double x = *px; double y = *py; double z = *pz;
+  double c1 = x*n1x + y*n1y + z*n1z;
+  double c2 = x*n2x + y*n2y + z*n2z;
+  double c3 = x*ax + y*ay + z*az;
+  ut_rotate(&c1, &c2, v);
+  *px = c1*n1x + c2*n2x + c3*ax;
+  *py = c1*n1y + c2*n2y + c3*ay;
+  *pz = c1*n1z + c2*n2z + c3*az;
 }
 
 
@@ -2357,23 +2424,80 @@ an_stripe_ball(frame_xyz F, int frame, void **data)
 }
 
 
+struct st_smoketail {
+  int idx;
+  struct { double x, y, z; } p[150];
+};
+
 static void
 an_smoketail(frame_xyz F, int frame, void **data)
 {
-  double x = 1;
+  static const int steps = 13;
+  static const int stepsize = 8;
+
+  if (frame == 0)
+    *data = malloc(sizeof(struct st_smoketail));
+  struct st_smoketail *c= static_cast<struct st_smoketail *>(*data);
+
+  if (frame == 0)
+    c->idx = 0;
+
+  double u = frame/353.23*2*M_PI;
+  double v = frame/147.2*2*M_PI;
+  double h = sin(u);
+  double r = sqrt(1.0 - h*h);
+  double ax = r*cos(v);
+  double ay = r*sin(v);
+  double az = h;
+
+  double x = 5;
   double y = 0;
   double z = 0;
-  ut_rotate(&x, &y, frame/100.0*2*M_PI);
-  ut_rotate(&x, &z, frame/77.3*2*M_PI);
-  ut_rotate(&z, &y, frame/111.11*2*M_PI);
-  double r = (SIDE-1)/5.0 + (SIDE-1)/3.5*(1.0+sin(frame/140.0*2*M_PI))/2.0;
-  int i = round(x*r + (SIDE-1)/2.0);
-  int j = round(y*r + (SIDE-1)/2.0);
-  int k = round(z*r + (SIDE-1)/2.0);
+  ut_rotate_axis(ax, ay, az, &x, &y, &z, (double)frame/150.0*2*M_PI);
+  x += 5;
+  y += 5;
+  z += 5;
 
-  ef_afterglow(F, 1);
-  if (i >= 0 && i < SIDE && j >= 0 && k < SIDE && j >= 0 && k < SIDE)
-    F[i][j][k] = 15;
+  c->p[c->idx].x = x;
+  c->p[c->idx].y = y;
+  c->p[c->idx].z = z;
+
+  ef_clear(F);
+  draw_line(F, 5, 5, 5, round(5+5*ax), round(5+5*ay), round(5+5*az), 10);
+  draw_line(F, 5, 5, 5, round(x), round(y), round(z), 15);
+
+  int max_l = 0;
+  for (int i = 0; i < SIDE; ++i)
+  {
+    for (int j = 0; j < SIDE; ++j)
+    {
+      for (int k = 0; k < SIDE; ++k)
+      {
+        int max_col = 0;
+        int idx = c->idx;
+        for (int l = 0; l < steps && l*stepsize <= frame ; ++l)
+        {
+          if (max_l < l)
+            max_l = l;
+          double x = c->p[idx].x;
+          double y = c->p[idx].y;
+          double z = c->p[idx].z;
+          double r = sqrt((i-x)*(i-x) + (j-y)*(j-y) + (k-z)*(k-z));
+          int col = round(16.5 - pow(r, 0.67) * 4.5 - 13*((double)l/steps));
+          if (col > 15)
+            col = 15;
+          if (col > max_col)
+            max_col = col;
+          idx -= stepsize;
+          if (idx < 0)
+            idx += sizeof(c->p)/sizeof(c->p[0]);
+        }
+        F[i][j][k] = max_col;
+      }
+    }
+  }
+
+  c->idx = (c->idx+1) % (sizeof(c->p)/sizeof(c->p[0]));
 }
 
 
@@ -2413,6 +2537,12 @@ testimg_solid(frame_xyz F, int frame, void **data)
 {
   //ef_clear(F, (frame/30) % 16);
   ef_clear(F, 13);
+  /*
+  if ((frame / 50)%2)
+    ef_clear(F, 15);
+  else
+    ef_clear(F, 0);
+  */
 }
 
 static void
@@ -2654,7 +2784,8 @@ static struct anim_piece animation5[] = {
 
 static struct anim_piece animation[] = {
   //{ testimg_test_lines, 100000, 0 },
-  //{ an_smoketail, 1000000, 0 },
+  { an_smoketail, 1000, 0 },
+  { fade_out, 16, 0 },
   { an_wireframe, 3150, 0 },
   { fade_out, 16, 0 },
   { an_stripe_ball, 900, 0 },
