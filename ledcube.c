@@ -319,17 +319,17 @@ timer1_interrupt_a()
     /* Switch the MOSFETs to the next layer. */
     switch (cur_layer)
     {
-    case 0: pinA4_high(); pin2_low(); break;
-    case 1: pin2_high(); pin3_low(); break;
-    case 2: pin3_high(); pin4_low(); break;
-    case 3: pin4_high(); pin5_low(); break;
-    case 4: pin5_high(); pin6_low(); break;
-    case 5: pin6_high(); pin7_low(); break;
-    case 6: pin7_high(); pinA0_low(); break;
-    case 7: pinA0_high(); pinA1_low(); break;
-    case 8: pinA1_high(); pinA2_low(); break;
-    case 9: pinA2_high(); pinA3_low(); break;
-    case 10:pinA3_high(); pinA4_low(); break;
+    case 0: pinA5_high(); pin7_low(); break;
+    case 1: pin7_high(); pin6_low(); break;
+    case 2: pin6_high(); pin5_low(); break;
+    case 3: pin5_high(); pin4_low(); break;
+    case 4: pin4_high(); pin3_low(); break;
+    case 5: pin3_high(); pinA0_low(); break;
+    case 6: pinA0_high(); pinA1_low(); break;
+    case 7: pinA1_high(); pinA2_low(); break;
+    case 8: pinA2_high(); pinA3_low(); break;
+    case 9: pinA3_high(); pinA4_low(); break;
+    case 10:pinA4_high(); pinA5_low(); break;
     }
     /* ToDo: Hack for now: only display lowest layers. */
     if (cur_layer <= 11)
@@ -391,8 +391,6 @@ init(void) {
   pin_mode_output(PIN_BLANK);
   pin_high(PIN_BLANK);    /* All leds are off initially */
 
-  pin_high(2);
-  pin_mode_output(2);
   pin_high(3);
   pin_mode_output(3);
   pin_high(4);
@@ -413,6 +411,8 @@ init(void) {
   pin_mode_output(A3);
   pin_high(A4);
   pin_mode_output(A4);
+  pin_high(A5);
+  pin_mode_output(A5);
 
 //  serial_baud_9600();
 //  serial_baud_115200();
@@ -493,8 +493,8 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
 
     if (onboard_animation)
     {
-//      anim_solid(generate_frame, 15);
-      cornercube_5(generate_frame);
+      anim_solid(generate_frame, 0);
+      //cornercube_5(generate_frame);
     }
     ++generate_counter;
   }

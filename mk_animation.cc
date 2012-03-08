@@ -2536,7 +2536,7 @@ static void
 testimg_solid(frame_xyz F, int frame, void **data)
 {
   //ef_clear(F, (frame/30) % 16);
-  ef_clear(F, 13);
+  ef_clear(F, 15);
   /*
   if ((frame / 50)%2)
     ef_clear(F, 15);
@@ -2599,6 +2599,13 @@ testimg_test_lines(frame_xyz F, int frame, void **data)
   draw_line(F, 3, 5, 10, 2, 2, 2, (frame/2+20)%16);
 }
 
+static void
+testimg_test_column(frame_xyz F, int frame, void **data)
+{
+  ef_clear(F);
+  F[SIDE-1-((frame/(8*SIDE*SIDE))%3)][(frame/(8*SIDE))%SIDE][(frame/8)%SIDE] = 11;
+}
+
 /* ****************************************************************** */
 static void (*out_function)(frame_xyz);
 static int frame_repeat= 1;
@@ -2648,8 +2655,8 @@ frame_out_ledpro(frame_xyz fb)
   int odd_even= 0;
   uint8_t partial;
   for (int z= 0; z < SIDE ; ++z)
-    for (int y= 0; y < SIDE; ++y)
-      for (int x= 0; x < SIDE; ++x)
+    for (int x= 0; x < SIDE; ++x)
+      for (int y= 0; y < SIDE; ++y)
       {
         if (odd_even)
         {
@@ -2784,12 +2791,12 @@ static struct anim_piece animation5[] = {
 
 static struct anim_piece animation[] = {
   //{ testimg_test_lines, 100000, 0 },
+  //{ testimg_test_column, 100000000, 0 },
+  // { testimg_solid, 1000, 0 },
   { an_smoketail, 1000, 0 },
-  { fade_out, 16, 0 },
   { an_wireframe, 3150, 0 },
   { fade_out, 16, 0 },
   { an_stripe_ball, 900, 0 },
-  { fade_out, 16, 0 },
   { an_fireworks, 1200, 0 },
   { fade_out, 16, 0 },
   { an_migrating_dots, 1200, 0 },
@@ -2797,7 +2804,6 @@ static struct anim_piece animation[] = {
   { an_wobbly_plane11, 900, 0 },
   { fade_out, 16, 0 },
   { an_stripes, 1100, 0 },
-  { fade_out, 16, 0 },
   { an_flytext9, 800, (void *)" LABITAT" },
   { fade_out, 16, 0 },
   { an_fountain, 900, 0 },
