@@ -1054,7 +1054,7 @@ an_migrating_dots(frame_xyz F, int frame, void **data)
     c->end_plane = 1;         /* Top; we will copy this to start_plane below. */
     c->wait = stage_pause+1;  /* Will trigger start of new round. */
     c->stage1 = 0;            /* Pretend that we are at the end of stage2. */
-    c->text_idx = -3;
+    c->text_idx = -5;
     for (int i = 0; i < SIDE*SIDE; ++i)
       c->dots[i].new_col = migrating_dots_col1;
   }
@@ -1267,7 +1267,7 @@ an_cosine_plane5(frame_xyz F, int frame, void **data)
 }
 
 
-static const int num_quinx = 11;
+static const int num_quinx = 21;
 static const int quinx_duration = 300;
 static const double quinx_grav = 0.06;
 struct st_quinx {
@@ -2537,6 +2537,7 @@ testimg_solid(frame_xyz F, int frame, void **data)
 {
   //ef_clear(F, (frame/30) % 16);
   ef_clear(F, 15);
+  //for (int i = 0; i < SIDE; ++i) for (int j= 0; j < SIDE; ++j) F[i][j][(frame/50)%SIDE] = 15;
   /*
   if ((frame / 50)%2)
     ef_clear(F, 15);
@@ -2603,7 +2604,7 @@ static void
 testimg_test_column(frame_xyz F, int frame, void **data)
 {
   ef_clear(F);
-  F[SIDE-1-((frame/(8*SIDE*SIDE))%3)][(frame/(8*SIDE))%SIDE][(frame/8)%SIDE] = 11;
+  F[SIDE-1-((frame/(8*SIDE*SIDE))%SIDE)][(frame/(8*SIDE))%SIDE][(frame/8)%SIDE] = 11;
 }
 
 /* ****************************************************************** */
@@ -2792,14 +2793,14 @@ static struct anim_piece animation5[] = {
 static struct anim_piece animation[] = {
   //{ testimg_test_lines, 100000, 0 },
   //{ testimg_test_column, 100000000, 0 },
-  // { testimg_solid, 1000, 0 },
-  { an_smoketail, 1000, 0 },
-  { an_wireframe, 3150, 0 },
+  //{ testimg_solid, 1000000, 0 },
+  { an_smoketail, 1400, 0 },
+  { an_wireframe, 1575, 0 },
   { fade_out, 16, 0 },
   { an_stripe_ball, 900, 0 },
   { an_fireworks, 1200, 0 },
   { fade_out, 16, 0 },
-  { an_migrating_dots, 1200, 0 },
+  { an_migrating_dots, 1800, 0 },
   { fade_out, 16, 0 },
   { an_wobbly_plane11, 900, 0 },
   { fade_out, 16, 0 },
