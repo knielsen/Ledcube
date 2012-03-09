@@ -17,6 +17,7 @@ my $len = 6 + int ((11**3*$N + 7)/8);
 my $inter_frame_delay= 1.0/$FRAMERATE;
 
 my $cnt= 0;
+my $last_cnt = -1;
 for (;;) {
   my $old_time= [Time::HiRes::gettimeofday()];
   my $sofar= 0;
@@ -46,8 +47,18 @@ for (;;) {
   if ($res > 0) {
     my $y = '';
     sysread(FH, $y, 128);
-    print ord(substr($y, $_, 1)), " " for (0 .. length($y)-1);
-    print "FRAME: sent ", $cnt % 64, " recv ", ord(substr($y, -1)), "\n";
+    for (0 .. length($y)-1) {
+      my $ack = ord(substr($y, $_, 1));
+      #print $ack, " ";
+      if ($ack & 0x80) {
+        print "ERROR: ", $ack & 0x3f, "\n";
+      }
+    }
+    if (($last_cnt % 64) > ($cnt % 64))
+    {
+      print "FRAME: sent ", $cnt % 64, " recv ", ord(substr($y, -1)), "\n";
+    }
+    $last_cnt = $cnt;
   }
 
   my $cur_time= [Time::HiRes::gettimeofday()];

@@ -68,6 +68,8 @@ static uint16_t current_idx = 0;
 static uint8_t remain_bytes= 0;
 /* Position to write next byte received in the "fast path" code. */
 static uint8_t *cur_data_ptr;
+/* Running checksum. */
+static uint8_t checksum = 0;
 
 /*
   Do the less often run serial stuff here, to keep the most serial interrupts
@@ -116,6 +118,9 @@ serial_interrupt_rx_naked()
     "st   Z+, r0\n\t"
     "sts  cur_data_ptr, r30\n\t"
     "sts  cur_data_ptr+1, r31\n\t"
+    "lds  r30, checksum\n\t"
+    "eor  r30, r0\n\t"
+    "sts   checksum, r30\n\t"
 
     "pop  r31\n\t"
     "pop  r30\n\t"
@@ -172,6 +177,7 @@ serial_interrupt_slow_part(void)
 
   c = serial_read();
   frames[cur][current_idx] = c;
+  checksum ^= c;
   current_idx++;
 
   if (current_idx >= 4 && current_idx < FRAME_SIZE-2)
@@ -187,6 +193,15 @@ serial_interrupt_slow_part(void)
   {
     ++frame_receive_counter;
     current_idx = 0;
+    if (checksum != 0xff || frames[cur][0] != 0x0 ||
+        frames[cur][FRAME_SIZE-1] != 0xff)
+    {
+      /* Frame error. Skip this frame and send error to peer. */
+      serial_write(frames[cur][1] | 0x80);
+      checksum = 0;
+      return;
+    }
+    checksum = 0;
     show_frame = cur;
     current_frame = (cur + 1) % NUM_FRAMES;
   }
