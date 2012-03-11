@@ -1,6 +1,6 @@
 ## Name your project
 NAME = ledcube
-FILES = ledcube.c
+#FILES = ledcube.c
 
 ## Point this to the directory where you did
 ##   git clone git://github.com/esmil/oniudra-headers.git arduino
@@ -102,6 +102,9 @@ all: $(NAME).hex
 	@$(NM) -n $< > $@
 
 upload: $(NAME).hex
+	$(AVRDUDE) -v -p$(MCU) -c$(PROG) $(PROG_$(PROG)) -Uflash:w:$<:i
+
+upload5: $(NAME)5.hex
 	$(AVRDUDE) -v -p$(MCU) -c$(PROG) $(PROG_$(PROG)) -Uflash:w:$<:i
 
 list: $(NAME).lss
