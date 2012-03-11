@@ -27,6 +27,8 @@ uint16_t pixel2out_low[16] =
 #define FRAME_SIZE (DATA_SIZE + 6)
 #define NUM_FRAMES 2
 
+#define SIDE 5
+
 static uint8_t frames[NUM_FRAMES][FRAME_SIZE];
 
 /* Keep track of port B state. */
@@ -450,8 +452,9 @@ init(void) {
 
 static void anim_solid(uint16_t frame);
 static void cornercube_5(uint16_t frame, void *data);
-static uint8_t anim_data[200];
+static void an_stripes(uint16_t frame);
 
+static uint8_t anim_data[200];
 static uint8_t generate_frame = 0;
 
 int
@@ -464,7 +467,7 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
   uint8_t previous_receive_counter = 0;
   uint8_t previous_receive_timestamp = 0;
   uint8_t generate_counter= 0;
-  uint8_t anim_stage = 0;
+  uint8_t anim_stage = 2;
   uint16_t anim_frame = 0, anim_target;
 
   init();
@@ -514,6 +517,10 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
     {
       switch (anim_stage)
       {
+      case 2:
+        an_stripes(anim_frame);
+        anim_target = 1200;
+        break;
       case 1:
         anim_solid(anim_frame);
         anim_target = 1200;
@@ -527,8 +534,9 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
       }
       if (++anim_frame >= anim_target)
       {
-        anim_stage = (anim_stage+1)%2;
         anim_frame = 0;
+        if (++anim_stage >= 3)
+          anim_stage = 0;
       }
     }
     ++generate_counter;
@@ -709,4 +717,27 @@ anim_solid(uint16_t frame)
 {
   int8_t d = (frame/5)%32;
   fast_clear(d > 15 ? 31 - d : d);
+}
+
+static void
+an_stripes(uint16_t frame)
+{
+  static const int N = 13;
+
+  for (int i = 0; i < SIDE; ++i)
+  {
+    for (int j = 0; j < SIDE; ++j)
+    {
+      for (int k = 0; k < SIDE; ++k)
+      {
+        int d = (i+j+k+frame*2/3) % (2*N-1);
+        int col;
+        if (d <= N)
+          col = d + (15-N);
+        else
+          col = 15 - (d - N);
+        pixel5(i, j, k, col);
+      }
+    }
+  }
 }
