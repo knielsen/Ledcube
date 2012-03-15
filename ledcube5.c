@@ -1,6 +1,7 @@
 #include <util/delay.h>
 #include <avr/sleep.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <arduino/pins.h>
 #include <arduino/serial.h>
@@ -453,6 +454,11 @@ init(void) {
 static void anim_solid(uint16_t frame);
 static void cornercube_5(uint16_t frame, void *data);
 static void an_stripes(uint16_t frame);
+static void an_test_float(uint16_t frame);
+static void an_cosine_plane(uint16_t frame);
+static void an_wobbly_plane(uint16_t frame);
+static void an_rotate_plane(uint16_t frame);
+static void an_scanplane(uint16_t frame);
 
 static uint8_t anim_data[200];
 static uint8_t generate_frame = 0;
@@ -467,7 +473,7 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
   uint8_t previous_receive_counter = 0;
   uint8_t previous_receive_timestamp = 0;
   uint8_t generate_counter= 0;
-  uint8_t anim_stage = 2;
+  uint8_t anim_stage = 0;
   uint16_t anim_frame = 0, anim_target;
 
   init();
@@ -515,19 +521,32 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
 
     if (onboard_animation)
     {
+      anim_target = 1200;
       switch (anim_stage)
       {
+      case 7:
+        an_scanplane(anim_frame);
+        break;
+      case 6:
+        an_rotate_plane(anim_frame);
+        break;
+      case 5:
+        an_wobbly_plane(anim_frame);
+        break;
+      case 4:
+        an_cosine_plane(anim_frame);
+        break;
+      case 3:
+        an_test_float(anim_frame);
+        break;
       case 2:
         an_stripes(anim_frame);
-        anim_target = 1200;
         break;
       case 1:
         anim_solid(anim_frame);
-        anim_target = 1200;
         break;
       case 0:
         cornercube_5(anim_frame, anim_data);
-        anim_target = 1200;
         break;
       default:
         anim_target = 0;
@@ -535,7 +554,7 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
       if (++anim_frame >= anim_target)
       {
         anim_frame = 0;
-        if (++anim_stage >= 3)
+        if (++anim_stage > 7)
           anim_stage = 0;
       }
     }
@@ -557,6 +576,37 @@ fast_clear(uint8_t val)
     *p++= 0;
 }
 
+static void ef_afterglow(uint8_t subtract)
+{
+  int i, j, k;
+  uint8_t *p = &frames[generate_frame][4];
+  for (i = 0; i < SIDE; ++i)
+  {
+    for (j = 0; j < SIDE; ++j)
+    {
+      for (k = 0; k < SIDE; ++k)
+      {
+        uint16_t idx = i*LEDS_PER_LAYER + LEDS_PER_LAYER - 25 + j*SIDE + k;
+        uint8_t v = p[idx/2];
+        uint8_t u;
+        if (idx % 2)
+        {
+          u = v & 0xf;
+          u = (u > subtract ? u - subtract : 0);
+          v = (v & 0xf0) | u;
+        }
+        else
+        {
+          u = v & 0xf0;
+          u = (u > (subtract<<4) ? u - (subtract<<4) : 0);
+          v = (v & 0xf) | u;
+        }
+        p[idx/2] = v;
+      }
+    }
+  }
+}
+
 static void
 pixel5(uint8_t x, uint8_t y, uint8_t z, uint8_t val)
 {
@@ -574,6 +624,45 @@ pixel5(uint8_t x, uint8_t y, uint8_t z, uint8_t val)
   else
     *p = (v & 0x0f) | (val & 0xf)<<4;
 }
+
+/*
+  Draw a plane given starting point R0 and normal vector N.
+  For now, requires that the plane is "mostly horizontal", meaning that the
+  largest component of the normal is in the z direction. Later we will
+  generalise to arbitrary normal, by selecting the two driving directions
+  to be the smaller two components of the normal.
+*/
+static void
+draw_plane(float x0, float y0, float z0, float nx, float ny, float nz)
+{
+  if (nx > nz || ny > nz)
+    return; /* ToDo */
+
+  /*
+    We span the plane with the two vectors A=(1,0,-nx/nz) and B=(0,1,-ny/nz).
+
+    These are normal to N and linearly independent, so they _do_span the plane.
+    And they are convenient for scan conversion, as they have unit component
+    in the x respectively y direction.
+
+    We shift the starting point to
+        Q0 = R0 - x0*A - y0*B = (0, 0, z0-x0*nx/nz-y0*ny/nz)
+    Then we can generate the points of the plane as simply
+        R = Q0 + u*A + v*B = (u, v, z0+(u-x0)*nx/nz+(v-y0)*ny/nz)
+    This makes it easy to scan-convert with one voxel per column.
+  */
+
+  for (int i = 0; i < SIDE; ++i)
+  {
+    for (int j = 0; j < SIDE; ++j)
+    {
+      int k = round(z0 + (i-x0)*nx/nz + (j-y0)*ny/nz);
+      if (k >= 0 && k < SIDE)
+        pixel5(i, j, k, 15);
+    }
+  }
+}
+
 
 #define RAND_N(n) (rand()/(RAND_MAX/(n)+1))
 
@@ -737,6 +826,133 @@ an_stripes(uint16_t frame)
         else
           col = 15 - (d - N);
         pixel5(i, j, k, col);
+      }
+    }
+  }
+}
+
+static void
+an_test_float(uint16_t frame)
+{
+  float f = frame / 3.14;
+  fast_clear(0);
+  int x = 2*sin(f)+2.5;
+  int y = 2*cos(f)+2.5;
+  pixel5(x, y, 2, 15);
+}
+
+static void
+an_cosine_plane(uint16_t frame)
+{
+  static const float speed = 22.0;
+  ef_afterglow(3);
+  for (int i = 0; i <SIDE; ++i)
+  {
+    for (int j = 0; j<SIDE; ++j)
+    {
+      float x = i - ((float)SIDE-1)/2;
+      float y = j - ((float)SIDE-1)/2;
+      float r = pow(x*x+y*y, 0.65);
+      float z = 0.95*SIDE/2.0*cos(0.48*M_PI - frame/speed*M_PI +
+                              r/pow(SIDE*SIDE/4.0, 0.65)*0.6*M_PI);
+      int k = round(z + ((float)SIDE-1)/2);
+      if (k >= 0 && k < SIDE)
+        pixel5(i, j, k, 15);
+    }
+  }
+}
+
+static void
+an_wobbly_plane(uint16_t frame)
+{
+  static const float spin_factor = 0.1;
+  static const uint16_t start_up_down = 250;
+  static const float up_down_factor = spin_factor/2;
+  static const float wobble_factor = spin_factor/6;
+  static const float wobble_amplitude = 0.5;
+
+  fast_clear(0);
+  float amp_delta = frame / 100.0;
+  if (amp_delta > 0.4)
+    amp_delta = 0.4;
+  float nx = wobble_amplitude*(amp_delta+fabs(sin(wobble_factor*frame)))*cos(frame * spin_factor);
+  float ny = wobble_amplitude*(amp_delta+fabs(sin(wobble_factor*frame)))*sin(frame * spin_factor);
+  float nz = 1;
+  float x0 = ((float)SIDE -1)/2;
+  float y0 = ((float)SIDE -1)/2;
+  float z0 = ((float)SIDE -1)/2;
+  if (frame >= start_up_down)
+    z0 += (float)SIDE/4*sin(frame * up_down_factor);
+  draw_plane(x0, y0, z0, nx, ny, nz);
+}
+
+static void
+an_rotate_plane(uint16_t frame)
+{
+  static const double angspeed = 0.14;
+
+  double angle = fmod(frame * angspeed, M_PI) - M_PI/4;
+  int orientation = floor(fmod(frame * angspeed, 3*4*2*M_PI) / (4*2*M_PI));
+  ef_afterglow(3);
+  if (angle <= M_PI/4)
+  {
+    double slope = tan(angle);
+    for (int i = 0; i < SIDE; ++i)
+    {
+      int a = round(((double)SIDE-1)/2 + slope*((double)i-((double)SIDE-1)/2));
+      for (int j= 0; j < SIDE; ++j)
+      {
+        switch (orientation)
+        {
+        case 0: pixel5(i, a, j, 15); break;
+        case 1: pixel5(i, j, a, 15); break;
+        case 2: pixel5(j, i, a, 15); break;
+        }
+      }
+    }
+  }
+  else
+  {
+    double slope = 1/tan(angle);
+    for (int i = 0; i < SIDE; ++i)
+    {
+      int a = round(((double)SIDE-1)/2 + slope*((double)i-((double)SIDE-1)/2));
+      for (int j= 0; j < SIDE; ++j)
+      {
+        switch (orientation)
+        {
+        case 0: pixel5(a, i, j, 15); break;
+        case 1: pixel5(a, j, i, 15); break;
+        case 2: pixel5(j, a, i, 15); break;
+        }
+      }
+    }
+  }
+}
+
+/* A plane that scans the 3 directions. */
+static void
+an_scanplane(uint16_t frame)
+{
+  fast_clear(0);
+  static const int slowdown = 5;
+  int c = (frame / slowdown) % (3*(2*SIDE-1));
+  int direction = c / (2*SIDE-1);
+  int pos = c % (2*SIDE-1);
+  if (pos >= SIDE)
+    pos = 2*SIDE-2-pos;
+  for (int i= 0; i < SIDE; ++i)
+  {
+    for (int j = 0; j < SIDE; ++j)
+    {
+      switch (direction)
+      {
+      case 0:
+        pixel5(i, j, pos, 15); break;
+      case 1:
+        pixel5(i, pos, j, 15); break;
+      case 2:
+        pixel5(pos, i, j, 15); break;
       }
     }
   }
