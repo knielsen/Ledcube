@@ -71,7 +71,7 @@ LDFLAGS    = -Wl,--relax
 ## Uncomment for scanf support with floating point (needs -lm below)
 #LDFLAGS   += -Wl,-u,vfscanf -lscanf_flt
 ## Uncomment for trigonometry and other floating point functions
-#LDFLAGS   += -lm
+LDFLAGS   += -lm
 
 .PHONY: all list tty cat
 .PRECIOUS: %.elf
