@@ -7,6 +7,7 @@
 #include <arduino/timer1.h>
 #include <arduino/sleep.h>
 
+#define FIXUP_COL40 1
 
 #define PIN_SCLK 8
 #define PIN_SIN  9
@@ -374,6 +375,17 @@ timer1_interrupt_a()
 
   /* Now shift out one layer. */
   bstate = portb_state & 0xf8;  /* XLAT, XCLK both 0 */
+#ifdef FIXUP_COL40
+  {
+    /* Fixup for number 40 - chip pin is broken, it's moved. */
+    uint8_t pixel;
+    if ((LEDS_PER_LAYER % 2) && (cur_layer % 2))
+      pixel = data[82/2] >> 4;
+    else
+      pixel = data[81/2] & 0xf;
+    shift_out_12bit(bstate, pixel2out_high[pixel], pixel2out_low[pixel]);
+  }
+#endif
   if ((LEDS_PER_LAYER % 2) && (cur_layer % 2))
   {
     uint8_t pixel = *data++ & 0xf;
@@ -449,6 +461,7 @@ init(void) {
 }
 
 static void anim_solid(uint8_t f, uint8_t val);
+static void anim_scan_plane(uint8_t f);
 static void cornercube_5(uint8_t f);
 
 int
@@ -508,7 +521,8 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
 
     if (onboard_animation)
     {
-      anim_solid(generate_frame, 0);
+      //anim_solid(generate_frame, 0);
+      anim_scan_plane(generate_frame);
       //cornercube_5(generate_frame);
     }
     ++generate_counter;
@@ -538,6 +552,23 @@ pixel5(uint8_t f, uint8_t x, uint8_t y, uint8_t z, uint8_t val)
   idx += LEDS_PER_LAYER - 25;
   idx += (4-x);
   idx += (4-y)*5;
+
+  p = &frames[f][4] + idx/2;
+  v = *p;
+  if (idx % 2)
+    *p = (v & 0xf0) | (val & 0xf);
+  else
+    *p = (v & 0x0f) | (val & 0xf)<<4;
+}
+
+static void
+pixel11(uint8_t f, uint8_t x, uint8_t y, uint8_t z, uint8_t val)
+{
+  uint8_t *p;
+  uint8_t v;
+  int idx= LEDS_PER_LAYER * z;
+  idx += x*NUM_LAYERS;
+  idx += y;
 
   p = &frames[f][4] + idx/2;
   v = *p;
@@ -690,4 +721,20 @@ static void
 anim_solid(uint8_t f, uint8_t val)
 {
   fast_clear(f, val);
+}
+
+static void
+anim_scan_plane(uint8_t f)
+{
+  static unsigned int count = 0;
+  int i, j;
+  fast_clear(f, 0);
+  for (i = 0; i < 11; ++i)
+  {
+    for (j = 0; j < 11; ++j)
+    {
+      pixel11(f, i, (count/32)%11, j, 15);
+    }
+  }
+  ++count;
 }
