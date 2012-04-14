@@ -1,5 +1,6 @@
 #include <util/delay.h>
 #include <avr/sleep.h>
+#include <avr/pgmspace.h>
 #include <stdlib.h>
 
 #include <arduino/pins.h>
@@ -29,6 +30,24 @@ uint16_t pixel2out_low[16] =
 #define NUM_FRAMES 2
 
 static uint8_t frames[NUM_FRAMES][FRAME_SIZE];
+
+/* Mapping: for each LED, which nibble to take the grayscale value from. */
+static prog_uint16_t led_map[] PROGMEM = {
+//  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  /* These are a few dead outputs on chip 2 that were re-mapped. */
+  120-26, 120-31, 120-29, 120-39,
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+  11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+  22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+  33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
+  44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
+  55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65,
+  66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76,
+  77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
+  88, 0xfff0, 90, 0xfff0, 92, 93, 0xfff0, 95, 96, 97, 98,
+  99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
+  110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120
+};
 
 /* Keep track of port B state. */
 /* ToDo: remove volatile once we don't need it in interrupt routines anymore. */
@@ -320,7 +339,8 @@ timer1_interrupt_a()
 {
   uint8_t i;
   uint8_t bstate;
-  static uint8_t *data;
+  static uint8_t *frame_start;
+  static uint16_t start;
 
   sei();
 
@@ -370,40 +390,31 @@ timer1_interrupt_a()
       serial_write(frames[cur_frame][1]);
       old_frame= cur_frame;
     }
-    data= &frames[cur_frame][4];
+    frame_start = &frames[cur_frame][4];
+    start = 0;
   }
 
   /* Now shift out one layer. */
   bstate = portb_state & 0xf8;  /* XLAT, XCLK both 0 */
-#ifdef FIXUP_COL40
+
+  for (i = 0; i < LEDS_PER_LAYER+4; ++i)
   {
-    /* Fixup for number 40 - chip pin is broken, it's moved. */
     uint8_t pixel;
-    if ((LEDS_PER_LAYER % 2) && (cur_layer % 2))
-      pixel = data[82/2] >> 4;
+    uint16_t idx = pgm_read_word_near(&led_map[i]);
+    if (idx >= 0xfff0)
+      pixel = idx & 0xf;
     else
-      pixel = data[81/2] & 0xf;
+    {
+      idx += start;
+      if (idx % 2)
+      pixel = frame_start[idx/2] & 0xf;
+    else
+      pixel = frame_start[idx/2] >> 4;
+    }
     shift_out_12bit(bstate, pixel2out_high[pixel], pixel2out_low[pixel]);
   }
-#endif
-  if ((LEDS_PER_LAYER % 2) && (cur_layer % 2))
-  {
-    uint8_t pixel = *data++ & 0xf;
-    shift_out_12bit(bstate, pixel2out_high[pixel], pixel2out_low[pixel]);
-  }
-  for (i = 0; i < LEDS_PER_LAYER/2; i++)
-  {
-    uint8_t v = *data++;
-    uint8_t first = v >> 4;
-    uint8_t second = v & 0xf;
-    shift_out_12bit(bstate, pixel2out_high[first], pixel2out_low[first]);
-    shift_out_12bit(bstate, pixel2out_high[second], pixel2out_low[second]);
-  }
-  if ((LEDS_PER_LAYER % 2) && !(cur_layer % 2))
-  {
-    uint8_t pixel = *data >> 4;
-    shift_out_12bit(bstate, pixel2out_high[pixel], pixel2out_low[pixel]);
-  }
+
+  start += 121;
 }
 
 
