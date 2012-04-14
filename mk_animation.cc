@@ -1745,6 +1745,132 @@ cornercube_5(frame_xyz F, int frame, void **data)
   }
 }
 
+static void
+cornercube_11(frame_xyz F, int frame, void **data)
+{
+  if (!*data)
+    *data= static_cast<void *>(new struct cornercube_data);
+  struct cornercube_data *cd= static_cast<struct cornercube_data *>(*data);
+
+  static const int N = 11;
+  static const int base_count= 15;
+
+  ef_clear(F);
+  if (frame == 0)
+  {
+    // Initialise first corner to expand from
+    cd->col= 0;
+    cd->target_col= 15;
+    cd->base_x= 0;
+    cd->base_y= 0;
+    cd->base_z= 0;
+    cd->dir_x= 1;
+    cd->dir_y= 1;
+    cd->dir_z= 1;
+    cd->corner= 0;
+  }
+
+  if ((frame / (base_count+1))%2 == 0)
+  {
+    // Cube expanding from corner.
+    if ((frame % (base_count+1)) == 0)
+    {
+      cd->col= cd->target_col;
+      cd->target_col= 15;
+    }
+    double expand_factor= (double)(frame % (base_count+1)) / base_count;
+    int col= (int)((double)cd->col +
+                   expand_factor * ((double)cd->target_col - (double)cd->col) + 0.5);
+    int side_len= (int)(expand_factor * (N-1) + 0.5);
+    for (int i= 0; i <= side_len; i++)
+    {
+      int end_x= cd->base_x+cd->dir_x*side_len;
+      int end_y= cd->base_y+cd->dir_y*side_len;
+      int end_z= cd->base_z+cd->dir_z*side_len;
+      F[cd->base_x + i*cd->dir_x][cd->base_y][cd->base_z]= col;
+      F[cd->base_x + i*cd->dir_x][end_y][cd->base_z]= col;
+      F[cd->base_x + i*cd->dir_x][cd->base_y][end_z]= col;
+      F[cd->base_x + i*cd->dir_x][end_y][end_z]= col;
+      F[cd->base_x][cd->base_y + i*cd->dir_y][cd->base_z]= col;
+      F[end_x][cd->base_y + i*cd->dir_y][cd->base_z]= col;
+      F[cd->base_x][cd->base_y + i*cd->dir_y][end_z]= col;
+      F[end_x][cd->base_y + i*cd->dir_y][end_z]= col;
+      F[cd->base_x][cd->base_y][cd->base_z + i*cd->dir_z]= col;
+      F[end_x][cd->base_y][cd->base_z + i*cd->dir_z]= col;
+      F[cd->base_x][end_y][cd->base_z + i*cd->dir_z]= col;
+      F[end_x][end_y][cd->base_z + i*cd->dir_z]= col;
+    }
+  }
+  else
+  {
+    // Cube retreating to other corner.
+    if ((frame % (base_count+1)) == 0)
+    {
+      // At first frame, select new base point.
+      int corner;
+      do
+        corner= rand() % 8;
+      while (corner == cd->corner);
+      cd->corner= corner;
+      if (corner & 1)
+      {
+        cd->base_x= N-1;
+        cd->dir_x= -1;
+      }
+      else
+      {
+        cd->base_x= 0;
+        cd->dir_x= 1;
+      }
+      if (corner & 2)
+      {
+        cd->base_y= N-1;
+        cd->dir_y= -1;
+      }
+      else
+      {
+        cd->base_y= 0;
+        cd->dir_y= 1;
+      }
+      if (corner & 4)
+      {
+        cd->base_z= N-1;
+        cd->dir_z= -1;
+      }
+      else
+      {
+        cd->base_z= 0;
+        cd->dir_z= 1;
+      }
+      // And a new target colour.
+      cd->col= cd->target_col;
+      cd->target_col= 15;
+    }
+    double expand_factor= (double)(base_count - (frame % (base_count + 1))) / base_count;
+    int col= (int)((double)cd->col +
+                   expand_factor * ((double)cd->target_col - (double)cd->col) + 0.5);
+    int side_len= (int)(expand_factor * (N-1) + 0.5);
+    for (int i= 0; i <= side_len; i++)
+    {
+      int end_x= cd->base_x+cd->dir_x*side_len;
+      int end_y= cd->base_y+cd->dir_y*side_len;
+      int end_z= cd->base_z+cd->dir_z*side_len;
+      F[cd->base_x + i*cd->dir_x][cd->base_y][cd->base_z]= col;
+      F[cd->base_x + i*cd->dir_x][end_y][cd->base_z]= col;
+      F[cd->base_x + i*cd->dir_x][cd->base_y][end_z]= col;
+      F[cd->base_x + i*cd->dir_x][end_y][end_z]= col;
+      F[cd->base_x][cd->base_y + i*cd->dir_y][cd->base_z]= col;
+      F[end_x][cd->base_y + i*cd->dir_y][cd->base_z]= col;
+      F[cd->base_x][cd->base_y + i*cd->dir_y][end_z]= col;
+      F[end_x][cd->base_y + i*cd->dir_y][end_z]= col;
+      F[cd->base_x][cd->base_y][cd->base_z + i*cd->dir_z]= col;
+      F[end_x][cd->base_y][cd->base_z + i*cd->dir_z]= col;
+      F[cd->base_x][end_y][cd->base_z + i*cd->dir_z]= col;
+      F[end_x][end_y][cd->base_z + i*cd->dir_z]= col;
+    }
+  }
+}
+
 
 static void
 generic_scrolltext_5(frame_xyz F, int frame, char text[], size_t len)
@@ -2536,7 +2662,7 @@ static void
 testimg_solid(frame_xyz F, int frame, void **data)
 {
   //ef_clear(F, (frame/30) % 16);
-  ef_clear(F, 15);
+  ef_clear(F, 0);
   //for (int i = 0; i < SIDE; ++i) for (int j= 0; j < SIDE; ++j) F[i][j][(frame/50)%SIDE] = 15;
   /*
   if ((frame / 50)%2)
@@ -2794,6 +2920,8 @@ static struct anim_piece animation[] = {
   //{ testimg_test_lines, 100000, 0 },
   //{ testimg_test_column, 100000000, 0 },
   //{ testimg_solid, 1000000, 0 },
+  { cornercube_11, 600, 0 },
+  { fade_out, 16, 0 },
   { an_smoketail, 1400, 0 },
   { an_wireframe, 1575, 0 },
   { fade_out, 16, 0 },
