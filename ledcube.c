@@ -7,30 +7,14 @@
 #include <arduino/serial.h>
 #include <arduino/timer1.h>
 #include <arduino/sleep.h>
+#include <arduino/spi.h>
 
 #define FIXUP_COL40 1
 
-#define PIN_SCLK 8
-#define PIN_SIN  9
 #define PIN_XLAT 10
-#define PIN_BLANK 11
-
-/* 12-bit output values used for different pixel values. */
-#ifdef DAYMODE
-uint16_t pixel2out_high[16] =
-{  0 >>8,  23 >>8,  89 >>8,  192 >>8,  332 >>8,  508 >>8,  719 >>8,  964 >>8,
-1242 >>8,  1554>>8,   1898 >>8,  2275 >>8,  2684 >>8,  3125 >>8,  3597 >>8,  4095 >>8 };
-uint16_t pixel2out_low[16] =
-{  0 &255, 23 &255, 89 &255, 192 &255, 332 &255, 508 &255, 719 &255, 964 &255,
-1242 &255, 1554 &255, 1898 &255, 2275 &255, 2684 &255, 3125 &255, 3597 &255, 4095 &255 };
-#else
-uint16_t pixel2out_high[16] =
-{ 0 >>8,  1 >>8,  3 >>8,  5 >>8,  9 >>8,  15 >>8,  27 >>8,  48 >>8,
- 84 >>8,  147>>8,   255 >>8,  445 >>8,  775 >>8,  1350 >>8,  2352 >>8,  4095 >>8 };
-uint16_t pixel2out_low[16] =
-{ 0 &255, 1 &255, 3 &255, 5 &255, 9 &255, 15 &255, 27 &255, 48 &255,
- 84 &255, 147 &255, 255 &255, 445 &255, 775 &255, 1350 &255, 2352 &255, 4095 &255 };
-#endif
+#define PIN_SIN  11
+#define PIN_BLANK 12
+#define PIN_SCLK 13
 
 #define NUM_LEDS 1331
 #define NUM_LAYERS 11
@@ -43,8 +27,10 @@ uint16_t pixel2out_low[16] =
 static uint8_t frames[NUM_FRAMES][FRAME_SIZE];
 
 /* Mapping: for each LED, which nibble to take the grayscale value from. */
+/* For the fast SPI output, the size should be divisible by two. */
 static prog_uint16_t led_map[] PROGMEM = {
-//  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+//  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0x8000,  /* Dummy extra shift-out, to make total even. */
   /* These are a few dead outputs on chip 2 that were re-mapped. */
   120-26, 120-31, 120-29, 120-39,
   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
@@ -55,26 +41,10 @@ static prog_uint16_t led_map[] PROGMEM = {
   55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65,
   66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76,
   77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
-  88, 0xfff0, 90, 0xfff0, 92, 93, 0xfff0, 95, 96, 97, 98,
+  88, 0x8000, 90, 0x8000, 92, 93, 0x8000, 95, 96, 97, 98,
   99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
   110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120
 };
-
-/* Keep track of port B state. */
-/* ToDo: remove volatile once we don't need it in interrupt routines anymore. */
-static volatile uint8_t portb_state;
-static void
-my_pin13_high(void)
-{
-  portb_state |= (1<<5);
-  pin13_high();
-}
-static void
-my_pin13_low(void)
-{
-  portb_state &= ~(1<<5);
-  pin13_low();
-}
 
 /* Serial reception. */
 
@@ -247,109 +217,177 @@ serial_reset(void)
   sei();
 }
 
-/*
-  Shift out 12 bits to the LED controller (a single LED).
-  ASM optimised to get down to 5 cycles / bit, should be ~65 cycles including
-  setup overhead.
 
-  Idea is
-   - Use bst/bld in unrolled loop to quickly move each data bit into the SIN
-     bit position.
-   - Use `out' instruction (1 cycle vs. 2 cycles + conditional jump cost for
-     sbi/cbi) for speed, and to set clock low in same cycle as setting data
-     bit. This requires that all other used bits in this port have known
-     fixed values.
-*/
-static inline void
-shift_out_12bit(uint8_t bstate, uint8_t val_high, uint8_t val_low)
+/* 12-bit output values used for different pixel values. */
+static uint16_t pixel2out[16] =
+#ifdef DAYMODE
+{ 0, 23, 89, 192, 332, 508, 719, 964, 1242, 1554, 1898, 2275, 2684, 3125, 3597, 4095 };
+#else
+{ 0, 1, 3, 5, 9, 15, 27, 48, 84, 147, 255, 445, 775, 1350, 2352, 0x800/*4095*/ };
+#endif
+
+static void
+shift_out_frame_spi(uint8_t *frame_start, uint16_t start)
 {
+  register uint8_t *frame_start_r asm("r20") = frame_start;
+  register uint8_t leds asm("r25") = sizeof(led_map)/sizeof(led_map[0])/2;
+  register uint16_t start_r asm("r18") = start;
+
+  /* Init SPI */
+  pin_mode_output(11);  /* MOSI */
+  pin_mode_output(13);  /* SCK */
   /*
-    SCLK is bit 0 in port B [8].
-    SIN is bit 1 in port B [9].
-
-    PORTB is register 5.
-
-    SCLK is assumed low at the start.
+    Interrupt disable, SPI enable, MSB first, master mode, SCK idle low,
+    sample on leading edge, d2 clock.
   */
-  asm volatile(
-    "\t"
-    "bst %[reg_val_high], 3\n\t"  /* Grab the first (MSB) data bit */
+  SPCR = _BV(SPE) | _BV(MSTR);
+  /* d2 clock. */
+  SPSR = _BV(SPI2X);
 
-    "bld %[reg_port], 1\n\t"      /* Store data bit in SIN position */
-    "out 5, %[reg_port]\n\t"      /* Output data bit on SIN, set SCLK low */
-    "bst %[reg_val_high], 2\n\t"  /* Grab the next data bit */
-    "sbi 5, 0\n\t"                /* Set SCLK high to send first data bit */
+  /*
+    Shift out all the grayscale values for one layer.
+    Use hardware SPI at max speed (2 cycles/bit) so that we can in parallel on
+    the CPU do the word to fetch and prepare the bits for the next one.
 
-    "bld %[reg_port], 1\n\t"
-    "out 5, %[reg_port]\n\t"
-    "bst %[reg_val_high], 1\n\t"
-    "sbi 5, 0\n\t"
+    Carefully count the cycles and spread out the SPI transmit OUT
+    instructions, so that we know that SPI will be ready and save a couple
+    instructions to wait for SPI ready.
 
-    "bld %[reg_port], 1\n\t"
-    "out 5, %[reg_port]\n\t"
-    "bst %[reg_val_high], 0\n\t"
-    "sbi 5, 0\n\t"
+    In each loop iteration we fetch two nibbles of grayscale values and convert
+    them into 3 bytes (2*12 bits) to shift out. So the number of LEDS to shift
+    out must be even (it is safe to shift out one more dummy LED.
 
-    "bld %[reg_port], 1\n\t"
-    "out 5, %[reg_port]\n\t"
-    "bst %[reg_val_low], 7\n\t"
-    "sbi 5, 0\n\t"
+    The led_map array, in FLASH memory, holds the nibble offset into the frame
+    for each LED to shift out. An offset >= 0x8000 shifts out zero.
 
-    "bld %[reg_port], 1\n\t"
-    "out 5, %[reg_port]\n\t"
-    "bst %[reg_val_low], 6\n\t"
-    "sbi 5, 0\n\t"
+    The pixel2out array, in DATA memory, holds 16 uint16_t values for the
+    PWM value to shift out to the TLC59xx for each possible grayscale value.
+  */
+  asm volatile
+  (
+  "ldi  r30, lo8(led_map)\n\t"
+  "ldi  r31, hi8(led_map)\n\t"
+  "ldi  r22, lo8(pixel2out)\n\t"
+  "ldi  r23, hi8(pixel2out)\n\t"
+  "ldi  r16, 0\n"                 /* dummy initial shift-out of zeros. */
 
-    "bld %[reg_port], 1\n\t"
-    "out 5, %[reg_port]\n\t"
-    "bst %[reg_val_low], 5\n\t"
-    "sbi 5, 0\n\t"
+"1:\n\t"
+  "lpm  r26, Z+\n\t"       /* 3 */
+  "lpm  r27, Z+\n\t"       /* 3  idx = led_map[led_num++] */
+  "add  r26, r18\n\t"      /* 1 */
+  "adc  r27, r19\n\t"      /* 1  X = idx + start */
+  "brmi 4f\n\t"            /* 1  (2 for taken) */
 
-    "bld %[reg_port], 1\n\t"
-    "out 5, %[reg_port]\n\t"
-    "bst %[reg_val_low], 4\n\t"
-    "sbi 5, 0\n\t"
+  "mov  r0, r26\n\t"       /* 1  save copy of X low bit, so we can test later */
+  "lsr  r27\n\t"           /* 1 */
+  "ror  r26\n\t"           /* 1 */
+  "add  r26, r20\n\t"      /* 1 */
+  "adc  r27, r21\n\t"      /* 1  X = &frame[(idx+start)/2] */
+  "ld   r26, X\n\t"        /* 1 */
+  "sbrs r0,0\n\t"          /* 1  (2 if skip, but that's counting swap as 0) */
+  "swap r26\n\t"           /* 1 */
+  "out  0x2E, r16\n\t"     /* 1 */
+  "andi r26, 0xf\n"        /* 1 */
 
-    "bld %[reg_port], 1\n\t"
-    "out 5, %[reg_port]\n\t"
-    "bst %[reg_val_low], 3\n\t"
-    "sbi 5, 0\n\t"
+"2:\n\t"                  /*    Now r26 = pixel value */
+  "clr  r27\n\t"           /* 1 */
+  "add  r26, r26\n\t"      /* 1 */
+  "add  r26, r22\n\t"      /* 1 */
+  "adc  r27, r23\n\t"      /* 1  X = &pixel2out[pixel] */
+  "ld   r24, X+\n\t"       /* 2  r24 = v  (low 8 bits to shift out) */
+  "ld   r0, X\n\t"         /* 1  r0 = u  (high 4 bits to shift out) */
+  "swap r0\n\t"            /* 1 */
+  "swap r24\n\t"           /* 1 */
+  "ldi  r17, 0xf\n\t"      /* 1 */
+  "and  r17, r24\n\t"      /* 1 */
+  "or   r17, r0\n\t"       /* 1 */
 
-    "bld %[reg_port], 1\n\t"
-    "out 5, %[reg_port]\n\t"
-    "bst %[reg_val_low], 2\n\t"
-    "sbi 5, 0\n\t"
+/* Now the second one ... */
 
-    "bld %[reg_port], 1\n\t"
-    "out 5, %[reg_port]\n\t"
-    "bst %[reg_val_low], 1\n\t"
-    "sbi 5, 0\n\t"
+  "lpm  r26, Z+\n\t"       /* 3 */
+  "lpm  r27, Z+\n\t"       /* 3 */
+  "add  r26, r18\n\t"      /* 1 */
+  "out  0x2E,r17\n\t"      /* 1 */
+  "adc  r27, r19\n\t"      /* 1 */
+  "brmi 7f\n\t"            /* 1 */
+  "mov  r0, r26\n\t"       /* 1 */
+  "lsr  r27\n\t"           /* 1 */
+  "ror  r26\n\t"           /* 1 */
+  "add  r26, r20\n\t"      /* 1 */
+  "adc  r27, r21\n\t"      /* 1 */
+  "ld   r26, X\n\t"        /* 1 */
+  "sbrs r0,0\n\t"          /* 1 */
+  "swap r26\n\t"           /* 1 */
+  "andi r26, 0xf\n"        /* 1 */
 
-    "bld %[reg_port], 1\n\t"
-    "out 5, %[reg_port]\n\t"
-    "bst %[reg_val_low], 0\n\t"
-    "sbi 5, 0\n\t"
+"3:\n\t"
+  "clr  r27\n\t"           /* 1 */
+  "add  r26, r26\n\t"      /* 1 */
+  "add  r26, r22\n\t"      /* 1 */
+  "adc  r27, r23\n\t"      /* 1 */
+  "ld   r16, X+\n\t"       /* 2 */
+  "ld   r0, X\n\t"         /* 1 */
+  "andi r24, 0xf0\n\t"     /* 1 */
+  "or   r0, r24\n\t"       /* 1 */
+  "out  0x2E, r0\n\t"      /* 1 */
+  "dec  r25\n\t"           /* 1 */
+  "brne 1b\n\t"            /* 2 */
 
-    "bld %[reg_port], 1\n\t"
-    "out 5, %[reg_port]\n\t"
-    "nop\n\t"
-    "sbi 5, 0\n\t"
+  "rjmp 10f\n"             /* 1 (really 2, but subtract 1 for not taken brne) */
 
-    "nop\n\t"
-    "cbi 5, 0\n\t"
+"4:\n\t"                   /* 1  (extra for taken branch) */
+  "clr  r26\n\t"           /* 1 */
+  /* Need to burn 5 cycles here ... */
+  "rjmp 5f\n"              /* 2 */
+"5:\n\t"
+  "rjmp 6f\n"              /* 2 */
+"6:\n\t"
+  "nop\n\t"                /* 1 */
+  "out  0x2E, r16\n\t"     /* 1  # Note: this OUT is one cycle early */
+  "rjmp 2b\n"              /* 2 */
 
-    : [reg_port] "+r" (bstate)
-    : [reg_val_high] "r" (val_high), [reg_val_low] "r" (val_low)
+"7:\n\t"                   /* 1  (extra for taken branch) */
+  "clr  r26\n\t"           /* 1 */
+  /* Need to burn 5 cycles here ... */
+  "rjmp 8f\n"              /* 2 */
+"8:\n\t"
+  "rjmp 9f\n"              /* 2 */
+"9:\n\t"
+  "nop\n\t"                /* 1 */
+  "rjmp 3b\n"              /* 2 */
+
+"10:\n\t"
+  /* Now we just need to wait 17 cycles and then shift out the last 8 bits. */
+  "ldi r17, 5\n"           /* 1 */
+"11:\n\t"
+  "dec r17\n\t"            /* 1 */
+  "brne 11b\n\t"           /* 2 / 1 */
+  "nop\n\t"                /* 1 */
+  "out  0x2E, r16\n\t"     /* 1 */
+  /* And wait for final to be shifted out. */
+  "ldi r17, 7\n"           /* 1 */
+"12:\n\t"
+  "dec r17\n\t"            /* 1 */
+  "brne 12b\n\t"           /* 2 / 1 */
+  : "+r" (leds)
+  : "r" (start_r), "r" (frame_start_r), "i" (&led_map[0]), "i" (&pixel2out[0])
+  /* We do not clobber memory, but we do read it. I couldn't easily figure out
+     how to specify exactly what we read (the frames[][] array, and it's not
+     time critical, so a generic "memory" clobber will serve.
+  */
+  : "r0", "r16", "r17", "r22", "r23", "r24", "r26", "r27", "r30", "r31", "memory"
   );
+
+  /* De-init SPI */
+  spi_disable();
 }
+
 
 static uint8_t old_frame= 0xff;
 static uint8_t cur_layer= NUM_LAYERS;
 static volatile uint8_t frame_refresh_counter= 0;
 timer1_interrupt_a()
 {
-  uint8_t i;
-  uint8_t bstate;
   static uint8_t *frame_start;
   static uint16_t start;
 
@@ -378,14 +416,7 @@ timer1_interrupt_a()
     case 9: pinA3_high(); pinA4_low(); break;
     case 10:pinA4_high(); pinA5_low(); break;
     }
-    /* ToDo: Hack for now: only display lowest layers. */
-    if (cur_layer <= 11)
-    {
-      pin_low(PIN_BLANK);
-      portb_state &= 0xf7;  /* fix BLANK low. */
-    }
-    else
-      portb_state |= 0x08;  /* fix BLANK high. */
+    pin_low(PIN_BLANK);
   }
 
   cur_layer++;
@@ -406,25 +437,7 @@ timer1_interrupt_a()
   }
 
   /* Now shift out one layer. */
-  bstate = portb_state & 0xf8;  /* XLAT, XCLK both 0 */
-
-  for (i = 0; i < LEDS_PER_LAYER+4; ++i)
-  {
-    uint8_t pixel;
-    uint16_t idx = pgm_read_word_near(&led_map[i]);
-    if (idx >= 0xfff0)
-      pixel = idx & 0xf;
-    else
-    {
-      idx += start;
-      if (idx % 2)
-      pixel = frame_start[idx/2] & 0xf;
-    else
-      pixel = frame_start[idx/2] >> 4;
-    }
-    shift_out_12bit(bstate, pixel2out_high[pixel], pixel2out_low[pixel]);
-  }
-
+  shift_out_frame_spi(frame_start, start);
   start += 121;
 }
 
@@ -484,6 +497,7 @@ init(void) {
 
 static void anim_solid(uint8_t f, uint8_t val);
 static void anim_scan_plane(uint8_t f);
+static void anim_scan_plane_5(uint8_t f);
 static void cornercube_5(uint8_t f);
 
 int
@@ -501,16 +515,9 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
   init();
   sei();
 
-  pin13_mode_output();
-  my_pin13_low();
-
   sleep_mode_idle();
   for (;;)
   {
-    if (onboard_animation)
-      my_pin13_high();
-    else
-      my_pin13_low();
     if (onboard_animation)
       show_frame = generate_frame;
     previous_refresh_counter= frame_refresh_counter;
@@ -543,8 +550,9 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
 
     if (onboard_animation)
     {
-      //anim_solid(generate_frame, 0);
-      anim_scan_plane(generate_frame);
+      anim_solid(generate_frame, 15);
+      //anim_scan_plane(generate_frame);
+      //anim_scan_plane_5(generate_frame);
       //cornercube_5(generate_frame);
     }
     ++generate_counter;
@@ -756,6 +764,22 @@ anim_scan_plane(uint8_t f)
     for (j = 0; j < 11; ++j)
     {
       pixel11(f, i, (count/32)%11, j, 15);
+    }
+  }
+  ++count;
+}
+
+static void
+anim_scan_plane_5(uint8_t f)
+{
+  static unsigned int count = 0;
+  int i, j;
+  fast_clear(f, 0);
+  for (i = 0; i < 5; ++i)
+  {
+    for (j = 0; j < 5; ++j)
+    {
+      pixel5(f, i, (count/32)%5, j, 15);
     }
   }
   ++count;

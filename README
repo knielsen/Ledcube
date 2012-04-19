@@ -38,10 +38,10 @@ Example:
 
 Ledcube Arduino pinout
 
-SCLK   8
-SIN    9
 XLAT  10
-BLANK 11
+SIN   11
+BLANK 12
+SCLK  13
 
 FET1    7
 FET2    6

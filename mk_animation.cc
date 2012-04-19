@@ -2694,6 +2694,14 @@ testimg_walk_bottom_5(frame_xyz F, int frame, void **data)
   F[v % 5][(v/5) % 5][0] = 15;
 }
 
+static void
+testimg_walk_all_5(frame_xyz F, int frame, void **data)
+{
+  ef_clear(F, 0);
+  int v = frame / 25;
+  F[v % 5][(v/5) % 5][(v/25) % 5] = 15;
+}
+
 /* Show the different grey scales for easy comparison. */
 static void
 testimg_show_greyscales_5(frame_xyz F, int frame, void **data)
@@ -2896,6 +2904,7 @@ static struct anim_piece animation5[] = {
   // { testimg_walk_bottom_5, 100000, 0},
   // { testimg_show_greyscales_5, 100000, 0},
   // { testimg_show_greyscales_bottom_5, 100000, 0},
+  // { testimg_walk_all_5, 100000, 0},
   { an_cosine_plane5, 600, 0 },
   { fade_out, 16, 0 },
   { an_wobbly_plane5, 800, 0 },
@@ -2980,7 +2989,7 @@ main(int argc, char *argv[])
       exit(1);
     }
   }
-  //play_animation(animation5);
-  play_animation(animation);
+  play_animation(animation5);
+  //play_animation(animation);
   return 0;
 }
