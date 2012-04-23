@@ -5,12 +5,14 @@
 
 #include <arduino/pins.h>
 #include <arduino/serial.h>
+#include <arduino/timer0.h>
 #include <arduino/timer1.h>
 #include <arduino/sleep.h>
 #include <arduino/spi.h>
 
 #define FIXUP_COL40 1
 
+#define PIN_GSCLK 6
 #define PIN_XLAT 10
 #define PIN_SIN  11
 #define PIN_BLANK 12
@@ -223,7 +225,7 @@ static uint16_t pixel2out[16] =
 #ifdef DAYMODE
 { 0, 23, 89, 192, 332, 508, 719, 964, 1242, 1554, 1898, 2275, 2684, 3125, 3597, 4095 };
 #else
-{ 0, 1, 3, 5, 9, 15, 27, 48, 84, 147, 255, 445, 775, 1350, 2352, 0x800/*4095*/ };
+{ 0, 1, 3, 5, 9, 15, 27, 48, 84, 147, 255, 445, 775, 1350, 2352, 4095 };
 #endif
 
 static void
@@ -405,8 +407,8 @@ timer1_interrupt_a()
     switch (cur_layer)
     {
     case 0: pinA5_high(); pin7_low(); break;
-    case 1: pin7_high(); pin6_low(); break;
-    case 2: pin6_high(); pin5_low(); break;
+    case 1: pin7_high(); pin2_low(); break;
+    case 2: pin2_high(); pin5_low(); break;
     case 3: pin5_high(); pin4_low(); break;
     case 4: pin4_high(); pin3_low(); break;
     case 5: pin3_high(); pinA0_low(); break;
@@ -453,14 +455,14 @@ init(void) {
   pin_mode_output(PIN_BLANK);
   pin_high(PIN_BLANK);    /* All leds are off initially */
 
+  pin_high(2);
+  pin_mode_output(2);
   pin_high(3);
   pin_mode_output(3);
   pin_high(4);
   pin_mode_output(4);
   pin_high(5);
   pin_mode_output(5);
-  pin_high(6);
-  pin_mode_output(6);
   pin_high(7);
   pin_mode_output(7);
   pin_high(A0);
@@ -476,6 +478,10 @@ init(void) {
   pin_high(A5);
   pin_mode_output(A5);
 
+  /* NOTE: pin 6 is used for GSCLK. */
+  pin_high(6);
+  pin_mode_output(6);
+
 //  serial_baud_9600();
 //  serial_baud_115200();
 //  serial_baud_230400();
@@ -490,9 +496,16 @@ init(void) {
   timer1_count_set(0);
   timer1_clock_d1();
   timer1_mode_ctc();
-  timer1_compare_a_set(17778);   /* 16MHz / 177778 -> 900Hz. */
+  timer1_compare_a_set(2*4096);   /* 16MHz / (2*4096) -> 1953Hz. */
+  //timer1_compare_a_set(17778);   /* 16MHz / 177778 -> 900Hz. */
   //timer1_compare_a_set(35955);   /* 16MHz / 35955 -> 445Hz. */
   timer1_interrupt_a_enable();
+
+  /* Use compare register A on timer0 to generate an 8MHz PWM clock on pin 6. */
+  TCCR0B = 0x01;  /* WGM0=2 (CTC) CS0=1 (no prescaling) */
+  TCCR0A = 0x42;  /* COM0A=1 (toggle) COM0B=0 (off) WGM0=2 (CTC) */
+  OCR0A = 0;      /* Compare value 0 -> max freq. (8 MHz). */
+  TCNT0 = 0;
 }
 
 static void anim_solid(uint8_t f, uint8_t val);
@@ -570,7 +583,7 @@ fast_clear(uint8_t frame, uint8_t val)
     *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v;
   }
   for (uint8_t i= 0; i < DATA_SIZE % 16; i++)
-    *p++= 0;
+    *p++= v;
 }
 
 static void
@@ -750,7 +763,8 @@ cornercube_5(uint8_t f)
 static void
 anim_solid(uint8_t f, uint8_t val)
 {
-  fast_clear(f, val);
+  static uint16_t count = 0;
+  fast_clear(f, (++count/32)%16);
 }
 
 static void
