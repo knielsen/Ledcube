@@ -38,13 +38,15 @@ Example:
 
 Ledcube Arduino pinout
 
-XLAT  10
-SIN   11
-BLANK 12
-SCLK  13
-
-FET1    7
-FET2    6
+GSCLK  6    5940-18          VPRG  5940-27  low=GS high=DC mode
+VPRG   9    5940-27          GND   5940-22
+XLAT  10    5940-24          VCC   5940-21
+SIN   11    5940-26          IREF  5940-20  resistor-towards-ground
+BLANK 12    5940-23          DCPRG 5940-19  low=EEPROM high=DC register
+SCLK  13    5940-25          SOUT  5940-17
+                             XERR  5940-16
+FET1    7                OUT0-15 5940-28,1-15
+FET2    2
 FET3    5
 FET4    4
 FET5    3

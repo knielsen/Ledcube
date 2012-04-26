@@ -10,9 +10,11 @@
 #include <arduino/sleep.h>
 #include <arduino/spi.h>
 
-#define FIXUP_COL40 1
+/* This is the current through each LED, relative to MAX, 0..63. */
+#define DC_VALUE 4
 
 #define PIN_GSCLK 6
+#define PIN_VPRG 9
 #define PIN_XLAT 10
 #define PIN_SIN  11
 #define PIN_BLANK 12
@@ -479,8 +481,12 @@ init(void) {
   pin_mode_output(A5);
 
   /* NOTE: pin 6 is used for GSCLK. */
-  pin_high(6);
-  pin_mode_output(6);
+  pin_high(PIN_GSCLK);
+  pin_mode_output(PIN_GSCLK);
+
+  /* VPRG is on pin 9. High initially to set in DC mode. */
+  pin_high(PIN_VPRG);
+  pin_mode_output(PIN_VPRG);
 
 //  serial_baud_9600();
 //  serial_baud_115200();
@@ -508,6 +514,70 @@ init(void) {
   TCNT0 = 0;
 }
 
+/*
+  Load the DC (dot correction) values into the TLC5940's.
+  This sets the current through each LED.
+  A value of 0 turns off, a value of 63 means max as determined by the
+  IREF resistor.
+*/
+static void
+init_dc(void)
+{
+  uint8_t byte;
+  uint8_t i;
+  uint8_t mask;
+
+  /* Init SPI */
+  pin_mode_output(11);  /* MOSI */
+  pin_mode_output(13);  /* SCK */
+
+  /*
+    Interrupt disable, SPI enable, MSB first, master mode, SCK idle low,
+    sample on leading edge, d2 clock.
+  */
+  SPCR = _BV(SPE) | _BV(MSTR);
+  /* d2 clock. */
+  SPSR = _BV(SPI2X);
+
+  /* Set DC mode. */
+  pin_high(PIN_VPRG);
+
+  mask = 0x80;
+  byte = 0;
+  for (i= 0; i < 128; ++i)
+  {
+    uint8_t v= DC_VALUE;
+    int8_t bit;
+    for (bit = 5; bit >= 0; --bit)
+    {
+      if (v & (1 << bit))
+        byte |= mask;
+      mask >>= 1;
+      if (mask == 0)
+      {
+        /* Shift out the byte with the SPI hardware. */
+        spi_write(byte);
+        while (!spi_interrupt_flag())
+          ;
+        mask = 0x80;
+        byte = 0;
+      }
+    }
+  }
+
+  /* Now latch the new DC data. */
+  pin_high(PIN_XLAT);
+  pin_low(PIN_XLAT);
+
+  /* De-init SPI */
+//  while (!spi_interrupt_flag())
+//    ;
+  spi_disable();
+
+  /* Set grayscale mode. */
+  pin_low(PIN_VPRG);
+}
+
 static void anim_solid(uint8_t f, uint8_t val);
 static void anim_scan_plane(uint8_t f);
 static void anim_scan_plane_5(uint8_t f);
@@ -526,6 +596,7 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
   uint8_t generate_counter= 0;
 
   init();
+  init_dc();
   sei();
 
   sleep_mode_idle();
@@ -764,6 +835,7 @@ static void
 anim_solid(uint8_t f, uint8_t val)
 {
   static uint16_t count = 0;
+  //fast_clear(f, val);
   fast_clear(f, (++count/32)%16);
 }
 
