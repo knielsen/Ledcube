@@ -799,6 +799,66 @@ init_font9()
     "XX  XX"
     "XXXXXX"
     "XXXXX ";
+  font9['C']=
+    " XXXXXXXX"
+    "XXXXXXXXX"
+    "XX       "
+    "XX       "
+    "XX       "
+    "XX       "
+    "XX       "
+    "XXXXXXXXX"
+    " XXXXXXXX";
+  font9['D']=
+    "XXXXXXXX "
+    "XXXXXXXXX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XXXXXXXXX"
+    "XXXXXXXX ";
+  font9['E']=
+    "XXXXXXXXX"
+    "XXXXXXXXX"
+    "XX       "
+    "XX       "
+    "XXXXX    "
+    "XX       "
+    "XX       "
+    "XXXXXXXXX"
+    "XXXXXXXXX";
+  font9['F']=
+    "XXXXXXXXX"
+    "XXXXXXXXX"
+    "XX       "
+    "XX       "
+    "XXXXX    "
+    "XX       "
+    "XX       "
+    "XX       "
+    "XX       ";
+  font9['G']=
+    " XXXXXXXX"
+    "XXXXXXXXX"
+    "XX       "
+    "XX       "
+    "XX    XXX"
+    "XX     XX"
+    "XX     XX"
+    "XXXXXXXXX"
+    " XXXXXXX ";
+  font9['H']=
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XXXXXXXXX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX";
   font9['I']=
     "XXXXXX"
     "XXXXXX"
@@ -809,6 +869,26 @@ init_font9()
     "  XX  "
     "XXXXXX"
     "XXXXXX";
+  font9['J']=
+    "       XX"
+    "       XX"
+    "       XX"
+    "       XX"
+    "       XX"
+    "       XX"
+    "XX     XX"
+    "XXXXXXXXX"
+    " XXXXXXX ";
+  font9['K']=
+    "XX    XX"
+    "XX   XX "
+    "XX  XX  "
+    "XX XX   "
+    "XXXX    "
+    "XX XX   "
+    "XX  XX  "
+    "XX   XX "
+    "XX    XX";
   font9['L']=
     "XX     "
     "XX     "
@@ -819,6 +899,76 @@ init_font9()
     "XX     "
     "XXXXXXX"
     "XXXXXXX";
+  font9['M']=
+    "XX     XX"
+    "XXX   XXX"
+    "XX X X XX"
+    "XX XXX XX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX";
+  font9['N']=
+    "XX     XX"
+    "XXX    XX"
+    "XXXX   XX"
+    "XX XX  XX"
+    "XX  XX XX"
+    "XX   XXXX"
+    "XX    XXX"
+    "XX     XX"
+    "XX     XX";
+  font9['O']=
+    " XXXXXXX "
+    "XXXXXXXXX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XXXXXXXXX"
+    " XXXXXXX ";
+  font9['P']=
+    "XXXXXXXX "
+    "XXXXXXXXX"
+    "XX     XX"
+    "XX     XX"
+    "XXXXXXXX "
+    "XX       "
+    "XX       "
+    "XX       "
+    "XX       ";
+  font9['Q']=
+    " XXXXXXX "
+    "XXXXXXXXX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX   X XX"
+    "XX    XXX"
+    "XXXXXXXXX"
+    " XXXXXXXX";
+  font9['R']=
+    "XXXXXXXX "
+    "XXXXXXXXX"
+    "XX     XX"
+    "XX     XX"
+    "XXXXXXXX "
+    "XXXX     "
+    "XX  XX   "
+    "XX   XX  "
+    "XX    XX ";
+  font9['S']=
+    " XXXXXXX "
+    "XXXXXXXX "
+    "XX       "
+    "XX       "
+    " XXXXXXX "
+    "       XX"
+    "       XX"
+    " XXXXXXXX"
+    " XXXXXXX ";
   font9['T']=
     "XXXXXXXX"
     "XXXXXXXX"
@@ -829,6 +979,109 @@ init_font9()
     "   XX   "
     "   XX   "
     "   XX   ";
+  font9['U']=
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XXXXXXXXX"
+    " XXXXXXX ";
+  font9['V']=
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    " XX   XX "
+    "  XX XX  "
+    "   XXX   "
+    "    X    ";
+  font9['W']=
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX     XX"
+    "XX  XX XX"
+    " XXX XXX "
+    "  X   X  ";
+  font9['X']=
+    "XX     XX"
+    "XX     XX"
+    " XX   XX "
+    "  XX XX  "
+    "   XXX   "
+    "  XX XX  "
+    " XX   XX "
+    "XX     XX"
+    "XX     XX";
+  font9['Y']=
+    "XX     XX"
+    "XX     XX"
+    " XX   XX "
+    "  XX XX  "
+    "   XXX   "
+    "    X    "
+    "    X    "
+    "    X    "
+    "    X    ";
+  font9['Z']=
+    "XXXXXXXXX"
+    "XXXXXXXXX"
+    "     XX  "
+    "    XX   "
+    "   XX    "
+    "  XX     "
+    " XX      "
+    "XXXXXXXXX"
+    "XXXXXXXXX";
+  font9[' ']=
+    "      "
+    "      "
+    "      "
+    "      "
+    "      "
+    "      "
+    "      "
+    "      "
+    "      ";
+  font9['-']=
+    "     "
+    "     "
+    "     "
+    "     "
+    "XXXXX"
+    "     "
+    "     "
+    "     "
+    "     ";
+  font9['!']=
+    " XX "
+    " XX "
+    " XX "
+    " XX "
+    " XX "
+    " XX "
+    "    "
+    " XX "
+    " XX ";
+  font9['.']=
+    "    "
+    "    "
+    "    "
+    "    "
+    "    "
+    "    "
+    "    "
+    " XX "
+    " XX ";
+
+
+
 }
 
 
@@ -2920,7 +3173,17 @@ static struct anim_piece animation[] = {
   //{ testimg_test_lines, 100000, 0 },
   //{ testimg_test_column, 100000000, 0 },
   //{ testimg_solid, 1000000, 0 },
-  { cornercube_11, 600, 0 },
+  { cornercube_11, 300, 0 },
+  { fade_out, 16, 0 },
+  { an_scrolltext_9, 1000, (void *)"LOREM IPSUM DOLOR SIT AMET OG NOGET MED BATTERIER" },
+  { fade_out, 16, 0 },
+//  { an_scrolltext_9, 950, (void *)"CHECK WWW.HEADRC.COM FOR FREE LIPO CELLS!" },
+//  { fade_out, 16, 0 },
+//  { an_scrolltext_9, 850, (void *)"HYPERION - REALLY GOOD LIPO CELLS!" },
+//  { fade_out, 16, 0 },
+//  { an_scrolltext_9, 850, (void *)"LINUS" },
+//  { fade_out, 16, 0 },
+  { an_scrolltext_9, 850, (void *)"LABITAT" },
   { fade_out, 16, 0 },
   { an_smoketail, 1400, 0 },
   { an_wireframe, 1575, 0 },
