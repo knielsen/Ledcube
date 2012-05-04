@@ -1,773 +1,726 @@
-# EESchema Netlist Version 1.1 created  2012-04-06T23:59:18 CEST
+# EESchema Netlist Version 1.1 created  2012-05-03T20:08:43 CEST
 (
- ( /4F7AB3EA $noname  R32 10k {Lib=R}
-  (    1 /layer10 )
-  (    2 GND )
- )
- ( /4F7AB3E8 $noname  R31 10k {Lib=R}
-  (    1 /layer9 )
-  (    2 GND )
- )
- ( /4F7AB3E7 $noname  R30 10k {Lib=R}
-  (    1 /layer8 )
-  (    2 GND )
- )
- ( /4F7AB3E5 $noname  R29 10k {Lib=R}
-  (    1 /layer7 )
-  (    2 GND )
- )
- ( /4F7AB3E3 $noname  R28 10k {Lib=R}
-  (    1 /layer6 )
-  (    2 GND )
- )
- ( /4F7AB3E1 $noname  R27 10k {Lib=R}
-  (    1 /layer5 )
-  (    2 GND )
- )
- ( /4F7AB3E0 $noname  R26 10k {Lib=R}
-  (    1 /layer4 )
-  (    2 GND )
- )
- ( /4F7AB3DE $noname  R25 10k {Lib=R}
-  (    1 /layer3 )
-  (    2 GND )
- )
- ( /4F7AB3DC $noname  R24 10k {Lib=R}
-  (    1 /layer2 )
-  (    2 GND )
- )
- ( /4F7AB3DA $noname  R23 10k {Lib=R}
-  (    1 /layer1 )
-  (    2 GND )
- )
- ( /4F7AB3D3 $noname  R22 10k {Lib=R}
-  (    1 /layer0 )
-  (    2 GND )
- )
- ( /4F79FDC6 $noname  C8 100n {Lib=C}
-  (    1 VCC )
-  (    2 GND )
- )
- ( /4F79F200 $noname  P15 LEDCUBE_CON3 {Lib=LEDCUBE_CON3}
-  (    1 GND )
-  (    2 VCC )
- )
- ( /4F79E3AA $noname  P14 LEDCUBE_CON2 {Lib=LEDCUBE_CON2}
-  (    1 /blank )
-  (    2 /sel5 )
-  (    3 VCC )
-  (    4 /gsclk )
-  (    5 /xerr )
-  (    6 GND )
-  (    7 /sout )
-  (    8 /sel6 )
-  (    9 /sel7 )
-  (   10 /sel8 )
-  (   11 /sel9 )
-  (   12 /sel10 )
- )
- ( /4F78DF87 $noname  P13 LECUBE_CON1 {Lib=LECUBE_CON1}
-  (    1 /sel0 )
-  (    2 /sel1 )
-  (    3 /sel2 )
-  (    4 /sel3 )
-  (    5 /sel4 )
-  (    6 /mode )
-  (    7 /sin )
-  (    8 /sclk )
-  (    9 /xlat )
- )
- ( /4F78D90C $noname  R21 10k {Lib=R}
-  (    1 VCC )
-  (    2 /sel10 )
- )
- ( /4F78D903 $noname  R20 10k {Lib=R}
-  (    1 VCC )
-  (    2 /sel9 )
- )
- ( /4F78D8FD $noname  R19 10k {Lib=R}
-  (    1 VCC )
-  (    2 /sel8 )
- )
- ( /4F78D8F6 $noname  R18 10k {Lib=R}
-  (    1 VCC )
-  (    2 /sel7 )
- )
- ( /4F78D8ED $noname  R17 10k {Lib=R}
-  (    1 VCC )
-  (    2 /sel6 )
- )
- ( /4F78D8B2 $noname  R16 10k {Lib=R}
-  (    1 VCC )
-  (    2 /sel5 )
- )
- ( /4F78D8A8 $noname  R15 10k {Lib=R}
-  (    1 VCC )
-  (    2 /sel4 )
- )
- ( /4F78D89A $noname  R13 10k {Lib=R}
-  (    1 VCC )
-  (    2 /sel2 )
- )
- ( /4F78D854 $noname  R14 10k {Lib=R}
-  (    1 VCC )
-  (    2 /sel3 )
- )
- ( /4F78D848 $noname  R12 10k {Lib=R}
-  (    1 VCC )
-  (    2 /sel1 )
- )
- ( /4F78D824 $noname  R11 10k {Lib=R}
-  (    1 VCC )
-  (    2 /sel0 )
- )
- ( /4F78D739 $noname  R10 10k {Lib=R}
-  (    1 /blank )
-  (    2 VCC )
- )
- ( /4F78D679 $noname  C7 100n {Lib=C}
-  (    1 VCC )
-  (    2 GND )
- )
- ( /4F78D66E $noname  C6 100n {Lib=C}
-  (    1 VCC )
-  (    2 GND )
- )
- ( /4F78D668 $noname  C5 100n {Lib=C}
-  (    1 VCC )
-  (    2 GND )
- )
- ( /4F78D661 $noname  C4 100n {Lib=C}
-  (    1 VCC )
-  (    2 GND )
- )
- ( /4F78D639 $noname  C3 100n {Lib=C}
-  (    1 VCC )
-  (    2 GND )
- )
- ( /4F78D603 $noname  C2 100n {Lib=C}
-  (    1 VCC )
-  (    2 GND )
- )
- ( /4F78CC5C $noname  C1 100n {Lib=C}
-  (    1 VCC )
-  (    2 GND )
- )
- ( /4F78BAC6 $noname  T11 ZXMP4A16 {Lib=ZXMP4A16}
-  (    1 /sel10 )
-  (    2 /layer10 )
-  (    3 VCC )
- )
- ( /4F78BAC0 $noname  T10 ZXMP4A16 {Lib=ZXMP4A16}
-  (    1 /sel9 )
-  (    2 /layer9 )
-  (    3 VCC )
- )
- ( /4F78BABC $noname  T9 ZXMP4A16 {Lib=ZXMP4A16}
-  (    1 /sel8 )
-  (    2 /layer8 )
-  (    3 VCC )
- )
- ( /4F78BAB7 $noname  T8 ZXMP4A16 {Lib=ZXMP4A16}
-  (    1 /sel7 )
-  (    2 /layer7 )
-  (    3 VCC )
- )
- ( /4F78BAAB $noname  T7 ZXMP4A16 {Lib=ZXMP4A16}
-  (    1 /sel6 )
-  (    2 /layer6 )
-  (    3 VCC )
- )
- ( /4F78BAA4 $noname  T6 ZXMP4A16 {Lib=ZXMP4A16}
-  (    1 /sel5 )
-  (    2 /layer5 )
-  (    3 VCC )
- )
- ( /4F78BA9C $noname  T5 ZXMP4A16 {Lib=ZXMP4A16}
-  (    1 /sel4 )
-  (    2 /layer4 )
-  (    3 VCC )
- )
- ( /4F78BA96 $noname  T4 ZXMP4A16 {Lib=ZXMP4A16}
-  (    1 /sel3 )
-  (    2 /layer3 )
-  (    3 VCC )
- )
- ( /4F78BA88 $noname  T3 ZXMP4A16 {Lib=ZXMP4A16}
-  (    1 /sel2 )
-  (    2 /layer2 )
-  (    3 VCC )
- )
- ( /4F78B983 $noname  T2 ZXMP4A16 {Lib=ZXMP4A16}
-  (    1 /sel1 )
-  (    2 /layer1 )
-  (    3 VCC )
- )
- ( /4F78B897 $noname  T1 ZXMP4A16 {Lib=ZXMP4A16}
-  (    1 /sel0 )
-  (    2 /layer0 )
-  (    3 VCC )
- )
- ( /4F78AFB4 $noname  P12 LEDCUBE_ROW11 {Lib=LEDCUBE_ROW11}
-  (    1 /layer0 )
-  (    2 /layer1 )
-  (    3 /layer2 )
-  (    4 /layer3 )
-  (    5 /layer4 )
-  (    6 /layer5 )
-  (    7 /layer6 )
-  (    8 /layer7 )
-  (    9 /layer8 )
-  (   10 /layer9 )
-  (   11 /layer10 )
- )
- ( /4F78675E $noname  U8 TLC5941 {Lib=TLC5941}
-  (    1 /ledf10 )
-  (    2 /lede10 )
-  (    3 /ledg9 )
-  (    4 /ledf9 )
-  (    5 /lede9 )
-  (    6 /lede8 )
-  (    7 /ledf8 )
-  (    8 /ledg8 )
-  (    9 ? )
-  (   10 ? )
-  (   11 ? )
-  (   12 ? )
-  (   13 ? )
-  (   14 ? )
-  (   15 ? )
-  (   16 /xerr )
-  (   17 /sout )
-  (   18 /gsclk )
-  (   19 VCC )
-  (   20 N-000001 )
-  (   21 VCC )
-  (   22 GND )
-  (   23 /blank )
-  (   24 /xlat )
-  (   25 /sclk )
-  (   26 N-000029 )
-  (   27 /mode )
-  (   28 /ledg10 )
- )
- ( /4F786759 $noname  U7 TLC5941 {Lib=TLC5941}
-  (    1 /ledk8 )
-  (    2 /ledk9 )
-  (    3 /ledj7 )
-  (    4 /ledk10 )
-  (    5 /ledj8 )
-  (    6 /ledj9 )
-  (    7 /ledj10 )
-  (    8 /ledi10 )
-  (    9 /ledi9 )
-  (   10 /ledi7 )
-  (   11 /ledi8 )
-  (   12 /ledh10 )
-  (   13 /ledh9 )
-  (   14 /ledh8 )
-  (   15 /ledh7 )
-  (   16 /xerr )
-  (   17 N-000029 )
-  (   18 /gsclk )
-  (   19 VCC )
-  (   20 N-000030 )
-  (   21 VCC )
-  (   22 GND )
-  (   23 /blank )
-  (   24 /xlat )
-  (   25 /sclk )
-  (   26 N-000028 )
-  (   27 /mode )
-  (   28 /ledk7 )
- )
- ( /4F78674F $noname  U6 TLC5941 {Lib=TLC5941}
-  (    1 /ledk5 )
-  (    2 /ledk6 )
-  (    3 /ledj4 )
-  (    4 /ledj5 )
-  (    5 /ledj6 )
-  (    6 /ledi6 )
-  (    7 /ledh6 )
-  (    8 /ledi5 )
-  (    9 /ledg7 )
-  (   10 /ledi4 )
-  (   11 /ledh5 )
-  (   12 /ledg6 )
-  (   13 /ledh4 )
-  (   14 /ledg5 )
-  (   15 /ledf6 )
-  (   16 /xerr )
-  (   17 N-000028 )
-  (   18 /gsclk )
-  (   19 VCC )
-  (   20 N-000031 )
-  (   21 VCC )
-  (   22 GND )
-  (   23 /blank )
-  (   24 /xlat )
-  (   25 /sclk )
-  (   26 N-000026 )
-  (   27 /mode )
-  (   28 /ledk4 )
- )
- ( /4F786742 $noname  U5 TLC5941 {Lib=TLC5941}
-  (    1 /ledi0 )
-  (    2 /ledj0 )
-  (    3 /ledh1 )
-  (    4 /ledk0 )
-  (    5 /ledi1 )
-  (    6 /ledj1 )
-  (    7 /ledk1 )
-  (    8 /ledk2 )
-  (    9 /ledj2 )
-  (   10 /ledh2 )
-  (   11 /ledi2 )
-  (   12 /ledk3 )
-  (   13 /ledj3 )
-  (   14 /ledi3 )
-  (   15 /ledh3 )
-  (   16 /xerr )
-  (   17 N-000026 )
-  (   18 /gsclk )
-  (   19 VCC )
-  (   20 N-000027 )
-  (   21 VCC )
-  (   22 GND )
-  (   23 /blank )
-  (   24 /xlat )
-  (   25 /sclk )
-  (   26 N-000053 )
-  (   27 /mode )
-  (   28 /ledh0 )
- )
- ( /4F78673C $noname  U4 TLC5941 {Lib=TLC5941}
-  (    1 /ledf0 )
-  (    2 /ledg0 )
-  (    3 /lede1 )
-  (    4 /ledf1 )
-  (    5 /ledg1 )
-  (    6 /ledg2 )
-  (    7 /ledf2 )
-  (    8 /ledg3 )
-  (    9 /ledg4 )
-  (   10 /lede2 )
-  (   11 /ledf3 )
-  (   12 /ledf4 )
-  (   13 /lede3 )
-  (   14 /lede4 )
-  (   15 /ledf5 )
-  (   16 /xerr )
-  (   17 N-000053 )
-  (   18 /gsclk )
-  (   19 VCC )
-  (   20 N-000049 )
-  (   21 VCC )
-  (   22 GND )
-  (   23 /blank )
-  (   24 /xlat )
-  (   25 /sclk )
-  (   26 N-000054 )
-  (   27 /mode )
-  (   28 /lede0 )
- )
- ( /4F78672B $noname  U3 TLC5941 {Lib=TLC5941}
-  (    1 /leda2 )
-  (    2 /leda1 )
-  (    3 /ledb3 )
-  (    4 /leda0 )
-  (    5 /ledb2 )
-  (    6 /ledb1 )
-  (    7 /ledb0 )
-  (    8 /ledc0 )
-  (    9 /ledc1 )
-  (   10 /ledc3 )
-  (   11 /ledc2 )
-  (   12 /ledd0 )
-  (   13 /ledd1 )
-  (   14 /ledd2 )
-  (   15 /ledd3 )
-  (   16 /xerr )
-  (   17 N-000054 )
-  (   18 /gsclk )
-  (   19 VCC )
-  (   20 N-000033 )
-  (   21 VCC )
-  (   22 GND )
-  (   23 /blank )
-  (   24 /xlat )
-  (   25 /sclk )
-  (   26 N-000032 )
-  (   27 /mode )
-  (   28 /leda3 )
- )
- ( /4F78670C $noname  U2 TLC5941 {Lib=TLC5941}
-  (    1 /leda5 )
-  (    2 /leda4 )
-  (    3 /ledb6 )
-  (    4 /ledb5 )
-  (    5 /ledb4 )
-  (    6 /ledc4 )
-  (    7 /ledc5 )
-  (    8 /ledd4 )
-  (    9 /ledd5 )
-  (   10 /ledc6 )
-  (   11 /lede5 )
-  (   12 /ledd6 )
-  (   13 /ledf7 )
-  (   14 /lede6 )
-  (   15 /lede7 )
-  (   16 /xerr )
-  (   17 N-000032 )
-  (   18 /gsclk )
-  (   19 VCC )
-  (   20 N-000038 )
-  (   21 VCC )
-  (   22 GND )
-  (   23 /blank )
-  (   24 /xlat )
-  (   25 /sclk )
-  (   26 N-000008 )
-  (   27 /mode )
-  (   28 /leda6 )
- )
- ( /4F786688 $noname  R9 100k {Lib=R}
-  (    1 VCC )
-  (    2 /xerr )
- )
- ( /4F786503 $noname  U1 TLC5941 {Lib=TLC5941}
-  (    1 /ledc10 )
-  (    2 /ledb10 )
-  (    3 /ledd9 )
-  (    4 /leda10 )
-  (    5 /ledc9 )
-  (    6 /ledb9 )
-  (    7 /leda9 )
-  (    8 /ledb8 )
-  (    9 /ledc8 )
-  (   10 /ledd8 )
-  (   11 /leda8 )
-  (   12 /leda7 )
-  (   13 /ledb7 )
-  (   14 /ledc7 )
-  (   15 /ledd7 )
-  (   16 /xerr )
-  (   17 N-000008 )
-  (   18 /gsclk )
-  (   19 VCC )
-  (   20 N-000015 )
-  (   21 VCC )
-  (   22 GND )
-  (   23 /blank )
-  (   24 /xlat )
-  (   25 /sclk )
-  (   26 /sin )
-  (   27 /mode )
-  (   28 /ledd10 )
- )
- ( /4F76075D $noname  R8 1.3k {Lib=R}
-  (    1 GND )
-  (    2 N-000001 )
- )
- ( /4F760758 $noname  R7 1.3k {Lib=R}
-  (    1 GND )
-  (    2 N-000030 )
- )
- ( /4F760753 $noname  R6 1.3k {Lib=R}
-  (    1 GND )
-  (    2 N-000031 )
- )
- ( /4F76074D $noname  R5 1.3k {Lib=R}
-  (    1 GND )
-  (    2 N-000027 )
- )
- ( /4F760745 $noname  R4 1.3k {Lib=R}
-  (    1 GND )
-  (    2 N-000049 )
- )
- ( /4F760742 $noname  R3 1.3k {Lib=R}
-  (    1 GND )
-  (    2 N-000033 )
- )
- ( /4F760739 $noname  R2 1.3K {Lib=R}
-  (    1 GND )
-  (    2 N-000038 )
- )
- ( /4F760720 $noname  R1 1.3k {Lib=R}
-  (    1 GND )
-  (    2 N-000015 )
- )
- ( /4F75A477 $noname  P11 LEDCUBE_ROW11 {Lib=LEDCUBE_ROW11}
-  (    1 /ledk0 )
-  (    2 /ledk1 )
-  (    3 /ledk2 )
-  (    4 /ledk3 )
-  (    5 /ledk4 )
-  (    6 /ledk5 )
-  (    7 /ledk6 )
-  (    8 /ledk7 )
-  (    9 /ledk8 )
-  (   10 /ledk9 )
-  (   11 /ledk10 )
- )
- ( /4F75A475 $noname  P10 LEDCUBE_ROW11 {Lib=LEDCUBE_ROW11}
-  (    1 /ledj0 )
-  (    2 /ledj1 )
-  (    3 /ledj2 )
-  (    4 /ledj3 )
-  (    5 /ledj4 )
-  (    6 /ledj5 )
-  (    7 /ledj6 )
-  (    8 /ledj7 )
-  (    9 /ledj8 )
-  (   10 /ledj9 )
-  (   11 /ledj10 )
- )
- ( /4F75A474 $noname  P9 LEDCUBE_ROW11 {Lib=LEDCUBE_ROW11}
-  (    1 /ledi0 )
-  (    2 /ledi1 )
-  (    3 /ledi2 )
-  (    4 /ledi3 )
-  (    5 /ledi4 )
-  (    6 /ledi5 )
-  (    7 /ledi6 )
-  (    8 /ledi7 )
-  (    9 /ledi8 )
-  (   10 /ledi9 )
-  (   11 /ledi10 )
- )
- ( /4F75A472 $noname  P8 LEDCUBE_ROW11 {Lib=LEDCUBE_ROW11}
-  (    1 /ledh0 )
-  (    2 /ledh1 )
-  (    3 /ledh2 )
-  (    4 /ledh3 )
-  (    5 /ledh4 )
-  (    6 /ledh5 )
-  (    7 /ledh6 )
-  (    8 /ledh7 )
-  (    9 /ledh8 )
-  (   10 /ledh9 )
-  (   11 /ledh10 )
- )
- ( /4F75A471 $noname  P7 LEDCUBE_ROW11 {Lib=LEDCUBE_ROW11}
-  (    1 /ledg0 )
-  (    2 /ledg1 )
-  (    3 /ledg2 )
-  (    4 /ledg3 )
-  (    5 /ledg4 )
-  (    6 /ledg5 )
-  (    7 /ledg6 )
-  (    8 /ledg7 )
-  (    9 /ledg8 )
-  (   10 /ledg9 )
-  (   11 /ledg10 )
- )
- ( /4F75A46F $noname  P6 LEDCUBE_ROW11 {Lib=LEDCUBE_ROW11}
-  (    1 /ledf0 )
-  (    2 /ledf1 )
-  (    3 /ledf2 )
-  (    4 /ledf3 )
-  (    5 /ledf4 )
-  (    6 /ledf5 )
-  (    7 /ledf6 )
-  (    8 /ledf7 )
-  (    9 /ledf8 )
-  (   10 /ledf9 )
-  (   11 /ledf10 )
- )
- ( /4F75A46E $noname  P5 LEDCUBE_ROW11 {Lib=LEDCUBE_ROW11}
-  (    1 /lede0 )
-  (    2 /lede1 )
-  (    3 /lede2 )
-  (    4 /lede3 )
-  (    5 /lede4 )
-  (    6 /lede5 )
-  (    7 /lede6 )
-  (    8 /lede7 )
-  (    9 /lede8 )
-  (   10 /lede9 )
-  (   11 /lede10 )
- )
- ( /4F75A46C $noname  P4 LEDCUBE_ROW11 {Lib=LEDCUBE_ROW11}
-  (    1 /ledd0 )
-  (    2 /ledd1 )
-  (    3 /ledd2 )
-  (    4 /ledd3 )
-  (    5 /ledd4 )
-  (    6 /ledd5 )
-  (    7 /ledd6 )
-  (    8 /ledd7 )
-  (    9 /ledd8 )
-  (   10 /ledd9 )
-  (   11 /ledd10 )
- )
- ( /4F75A46B $noname  P3 LEDCUBE_ROW11 {Lib=LEDCUBE_ROW11}
-  (    1 /ledc0 )
-  (    2 /ledc1 )
-  (    3 /ledc2 )
-  (    4 /ledc3 )
-  (    5 /ledc4 )
-  (    6 /ledc5 )
-  (    7 /ledc6 )
-  (    8 /ledc7 )
-  (    9 /ledc8 )
-  (   10 /ledc9 )
-  (   11 /ledc10 )
- )
- ( /4F75A468 $noname  P2 LEDCUBE_ROW11 {Lib=LEDCUBE_ROW11}
-  (    1 /ledb0 )
-  (    2 /ledb1 )
-  (    3 /ledb2 )
-  (    4 /ledb3 )
-  (    5 /ledb4 )
-  (    6 /ledb5 )
-  (    7 /ledb6 )
-  (    8 /ledb7 )
-  (    9 /ledb8 )
-  (   10 /ledb9 )
-  (   11 /ledb10 )
- )
- ( /4F75A45A $noname  P1 LEDCUBE_ROW11 {Lib=LEDCUBE_ROW11}
-  (    1 /leda0 )
-  (    2 /leda1 )
-  (    3 /leda2 )
-  (    4 /leda3 )
-  (    5 /leda4 )
-  (    6 /leda5 )
-  (    7 /leda6 )
-  (    8 /leda7 )
-  (    9 /leda8 )
-  (   10 /leda9 )
-  (   11 /leda10 )
+ ( /4F78CC5C C1 C1 100n
+  ( 1 VCC )
+  ( 2 GND )
+ )
+ ( /4F78D603 C1 C2 100n
+  ( 1 VCC )
+  ( 2 GND )
+ )
+ ( /4F78D639 C1 C3 100n
+  ( 1 VCC )
+  ( 2 GND )
+ )
+ ( /4F78D661 C1 C4 100n
+  ( 1 VCC )
+  ( 2 GND )
+ )
+ ( /4F78D668 C1 C5 100n
+  ( 1 VCC )
+  ( 2 GND )
+ )
+ ( /4F78D66E C1 C6 100n
+  ( 1 VCC )
+  ( 2 GND )
+ )
+ ( /4F78D679 C1 C7 100n
+  ( 1 VCC )
+  ( 2 GND )
+ )
+ ( /4F79FDC6 C1 C8 100n
+  ( 1 VCC )
+  ( 2 GND )
+ )
+ ( /4F75A45A LEDCUBE_ROW11 P1 LEDCUBE_ROW11
+  ( 1 /leda0 )
+  ( 2 /leda1 )
+  ( 3 /leda2 )
+  ( 4 /leda3 )
+  ( 5 /leda4 )
+  ( 6 /leda5 )
+  ( 7 /leda6 )
+  ( 8 /leda7 )
+  ( 9 /leda8 )
+  ( 10 /leda9 )
+  ( 11 /leda10 )
+ )
+ ( /4F75A468 LEDCUBE_ROW11 P2 LEDCUBE_ROW11
+  ( 1 /ledb0 )
+  ( 2 /ledb1 )
+  ( 3 /ledb2 )
+  ( 4 /ledb3 )
+  ( 5 /ledb4 )
+  ( 6 /ledb5 )
+  ( 7 /ledb6 )
+  ( 8 /ledb7 )
+  ( 9 /ledb8 )
+  ( 10 /ledb9 )
+  ( 11 /ledb10 )
+ )
+ ( /4F75A46B LEDCUBE_ROW11 P3 LEDCUBE_ROW11
+  ( 1 /ledc0 )
+  ( 2 /ledc1 )
+  ( 3 /ledc2 )
+  ( 4 /ledc3 )
+  ( 5 /ledc4 )
+  ( 6 /ledc5 )
+  ( 7 /ledc6 )
+  ( 8 /ledc7 )
+  ( 9 /ledc8 )
+  ( 10 /ledc9 )
+  ( 11 /ledc10 )
+ )
+ ( /4F75A46C LEDCUBE_ROW11 P4 LEDCUBE_ROW11
+  ( 1 /ledd0 )
+  ( 2 /ledd1 )
+  ( 3 /ledd2 )
+  ( 4 /ledd3 )
+  ( 5 /ledd4 )
+  ( 6 /ledd5 )
+  ( 7 /ledd6 )
+  ( 8 /ledd7 )
+  ( 9 /ledd8 )
+  ( 10 /ledd9 )
+  ( 11 /ledd10 )
+ )
+ ( /4F75A46E LEDCUBE_ROW11 P5 LEDCUBE_ROW11
+  ( 1 /lede0 )
+  ( 2 /lede1 )
+  ( 3 /lede2 )
+  ( 4 /lede3 )
+  ( 5 /lede4 )
+  ( 6 /lede5 )
+  ( 7 /lede6 )
+  ( 8 /lede7 )
+  ( 9 /lede8 )
+  ( 10 /lede9 )
+  ( 11 /lede10 )
+ )
+ ( /4F75A46F LEDCUBE_ROW11 P6 LEDCUBE_ROW11
+  ( 1 /ledf0 )
+  ( 2 /ledf1 )
+  ( 3 /ledf2 )
+  ( 4 /ledf3 )
+  ( 5 /ledf4 )
+  ( 6 /ledf5 )
+  ( 7 /ledf6 )
+  ( 8 /ledf7 )
+  ( 9 /ledf8 )
+  ( 10 /ledf9 )
+  ( 11 /ledf10 )
+ )
+ ( /4F75A471 LEDCUBE_ROW11 P7 LEDCUBE_ROW11
+  ( 1 /ledg0 )
+  ( 2 /ledg1 )
+  ( 3 /ledg2 )
+  ( 4 /ledg3 )
+  ( 5 /ledg4 )
+  ( 6 /ledg5 )
+  ( 7 /ledg6 )
+  ( 8 /ledg7 )
+  ( 9 /ledg8 )
+  ( 10 /ledg9 )
+  ( 11 /ledg10 )
+ )
+ ( /4F75A472 LEDCUBE_ROW11 P8 LEDCUBE_ROW11
+  ( 1 /ledh0 )
+  ( 2 /ledh1 )
+  ( 3 /ledh2 )
+  ( 4 /ledh3 )
+  ( 5 /ledh4 )
+  ( 6 /ledh5 )
+  ( 7 /ledh6 )
+  ( 8 /ledh7 )
+  ( 9 /ledh8 )
+  ( 10 /ledh9 )
+  ( 11 /ledh10 )
+ )
+ ( /4F75A474 LEDCUBE_ROW11 P9 LEDCUBE_ROW11
+  ( 1 /ledi0 )
+  ( 2 /ledi1 )
+  ( 3 /ledi2 )
+  ( 4 /ledi3 )
+  ( 5 /ledi4 )
+  ( 6 /ledi5 )
+  ( 7 /ledi6 )
+  ( 8 /ledi7 )
+  ( 9 /ledi8 )
+  ( 10 /ledi9 )
+  ( 11 /ledi10 )
+ )
+ ( /4F75A475 LEDCUBE_ROW11 P10 LEDCUBE_ROW11
+  ( 1 /ledj0 )
+  ( 2 /ledj1 )
+  ( 3 /ledj2 )
+  ( 4 /ledj3 )
+  ( 5 /ledj4 )
+  ( 6 /ledj5 )
+  ( 7 /ledj6 )
+  ( 8 /ledj7 )
+  ( 9 /ledj8 )
+  ( 10 /ledj9 )
+  ( 11 /ledj10 )
+ )
+ ( /4F75A477 LEDCUBE_ROW11 P11 LEDCUBE_ROW11
+  ( 1 /ledk0 )
+  ( 2 /ledk1 )
+  ( 3 /ledk2 )
+  ( 4 /ledk3 )
+  ( 5 /ledk4 )
+  ( 6 /ledk5 )
+  ( 7 /ledk6 )
+  ( 8 /ledk7 )
+  ( 9 /ledk8 )
+  ( 10 /ledk9 )
+  ( 11 /ledk10 )
+ )
+ ( /4F78AFB4 LEDCUBE_ROW11_CIRC P12 LEDCUBE_ROW11
+  ( 1 /layer0 )
+  ( 2 /layer1 )
+  ( 3 /layer2 )
+  ( 4 /layer3 )
+  ( 5 /layer4 )
+  ( 6 /layer5 )
+  ( 7 /layer6 )
+  ( 8 /layer7 )
+  ( 9 /layer8 )
+  ( 10 /layer9 )
+  ( 11 /layer10 )
+ )
+ ( /4F78DF87 SIL-9 P13 LECUBE_CON1
+  ( 1 /sel0 )
+  ( 2 /sel1 )
+  ( 3 /sel2 )
+  ( 4 /sel3 )
+  ( 5 /sel4 )
+  ( 6 /mode )
+  ( 7 /sin )
+  ( 8 /sclk )
+  ( 9 /xlat )
+ )
+ ( /4F79E3AA SIL-12 P14 LEDCUBE_CON2
+  ( 1 /blank )
+  ( 2 /sel5 )
+  ( 3 VCC )
+  ( 4 /gsclk )
+  ( 5 /xerr )
+  ( 6 GND )
+  ( 7 /sout )
+  ( 8 /sel6 )
+  ( 9 /sel7 )
+  ( 10 /sel8 )
+  ( 11 /sel9 )
+  ( 12 /sel10 )
+ )
+ ( /4F79F200 SIL-2 P15 LEDCUBE_CON3
+  ( 1 +5V )
+  ( 2 GND )
+ )
+ ( /4FA2C770 SIL-2 P16 LEDCUBE_JMP1
+  ( 1 +5V )
+  ( 2 VCC )
+ )
+ ( /4F760720 R3 R1 1.3k
+  ( 1 GND )
+  ( 2 N-000021 )
+ )
+ ( /4F760739 R3 R2 1.3K
+  ( 1 GND )
+  ( 2 N-000037 )
+ )
+ ( /4F760742 R3 R3 1.3k
+  ( 1 GND )
+  ( 2 N-000047 )
+ )
+ ( /4F760745 R3 R4 1.3k
+  ( 1 GND )
+  ( 2 N-000045 )
+ )
+ ( /4F76074D R3 R5 1.3k
+  ( 1 GND )
+  ( 2 N-000022 )
+ )
+ ( /4F760753 R3 R6 1.3k
+  ( 1 GND )
+  ( 2 N-000027 )
+ )
+ ( /4F760758 R3 R7 1.3k
+  ( 1 GND )
+  ( 2 N-000002 )
+ )
+ ( /4F76075D R3 R8 1.3k
+  ( 1 GND )
+  ( 2 N-000003 )
+ )
+ ( /4F786688 R3 R9 100k
+  ( 1 VCC )
+  ( 2 /xerr )
+ )
+ ( /4F78D739 R3 R10 10k
+  ( 1 /blank )
+  ( 2 VCC )
+ )
+ ( /4F78D824 R3 R11 10k
+  ( 1 +5V )
+  ( 2 /sel0 )
+ )
+ ( /4F78D848 R3 R12 10k
+  ( 1 +5V )
+  ( 2 /sel1 )
+ )
+ ( /4F78D89A R3 R13 10k
+  ( 1 +5V )
+  ( 2 /sel2 )
+ )
+ ( /4F78D854 R3 R14 10k
+  ( 1 +5V )
+  ( 2 /sel3 )
+ )
+ ( /4F78D8A8 R3 R15 10k
+  ( 1 +5V )
+  ( 2 /sel4 )
+ )
+ ( /4F78D8B2 R3 R16 10k
+  ( 1 +5V )
+  ( 2 /sel5 )
+ )
+ ( /4F78D8ED R3 R17 10k
+  ( 1 +5V )
+  ( 2 /sel6 )
+ )
+ ( /4F78D8F6 R3 R18 10k
+  ( 1 +5V )
+  ( 2 /sel7 )
+ )
+ ( /4F78D8FD R3 R19 10k
+  ( 1 +5V )
+  ( 2 /sel8 )
+ )
+ ( /4F78D903 R3 R20 10k
+  ( 1 +5V )
+  ( 2 /sel9 )
+ )
+ ( /4F78D90C R3 R21 10k
+  ( 1 +5V )
+  ( 2 /sel10 )
+ )
+ ( /4F78B897 SOT223_SHR T1 ZXMP4A16
+  ( 1 /sel0 )
+  ( 2 /layer0 )
+  ( 3 +5V )
+ )
+ ( /4F78B983 SOT223_SHR T2 ZXMP4A16
+  ( 1 /sel1 )
+  ( 2 /layer1 )
+  ( 3 +5V )
+ )
+ ( /4F78BA88 SOT223_SHR T3 ZXMP4A16
+  ( 1 /sel2 )
+  ( 2 /layer2 )
+  ( 3 +5V )
+ )
+ ( /4F78BA96 SOT223_SHR T4 ZXMP4A16
+  ( 1 /sel3 )
+  ( 2 /layer3 )
+  ( 3 +5V )
+ )
+ ( /4F78BA9C SOT223_SHR T5 ZXMP4A16
+  ( 1 /sel4 )
+  ( 2 /layer4 )
+  ( 3 +5V )
+ )
+ ( /4F78BAA4 SOT223_SHR T6 ZXMP4A16
+  ( 1 /sel5 )
+  ( 2 /layer5 )
+  ( 3 +5V )
+ )
+ ( /4F78BAAB SOT223_SHR T7 ZXMP4A16
+  ( 1 /sel6 )
+  ( 2 /layer6 )
+  ( 3 +5V )
+ )
+ ( /4F78BAB7 SOT223_SHR T8 ZXMP4A16
+  ( 1 /sel7 )
+  ( 2 /layer7 )
+  ( 3 +5V )
+ )
+ ( /4F78BABC SOT223_SHR T9 ZXMP4A16
+  ( 1 /sel8 )
+  ( 2 /layer8 )
+  ( 3 +5V )
+ )
+ ( /4F78BAC0 SOT223_SHR T10 ZXMP4A16
+  ( 1 /sel9 )
+  ( 2 /layer9 )
+  ( 3 +5V )
+ )
+ ( /4F78BAC6 SOT223_SHR T11 ZXMP4A16
+  ( 1 /sel10 )
+  ( 2 /layer10 )
+  ( 3 +5V )
+ )
+ ( /4F786503 DIP-28__300_ELL U1 TLC5941
+  ( 1 /ledc10 )
+  ( 2 /ledb10 )
+  ( 3 /ledd9 )
+  ( 4 /leda10 )
+  ( 5 /ledc9 )
+  ( 6 /ledb9 )
+  ( 7 /leda9 )
+  ( 8 /ledb8 )
+  ( 9 /ledc8 )
+  ( 10 /ledd8 )
+  ( 11 /leda8 )
+  ( 12 /leda7 )
+  ( 13 /ledb7 )
+  ( 14 /ledc7 )
+  ( 15 /ledd7 )
+  ( 16 /xerr )
+  ( 17 N-000035 )
+  ( 18 /gsclk )
+  ( 19 VCC )
+  ( 20 N-000021 )
+  ( 21 VCC )
+  ( 22 GND )
+  ( 23 /blank )
+  ( 24 /xlat )
+  ( 25 /sclk )
+  ( 26 /sin )
+  ( 27 /mode )
+  ( 28 /ledd10 )
+ )
+ ( /4F78670C DIP-28__300_ELL U2 TLC5941
+  ( 1 /leda5 )
+  ( 2 /leda4 )
+  ( 3 /ledb6 )
+  ( 4 /ledb5 )
+  ( 5 /ledb4 )
+  ( 6 /ledc4 )
+  ( 7 /ledc5 )
+  ( 8 /ledd4 )
+  ( 9 /ledd5 )
+  ( 10 /ledc6 )
+  ( 11 /lede5 )
+  ( 12 /ledd6 )
+  ( 13 /ledf7 )
+  ( 14 /lede6 )
+  ( 15 /lede7 )
+  ( 16 /xerr )
+  ( 17 N-000028 )
+  ( 18 /gsclk )
+  ( 19 VCC )
+  ( 20 N-000037 )
+  ( 21 VCC )
+  ( 22 GND )
+  ( 23 /blank )
+  ( 24 /xlat )
+  ( 25 /sclk )
+  ( 26 N-000035 )
+  ( 27 /mode )
+  ( 28 /leda6 )
+ )
+ ( /4F78672B DIP-28__300_ELL U3 TLC5941
+  ( 1 /leda2 )
+  ( 2 /leda1 )
+  ( 3 /ledb3 )
+  ( 4 /leda0 )
+  ( 5 /ledb2 )
+  ( 6 /ledb1 )
+  ( 7 /ledb0 )
+  ( 8 /ledc0 )
+  ( 9 /ledc1 )
+  ( 10 /ledc3 )
+  ( 11 /ledc2 )
+  ( 12 /ledd0 )
+  ( 13 /ledd1 )
+  ( 14 /ledd2 )
+  ( 15 /ledd3 )
+  ( 16 /xerr )
+  ( 17 N-000043 )
+  ( 18 /gsclk )
+  ( 19 VCC )
+  ( 20 N-000047 )
+  ( 21 VCC )
+  ( 22 GND )
+  ( 23 /blank )
+  ( 24 /xlat )
+  ( 25 /sclk )
+  ( 26 N-000028 )
+  ( 27 /mode )
+  ( 28 /leda3 )
+ )
+ ( /4F78673C DIP-28__300_ELL U4 TLC5941
+  ( 1 /ledf0 )
+  ( 2 /ledg0 )
+  ( 3 /lede1 )
+  ( 4 /ledf1 )
+  ( 5 /ledg1 )
+  ( 6 /ledg2 )
+  ( 7 /ledf2 )
+  ( 8 /ledg3 )
+  ( 9 /ledg4 )
+  ( 10 /lede2 )
+  ( 11 /ledf3 )
+  ( 12 /ledf4 )
+  ( 13 /lede3 )
+  ( 14 /lede4 )
+  ( 15 /ledf5 )
+  ( 16 /xerr )
+  ( 17 N-000044 )
+  ( 18 /gsclk )
+  ( 19 VCC )
+  ( 20 N-000045 )
+  ( 21 VCC )
+  ( 22 GND )
+  ( 23 /blank )
+  ( 24 /xlat )
+  ( 25 /sclk )
+  ( 26 N-000043 )
+  ( 27 /mode )
+  ( 28 /lede0 )
+ )
+ ( /4F786742 DIP-28__300_ELL U5 TLC5941
+  ( 1 /ledi0 )
+  ( 2 /ledj0 )
+  ( 3 /ledh1 )
+  ( 4 /ledk0 )
+  ( 5 /ledi1 )
+  ( 6 /ledj1 )
+  ( 7 /ledk1 )
+  ( 8 /ledk2 )
+  ( 9 /ledj2 )
+  ( 10 /ledh2 )
+  ( 11 /ledi2 )
+  ( 12 /ledk3 )
+  ( 13 /ledj3 )
+  ( 14 /ledi3 )
+  ( 15 /ledh3 )
+  ( 16 /xerr )
+  ( 17 N-000023 )
+  ( 18 /gsclk )
+  ( 19 VCC )
+  ( 20 N-000022 )
+  ( 21 VCC )
+  ( 22 GND )
+  ( 23 /blank )
+  ( 24 /xlat )
+  ( 25 /sclk )
+  ( 26 N-000044 )
+  ( 27 /mode )
+  ( 28 /ledh0 )
+ )
+ ( /4F78674F DIP-28__300_ELL U6 TLC5941
+  ( 1 /ledk5 )
+  ( 2 /ledk6 )
+  ( 3 /ledj4 )
+  ( 4 /ledj5 )
+  ( 5 /ledj6 )
+  ( 6 /ledi6 )
+  ( 7 /ledh6 )
+  ( 8 /ledi5 )
+  ( 9 /ledg7 )
+  ( 10 /ledi4 )
+  ( 11 /ledh5 )
+  ( 12 /ledg6 )
+  ( 13 /ledh4 )
+  ( 14 /ledg5 )
+  ( 15 /ledf6 )
+  ( 16 /xerr )
+  ( 17 N-000025 )
+  ( 18 /gsclk )
+  ( 19 VCC )
+  ( 20 N-000027 )
+  ( 21 VCC )
+  ( 22 GND )
+  ( 23 /blank )
+  ( 24 /xlat )
+  ( 25 /sclk )
+  ( 26 N-000023 )
+  ( 27 /mode )
+  ( 28 /ledk4 )
+ )
+ ( /4F786759 DIP-28__300_ELL U7 TLC5941
+  ( 1 /ledk8 )
+  ( 2 /ledk9 )
+  ( 3 /ledj7 )
+  ( 4 /ledk10 )
+  ( 5 /ledj8 )
+  ( 6 /ledj9 )
+  ( 7 /ledj10 )
+  ( 8 /ledi10 )
+  ( 9 /ledi9 )
+  ( 10 /ledi7 )
+  ( 11 /ledi8 )
+  ( 12 /ledh10 )
+  ( 13 /ledh9 )
+  ( 14 /ledh8 )
+  ( 15 /ledh7 )
+  ( 16 /xerr )
+  ( 17 N-000026 )
+  ( 18 /gsclk )
+  ( 19 VCC )
+  ( 20 N-000002 )
+  ( 21 VCC )
+  ( 22 GND )
+  ( 23 /blank )
+  ( 24 /xlat )
+  ( 25 /sclk )
+  ( 26 N-000025 )
+  ( 27 /mode )
+  ( 28 /ledk7 )
+ )
+ ( /4F78675E DIP-28__300_ELL U8 TLC5941
+  ( 1 /ledf10 )
+  ( 2 /lede10 )
+  ( 3 /ledg9 )
+  ( 4 /ledf9 )
+  ( 5 /lede9 )
+  ( 6 /lede8 )
+  ( 7 /ledf8 )
+  ( 8 /ledg8 )
+  ( 9 ? )
+  ( 10 ? )
+  ( 11 ? )
+  ( 12 ? )
+  ( 13 ? )
+  ( 14 ? )
+  ( 15 ? )
+  ( 16 /xerr )
+  ( 17 /sout )
+  ( 18 /gsclk )
+  ( 19 VCC )
+  ( 20 N-000003 )
+  ( 21 VCC )
+  ( 22 GND )
+  ( 23 /blank )
+  ( 24 /xlat )
+  ( 25 /sclk )
+  ( 26 N-000026 )
+  ( 27 /mode )
+  ( 28 /ledg10 )
  )
 )
 *
 { Allowed footprints by component:
-$component R32
- R?
- SM0603
- SM0805
- R?-*
- SM1206
+$component C1
+ SM*
+ C?
+ C1-1
 $endlist
-$component R31
- R?
- SM0603
- SM0805
- R?-*
- SM1206
+$component C2
+ SM*
+ C?
+ C1-1
 $endlist
-$component R30
- R?
- SM0603
- SM0805
- R?-*
- SM1206
+$component C3
+ SM*
+ C?
+ C1-1
 $endlist
-$component R29
- R?
- SM0603
- SM0805
- R?-*
- SM1206
+$component C4
+ SM*
+ C?
+ C1-1
 $endlist
-$component R28
- R?
- SM0603
- SM0805
- R?-*
- SM1206
+$component C5
+ SM*
+ C?
+ C1-1
 $endlist
-$component R27
- R?
- SM0603
- SM0805
- R?-*
- SM1206
+$component C6
+ SM*
+ C?
+ C1-1
 $endlist
-$component R26
- R?
- SM0603
- SM0805
- R?-*
- SM1206
-$endlist
-$component R25
- R?
- SM0603
- SM0805
- R?-*
- SM1206
-$endlist
-$component R24
- R?
- SM0603
- SM0805
- R?-*
- SM1206
-$endlist
-$component R23
- R?
- SM0603
- SM0805
- R?-*
- SM1206
-$endlist
-$component R22
- R?
- SM0603
- SM0805
- R?-*
- SM1206
+$component C7
+ SM*
+ C?
+ C1-1
 $endlist
 $component C8
  SM*
  C?
  C1-1
 $endlist
-$component R21
+$component R1
  R?
  SM0603
  SM0805
  R?-*
  SM1206
 $endlist
-$component R20
+$component R2
  R?
  SM0603
  SM0805
  R?-*
  SM1206
 $endlist
-$component R19
+$component R3
  R?
  SM0603
  SM0805
  R?-*
  SM1206
 $endlist
-$component R18
+$component R4
  R?
  SM0603
  SM0805
  R?-*
  SM1206
 $endlist
-$component R17
+$component R5
  R?
  SM0603
  SM0805
  R?-*
  SM1206
 $endlist
-$component R16
+$component R6
  R?
  SM0603
  SM0805
  R?-*
  SM1206
 $endlist
-$component R15
+$component R7
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$component R8
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$component R9
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$component R10
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$component R11
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$component R12
  R?
  SM0603
  SM0805
@@ -788,119 +741,49 @@ $component R14
  R?-*
  SM1206
 $endlist
-$component R12
+$component R15
  R?
  SM0603
  SM0805
  R?-*
  SM1206
 $endlist
-$component R11
+$component R16
  R?
  SM0603
  SM0805
  R?-*
  SM1206
 $endlist
-$component R10
+$component R17
  R?
  SM0603
  SM0805
  R?-*
  SM1206
 $endlist
-$component C7
- SM*
- C?
- C1-1
-$endlist
-$component C6
- SM*
- C?
- C1-1
-$endlist
-$component C5
- SM*
- C?
- C1-1
-$endlist
-$component C4
- SM*
- C?
- C1-1
-$endlist
-$component C3
- SM*
- C?
- C1-1
-$endlist
-$component C2
- SM*
- C?
- C1-1
-$endlist
-$component C1
- SM*
- C?
- C1-1
-$endlist
-$component R9
+$component R18
  R?
  SM0603
  SM0805
  R?-*
  SM1206
 $endlist
-$component R8
+$component R19
  R?
  SM0603
  SM0805
  R?-*
  SM1206
 $endlist
-$component R7
+$component R20
  R?
  SM0603
  SM0805
  R?-*
  SM1206
 $endlist
-$component R6
- R?
- SM0603
- SM0805
- R?-*
- SM1206
-$endlist
-$component R5
- R?
- SM0603
- SM0805
- R?-*
- SM1206
-$endlist
-$component R4
- R?
- SM0603
- SM0805
- R?-*
- SM1206
-$endlist
-$component R3
- R?
- SM0603
- SM0805
- R?-*
- SM1206
-$endlist
-$component R2
- R?
- SM0603
- SM0805
- R?-*
- SM1206
-$endlist
-$component R1
+$component R21
  R?
  SM0603
  SM0805
@@ -909,659 +792,3 @@ $component R1
 $endlist
 $endfootprintlist
 }
-{ Pin List by Nets
-Net 1 "" ""
- U8 20
- R8 2
-Net 2 "/ledd10" "ledd10"
- P4 11
- U1 28
-Net 3 "GND" "GND"
- U3 22
- U7 22
- U2 22
- C7 2
- U1 22
- U8 22
- R31 2
- R27 2
- R28 2
- R29 2
- R30 2
- R26 2
- R32 2
- C6 2
- C1 2
- C2 2
- U6 22
- R8 1
- R7 1
- U4 22
- R6 1
- R5 1
- R4 1
- R3 1
- P14 6
- C5 2
- P15 1
- C4 2
- C8 2
- U5 22
- R22 2
- R23 2
- R24 2
- R25 2
- C3 2
- R2 1
- R1 1
-Net 4 "/ledb10" "ledb10"
- P2 11
- U1 2
-Net 5 "/ledc10" "ledc10"
- U1 1
- P3 11
-Net 6 "/leda6" "leda6"
- P1 7
- U2 28
-Net 7 "/ledd9" "ledd9"
- U1 3
- P4 10
-Net 8 "" ""
- U2 26
- U1 17
-Net 9 "/lede6" "lede6"
- P5 7
- U2 14
-Net 10 "/leda8" "leda8"
- P1 9
- U1 11
-Net 11 "/ledd7" "ledd7"
- U1 15
- P4 8
-Net 12 "/ledc7" "ledc7"
- U1 14
- P3 8
-Net 13 "/ledb7" "ledb7"
- P2 8
- U1 13
-Net 14 "/leda7" "leda7"
- P1 8
- U1 12
-Net 15 "" ""
- R1 2
- U1 20
-Net 16 "/ledd8" "ledd8"
- U1 10
- P4 9
-Net 17 "/ledc8" "ledc8"
- P3 9
- U1 9
-Net 18 "/ledb8" "ledb8"
- P2 9
- U1 8
-Net 19 "/leda9" "leda9"
- P1 10
- U1 7
-Net 20 "/ledb9" "ledb9"
- U1 6
- P2 10
-Net 21 "/ledc9" "ledc9"
- P3 10
- U1 5
-Net 22 "/leda10" "leda10"
- U1 4
- P1 11
-Net 23 "/xerr" "xerr"
- U1 16
- U8 16
- U6 16
- U4 16
- U7 16
- U2 16
- P14 5
- U5 16
- U3 16
- R9 2
-Net 24 "/ledf6" "ledf6"
- U6 15
- P6 7
-Net 25 "/xlat" "xlat"
- U6 24
- U4 24
- P13 9
- U8 24
- U1 24
- U2 24
- U3 24
- U5 24
- U7 24
-Net 26 "" ""
- U5 17
- U6 26
-Net 27 "" ""
- U5 20
- R5 2
-Net 28 "" ""
- U7 26
- U6 17
-Net 29 "" ""
- U8 26
- U7 17
-Net 30 "" ""
- R7 2
- U7 20
-Net 31 "" ""
- R6 2
- U6 20
-Net 32 "" ""
- U3 26
- U2 17
-Net 33 "" ""
- U3 20
- R3 2
-Net 34 "/ledc3" "ledc3"
- P3 4
- U3 10
-Net 35 "/ledc5" "ledc5"
- U2 7
- P3 6
-Net 36 "/ledd6" "ledd6"
- P4 7
- U2 12
-Net 37 "/lede5" "lede5"
- U2 11
- P5 6
-Net 38 "" ""
- U2 20
- R2 2
-Net 39 "/ledc6" "ledc6"
- U2 10
- P3 7
-Net 40 "/ledd5" "ledd5"
- P4 6
- U2 9
-Net 41 "/ledd4" "ledd4"
- U2 8
- P4 5
-Net 42 "/ledc4" "ledc4"
- P3 5
- U2 6
-Net 43 "/ledb4" "ledb4"
- P2 5
- U2 5
-Net 44 "/ledb5" "ledb5"
- U2 4
- P2 6
-Net 45 "/ledb6" "ledb6"
- P2 7
- U2 3
-Net 46 "/leda4" "leda4"
- U2 2
- P1 5
-Net 47 "/leda5" "leda5"
- U2 1
- P1 6
-Net 48 "/leda3" "leda3"
- P1 4
- U3 28
-Net 49 "" ""
- R4 2
- U4 20
-Net 50 "/leda0" "leda0"
- P1 1
- U3 4
-Net 51 "/leda1" "leda1"
- P1 2
- U3 2
-Net 52 "/leda2" "leda2"
- P1 3
- U3 1
-Net 53 "" ""
- U5 26
- U4 17
-Net 54 "" ""
- U4 26
- U3 17
-Net 55 "/ledj5" "ledj5"
- P10 6
- U6 4
-Net 56 "/ledi3" "ledi3"
- P9 4
- U5 14
-Net 57 "/ledi2" "ledi2"
- U5 11
- P9 3
-Net 58 "/ledi1" "ledi1"
- U5 5
- P9 2
-Net 59 "/ledi0" "ledi0"
- P9 1
- U5 1
-Net 60 "/ledj10" "ledj10"
- U7 7
- P10 11
-Net 61 "/ledj9" "ledj9"
- P10 10
- U7 6
-Net 62 "/ledj8" "ledj8"
- U7 5
- P10 9
-Net 63 "/ledj7" "ledj7"
- P10 8
- U7 3
-Net 64 "/ledj6" "ledj6"
- P10 7
- U6 5
-Net 65 "/ledi4" "ledi4"
- P9 5
- U6 10
-Net 66 "/ledj4" "ledj4"
- P10 5
- U6 3
-Net 67 "/ledj3" "ledj3"
- P10 4
- U5 13
-Net 68 "/ledj2" "ledj2"
- P10 3
- U5 9
-Net 69 "/ledj1" "ledj1"
- U5 6
- P10 2
-Net 70 "/ledj0" "ledj0"
- U5 2
- P10 1
-Net 71 "/ledk10" "ledk10"
- P11 11
- U7 4
-Net 72 "/ledk9" "ledk9"
- U7 2
- P11 10
-Net 73 "/ledk8" "ledk8"
- P11 9
- U7 1
-Net 74 "/ledh2" "ledh2"
- U5 10
- P8 3
-Net 75 "/ledg0" "ledg0"
- P7 1
- U4 2
-Net 76 "/ledh10" "ledh10"
- P8 11
- U7 12
-Net 77 "/ledh9" "ledh9"
- U7 13
- P8 10
-Net 78 "/ledh8" "ledh8"
- U7 14
- P8 9
-Net 79 "/ledh7" "ledh7"
- U7 15
- P8 8
-Net 80 "/ledh6" "ledh6"
- U6 7
- P8 7
-Net 81 "/ledh5" "ledh5"
- U6 11
- P8 6
-Net 82 "/ledh4" "ledh4"
- P8 5
- U6 13
-Net 83 "/ledh3" "ledh3"
- U5 15
- P8 4
-Net 84 "/ledk7" "ledk7"
- U7 28
- P11 8
-Net 85 "/ledh1" "ledh1"
- U5 3
- P8 2
-Net 86 "/ledh0" "ledh0"
- U5 28
- P8 1
-Net 87 "/ledi10" "ledi10"
- U7 8
- P9 11
-Net 88 "/ledi9" "ledi9"
- P9 10
- U7 9
-Net 89 "/ledi8" "ledi8"
- U7 11
- P9 9
-Net 90 "/ledi7" "ledi7"
- U7 10
- P9 8
-Net 91 "/ledi6" "ledi6"
- U6 6
- P9 7
-Net 92 "/ledi5" "ledi5"
- U6 8
- P9 6
-Net 93 "/ledk6" "ledk6"
- U6 2
- P11 7
-Net 94 "/ledk5" "ledk5"
- U6 1
- P11 6
-Net 95 "/ledk4" "ledk4"
- P11 5
- U6 28
-Net 96 "/ledk3" "ledk3"
- P11 4
- U5 12
-Net 97 "/ledk2" "ledk2"
- P11 3
- U5 8
-Net 98 "/ledk1" "ledk1"
- P11 2
- U5 7
-Net 99 "/ledk0" "ledk0"
- U5 4
- P11 1
-Net 100 "/ledg1" "ledg1"
- P7 2
- U4 5
-Net 101 "/ledb2" "ledb2"
- U3 5
- P2 3
-Net 102 "/ledb1" "ledb1"
- U3 6
- P2 2
-Net 103 "/ledb0" "ledb0"
- P2 1
- U3 7
-Net 104 "/ledb3" "ledb3"
- P2 4
- U3 3
-Net 105 "/ledc2" "ledc2"
- P3 3
- U3 11
-Net 106 "/ledc1" "ledc1"
- P3 2
- U3 9
-Net 107 "/ledc0" "ledc0"
- U3 8
- P3 1
-Net 108 "/ledg10" "ledg10"
- P7 11
- U8 28
-Net 109 "/ledf8" "ledf8"
- P6 9
- U8 7
-Net 110 "/ledf7" "ledf7"
- P6 8
- U2 13
-Net 111 "/ledf5" "ledf5"
- P6 6
- U4 15
-Net 112 "/ledf4" "ledf4"
- P6 5
- U4 12
-Net 113 "/ledf3" "ledf3"
- U4 11
- P6 4
-Net 114 "/ledf2" "ledf2"
- U4 7
- P6 3
-Net 115 "/ledf1" "ledf1"
- U4 4
- P6 2
-Net 116 "/ledf0" "ledf0"
- P6 1
- U4 1
-Net 117 "/ledf9" "ledf9"
- P6 10
- U8 4
-Net 118 "/ledg9" "ledg9"
- P7 10
- U8 3
-Net 119 "/ledg8" "ledg8"
- U8 8
- P7 9
-Net 120 "/ledg7" "ledg7"
- P7 8
- U6 9
-Net 121 "/ledg6" "ledg6"
- P7 7
- U6 12
-Net 122 "/ledg5" "ledg5"
- P7 6
- U6 14
-Net 123 "/ledg4" "ledg4"
- U4 9
- P7 5
-Net 124 "/ledg3" "ledg3"
- P7 4
- U4 8
-Net 125 "/ledg2" "ledg2"
- P7 3
- U4 6
-Net 126 "/lede7" "lede7"
- U2 15
- P5 8
-Net 127 "/ledd3" "ledd3"
- P4 4
- U3 15
-Net 128 "/ledd2" "ledd2"
- U3 14
- P4 3
-Net 129 "/ledd1" "ledd1"
- U3 13
- P4 2
-Net 130 "/ledd0" "ledd0"
- P4 1
- U3 12
-Net 131 "/lede10" "lede10"
- U8 2
- P5 11
-Net 132 "/lede9" "lede9"
- U8 5
- P5 10
-Net 133 "/lede8" "lede8"
- U8 6
- P5 9
-Net 134 "/lede4" "lede4"
- U4 14
- P5 5
-Net 135 "/lede3" "lede3"
- U4 13
- P5 4
-Net 136 "/lede2" "lede2"
- U4 10
- P5 3
-Net 137 "/lede1" "lede1"
- P5 2
- U4 3
-Net 138 "/lede0" "lede0"
- P5 1
- U4 28
-Net 139 "/ledf10" "ledf10"
- U8 1
- P6 11
-Net 140 "/sout" "sout"
- P14 7
- U8 17
-Net 141 "/sel5" "sel5"
- T6 1
- P14 2
- R16 2
-Net 142 "/layer5" "layer5"
- R27 1
- P12 6
- T6 2
-Net 143 "/sel6" "sel6"
- R17 2
- P14 8
- T7 1
-Net 144 "/layer6" "layer6"
- R28 1
- P12 7
- T7 2
-Net 145 "/sel7" "sel7"
- T8 1
- R18 2
- P14 9
-Net 146 "/layer3" "layer3"
- R25 1
- T4 2
- P12 4
-Net 147 "/sel2" "sel2"
- P13 3
- T3 1
- R13 2
-Net 148 "/layer2" "layer2"
- R24 1
- T3 2
- P12 3
-Net 149 "/sel3" "sel3"
- R14 2
- T4 1
- P13 4
-Net 150 "/layer7" "layer7"
- T8 2
- P12 8
- R29 1
-Net 151 "/sel4" "sel4"
- P13 5
- T5 1
- R15 2
-Net 152 "/layer4" "layer4"
- R26 1
- T5 2
- P12 5
-Net 153 "/sel10" "sel10"
- P14 12
- R21 2
- T11 1
-Net 154 "/layer10" "layer10"
- P12 11
- R32 1
- T11 2
-Net 155 "VCC" "VCC"
- T2 3
- T3 3
- R10 2
- P14 3
- T11 3
- C4 1
- C5 1
- C6 1
- C7 1
- T10 3
- T9 3
- U8 21
- U6 19
- U8 19
- T1 3
- R11 1
- R19 1
- R20 1
- R21 1
- R18 1
- R12 1
- R14 1
- R13 1
- R15 1
- R16 1
- R17 1
- U1 19
- U1 21
- C8 1
- P15 2
- U2 19
- R9 1
- U3 19
- T7 3
- U3 21
- U4 21
- T8 3
- U2 21
- U5 19
- U7 21
- U7 19
- U6 21
- U4 19
- T6 3
- U5 21
- C3 1
- T4 3
- C1 1
- C2 1
- T5 3
-Net 156 "/sel8" "sel8"
- T9 1
- R19 2
- P14 10
-Net 157 "/layer8" "layer8"
- P12 9
- T9 2
- R30 1
-Net 158 "/sel9" "sel9"
- T10 1
- R20 2
- P14 11
-Net 159 "/layer9" "layer9"
- T10 2
- R31 1
- P12 10
-Net 164 "/gsclk" "gsclk"
- U2 18
- P14 4
- U7 18
- U5 18
- U3 18
- U1 18
- U4 18
- U8 18
- U6 18
-Net 165 "/sclk" "sclk"
- U8 25
- U4 25
- U6 25
- U5 25
- P13 8
- U3 25
- U7 25
- U2 25
- U1 25
-Net 166 "/sin" "sin"
- P13 7
- U1 26
-Net 170 "/sel0" "sel0"
- P13 1
- R11 2
- T1 1
-Net 171 "/layer0" "layer0"
- T1 2
- P12 1
- R22 1
-Net 172 "/layer1" "layer1"
- R23 1
- P12 2
- T2 2
-Net 173 "/sel1" "sel1"
- R12 2
- P13 2
- T2 1
-Net 174 "/mode" "mode"
- U7 27
- U6 27
- U8 27
- U1 27
- U5 27
- U3 27
- U4 27
- P13 6
- U2 27
-Net 175 "/blank" "blank"
- P14 1
- U7 23
- U1 23
- U8 23
- U2 23
- U5 23
- U4 23
- R10 1
- U3 23
- U6 23
-}
-#End

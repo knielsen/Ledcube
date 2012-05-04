@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by CvPcb (2012-jan-04)-stable date = 2012-04-06T19:57:16 CEST
+Cmp-Mod V01 Created by CvPcb (2012-jan-04)-stable date = 2012-05-03T20:08:43 CEST
 
 BeginCmp
 TimeStamp = /4F78CC5C;
@@ -162,6 +162,13 @@ IdModule  = SIL-2;
 EndCmp
 
 BeginCmp
+TimeStamp = /4FA2C770;
+Reference = P16;
+ValeurCmp = LEDCUBE_JMP1;
+IdModule  = SIL-2;
+EndCmp
+
+BeginCmp
 TimeStamp = /4F760720;
 Reference = R1;
 ValeurCmp = 1.3k;
@@ -309,83 +316,6 @@ IdModule  = R3;
 EndCmp
 
 BeginCmp
-TimeStamp = /4F7AB3D3;
-Reference = R22;
-ValeurCmp = 10k;
-IdModule  = R3;
-EndCmp
-
-BeginCmp
-TimeStamp = /4F7AB3DA;
-Reference = R23;
-ValeurCmp = 10k;
-IdModule  = R3;
-EndCmp
-
-BeginCmp
-TimeStamp = /4F7AB3DC;
-Reference = R24;
-ValeurCmp = 10k;
-IdModule  = R3;
-EndCmp
-
-BeginCmp
-TimeStamp = /4F7AB3DE;
-Reference = R25;
-ValeurCmp = 10k;
-IdModule  = R3;
-EndCmp
-
-BeginCmp
-TimeStamp = /4F7AB3E0;
-Reference = R26;
-ValeurCmp = 10k;
-IdModule  = R3;
-EndCmp
-
-BeginCmp
-TimeStamp = /4F7AB3E1;
-Reference = R27;
-ValeurCmp = 10k;
-IdModule  = R3;
-EndCmp
-
-BeginCmp
-TimeStamp = /4F7AB3E3;
-Reference = R28;
-ValeurCmp = 10k;
-IdModule  = R3;
-EndCmp
-
-BeginCmp
-TimeStamp = /4F7AB3E5;
-Reference = R29;
-ValeurCmp = 10k;
-IdModule  = R3;
-EndCmp
-
-BeginCmp
-TimeStamp = /4F7AB3E7;
-Reference = R30;
-ValeurCmp = 10k;
-IdModule  = R3;
-EndCmp
-
-BeginCmp
-TimeStamp = /4F7AB3E8;
-Reference = R31;
-ValeurCmp = 10k;
-IdModule  = R3;
-EndCmp
-
-BeginCmp
-TimeStamp = /4F7AB3EA;
-Reference = R32;
-ValeurCmp = 10k;
-IdModule  = R3;
-EndCmp
-
-BeginCmp
 TimeStamp = /4F78B897;
 Reference = T1;
 ValeurCmp = ZXMP4A16;
@@ -466,56 +396,56 @@ BeginCmp
 TimeStamp = /4F786503;
 Reference = U1;
 ValeurCmp = TLC5941;
-IdModule  = DIP-28__300;
+IdModule  = DIP-28__300_ELL;
 EndCmp
 
 BeginCmp
 TimeStamp = /4F78670C;
 Reference = U2;
 ValeurCmp = TLC5941;
-IdModule  = DIP-28__300;
+IdModule  = DIP-28__300_ELL;
 EndCmp
 
 BeginCmp
 TimeStamp = /4F78672B;
 Reference = U3;
 ValeurCmp = TLC5941;
-IdModule  = DIP-28__300;
+IdModule  = DIP-28__300_ELL;
 EndCmp
 
 BeginCmp
 TimeStamp = /4F78673C;
 Reference = U4;
 ValeurCmp = TLC5941;
-IdModule  = DIP-28__300;
+IdModule  = DIP-28__300_ELL;
 EndCmp
 
 BeginCmp
 TimeStamp = /4F786742;
 Reference = U5;
 ValeurCmp = TLC5941;
-IdModule  = DIP-28__300;
+IdModule  = DIP-28__300_ELL;
 EndCmp
 
 BeginCmp
 TimeStamp = /4F78674F;
 Reference = U6;
 ValeurCmp = TLC5941;
-IdModule  = DIP-28__300;
+IdModule  = DIP-28__300_ELL;
 EndCmp
 
 BeginCmp
 TimeStamp = /4F786759;
 Reference = U7;
 ValeurCmp = TLC5941;
-IdModule  = DIP-28__300;
+IdModule  = DIP-28__300_ELL;
 EndCmp
 
 BeginCmp
 TimeStamp = /4F78675E;
 Reference = U8;
 ValeurCmp = TLC5941;
-IdModule  = DIP-28__300;
+IdModule  = DIP-28__300_ELL;
 EndCmp
 
 EndListe
