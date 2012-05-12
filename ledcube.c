@@ -11,14 +11,15 @@
 #include <arduino/spi.h>
 
 /* This is the current through each LED, relative to MAX, 0..63. */
-#define DC_VALUE 4
+#define DC_VALUE 2
 
 #define PIN_GSCLK 6
 #define PIN_VPRG 9
 #define PIN_XLAT 10
 #define PIN_SIN  11
-#define PIN_BLANK 12
+#define PIN_BLANK 8
 #define PIN_SCLK 13
+#define PIN_SOUT 12
 
 #define NUM_LEDS 1331
 #define NUM_LAYERS 11
@@ -202,7 +203,9 @@ serial_interrupt_slow_part(void)
         frames[cur][FRAME_SIZE-1] != 0xff)
     {
       /* Frame error. Skip this frame and send error to peer. */
+#ifndef DEBUG_OUTPUT_STATUS_INFO_REGISTER
       serial_write(frames[cur][1] | 0x80);
+#endif
       checksum = 0;
       return;
     }
@@ -420,7 +423,9 @@ timer1_interrupt_a()
     case 9: pinA3_high(); pinA4_low(); break;
     case 10:pinA4_high(); pinA5_low(); break;
     }
-    pin_low(PIN_BLANK);
+    /* Hack: only 1st layer, while running without MOSFETs. */
+    if (cur_layer == 0)
+      pin_low(PIN_BLANK);
   }
 
   cur_layer++;
@@ -433,7 +438,9 @@ timer1_interrupt_a()
     uint8_t cur_frame = show_frame;
     if (cur_frame != old_frame)
     {
+#ifndef DEBUG_OUTPUT_STATUS_INFO_REGISTER
       serial_write(frames[cur_frame][1]);
+#endif
       old_frame= cur_frame;
     }
     frame_start = &frames[cur_frame][4];
@@ -524,12 +531,14 @@ static void
 init_dc(void)
 {
   uint8_t byte;
-  uint8_t i;
+  uint8_t i, j, k;
   uint8_t mask;
+  uint8_t *p, *q;
 
   /* Init SPI */
-  pin_mode_output(11);  /* MOSI */
-  pin_mode_output(13);  /* SCK */
+  pin_mode_output(PIN_SIN);
+  pin_mode_output(PIN_SCLK);
+  pin_mode_input(PIN_SOUT);
 
   /*
     Interrupt disable, SPI enable, MSB first, master mode, SCK idle low,
@@ -569,13 +578,107 @@ init_dc(void)
   pin_high(PIN_XLAT);
   pin_low(PIN_XLAT);
 
-  /* De-init SPI */
-//  while (!spi_interrupt_flag())
-//    ;
-  spi_disable();
+  /*
+    Now shift in initial all-zero grayscale data, and read out status at the
+    same time.
+  */
 
   /* Set grayscale mode. */
   pin_low(PIN_VPRG);
+
+  /*
+    The TLC5940 actually needs setup and sample both on the trailing edge. But
+    AVR SPI can only do setup and sample on opposite edges.
+    So we just sample on trailing and setup on leading - and setup an initial
+    zero bit before we start - that works since we shift out all zeros anyway.
+  */
+
+  pin_low(PIN_SIN);
+  SPCR = _BV(SPE) | _BV(MSTR) | _BV(CPHA);
+  SPSR = _BV(SPI2X);
+
+  pin_high(PIN_XLAT); pin_low(PIN_XLAT);
+  /*
+    Datasheet explains that a small delay is needed before status info data
+    becomes available.
+  */
+  _delay_us(1.51 + 0.125);
+
+  p = &frames[0][0];
+  for (i = 0; i < 192*8/8; ++i)
+  {
+    spi_write(0);
+    while (!spi_interrupt_flag())
+      ;
+    *p++ = spi_read();
+  }
+
+  /* De-init SPI */
+  spi_disable();
+
+#ifdef DEBUG_OUTPUT_STATUS_INFO_REGISTER
+  /* Now output the stuff, for dbug. */
+  while (!serial_writeable()); serial_write('?');
+  for (q= &frames[0][0]; q < p; ++q)
+  {
+    uint8_t u, v;
+    v = *q;
+    u = v >> 4;
+    while (!serial_writeable()); serial_write(u + (u >= 10 ? 'A'-10 : '0'));
+    u = v & 0xf;
+    while (!serial_writeable()); serial_write(u + (u >= 10 ? 'A'-10 : '0'));
+  }
+  while (!serial_writeable()); serial_write('!');
+#endif
+
+  /*
+    Check that the DC register reads identical to what we tried to write.
+    If not, refuse to continue.
+    The idea is to avoid running with random data in the DC due to software
+    or hardware errors, potentially frying the LEDs.
+  */
+  p= &frames[0][0];
+  for (i = 0; i < 8; ++i)
+  {
+    /* The first 3 bytes are LOD and TEF error flags. */
+    p+= 3;
+    /* Then the 16 6-bit DC register values. */
+    mask= 0x80;
+    for (j = 0; j < 16; ++j)
+    {
+      byte= 0;
+      for (k = 0; k < 6; ++k)
+      {
+        byte <<= 1;
+        if (*p & mask)
+          byte|= 1;
+        mask >>= 1;
+        if (!mask)
+        {
+          mask= 0x80;
+          ++p;
+        }
+      }
+      if (byte != DC_VALUE)
+        goto err;
+    }
+    /* The last 9 bytes are reserved. */
+    p+= 9;
+  }
+err:
+  while (byte != DC_VALUE)
+  {
+    /* Flash the status LED forever to show our unhappiness */
+    pin_mode_output(13);
+    pin_high(13);
+    _delay_ms(300);
+    pin_low(13);
+    _delay_ms(100);
+    pin_high(13);
+    _delay_ms(100);
+    pin_low(13);
+    _delay_ms(100);
+  }
 }
 
 static void anim_solid(uint8_t f, uint8_t val);
