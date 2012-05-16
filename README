@@ -39,13 +39,14 @@ Example:
 Ledcube Arduino pinout
 
 GSCLK  6    5940-18          VPRG  5940-27  low=GS high=DC mode
-VPRG   9    5940-27          GND   5940-22
-XLAT  10    5940-24          VCC   5940-21
-SIN   11    5940-26          IREF  5940-20  resistor-towards-ground
-BLANK 12    5940-23          DCPRG 5940-19  low=EEPROM high=DC register
-SCLK  13    5940-25          SOUT  5940-17
-                             XERR  5940-16
-FET1    7                OUT0-15 5940-28,1-15
+BLANK  8    5940-23          GND   5940-22
+VPRG   9    5940-27          VCC   5940-21
+XLAT  10    5940-24          IREF  5940-20  resistor-towards-ground
+SIN   11    5940-26          DCPRG 5940-19  low=EEPROM high=DC register
+SOUT  12    5940-17          XERR  5940-16
+SCLK  13    5940-25
+                OUT0-15 5940-28,1-15
+FET1    7
 FET2    2
 FET3    5
 FET4    4
@@ -57,31 +58,17 @@ FET9   A3
 FET10  A4
 FET11  A5
 
+Print pinout (set fra komponentside):
 
-Print pinout:
-
-###########
-###########
-| | | | | |
-1 2 3 4 5 6
-
-1: SIN
-2: SCLK
-3: BLANK
-4: XLAT
-5: GND
-6: VCC
+"knielsen 2012 rev2"  | | | | | | | | | | | | | | | | | | | | |      | |
+                      2 2 1 1 1 1 1 1 1 1 1 1                    +6.5V GND
+                      1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1
+                      l l l l l S G X G V l B X S S V l l l l l
+                      1 9 8 7 6 O N E S C 5 L L C I P 4 3 2 1 0
+                      0         U D R C C   A A L N R
+                                T   R L     N T K   G
+                                      K     K
 
 
-Print:
-
-TLC 1-6 er alle funktionelle.
-
-TLC 6 udgang 12 virker ikke, den virker på benet på chippen, men der
-er fejl på lodningen eller noget. Det betyder ikke noget, vi skal ikke
-bruge den udgang.
-
-Der er pull-DOWN på BLANK. Det er egentlig forkert, for BLANK er aktiv
-høj - det skulle være pull-UP. Men da vi har pull-up på MOSFET'erne så
-gør det ikke noget, så slukker vi den vej hvis der ikke kører
-kontrolsoftware på Arduinoen.
+IC 6 pin 3: kortsluttet til GND
+IC 2 pin 15 + 28 er ikke forbundet (har glemt at lodde!)
