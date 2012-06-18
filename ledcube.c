@@ -34,20 +34,25 @@ static uint8_t frames[NUM_FRAMES][FRAME_SIZE];
 
 /* Mapping: for each LED, which nibble to take the grayscale value from. */
 /* For the fast SPI output, the size should be divisible by two. */
-static prog_uint16_t led_map[] PROGMEM = {
-//  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
-  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-  11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-  22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
-  33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
-  44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
-  55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65,
-  66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76,
-  77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
-  88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98,
-  99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
-  110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120
+/* Note: pin 3 (output 4 of 16) of IC 6 is re-mapped to pin 15 (output 16) */
+/* of IC 8, due to shorted pad - this is nibble 103. */
+static const uint16_t led_map[] PROGMEM = {
+  15, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 52,
+  63, 74, 75, 64, 53, 76, 65, 54,
+  40, 41, 42, 43, 30, 29, 31, 32,
+  21, 20, 19, 10, 18, 9, 8, 7,
+  61, 49, 37, 50, 38, 26, 51, 27,
+  39, 28, 17, 16, 0x8000, 6, 5, 4,
+  36, 25, 14, 3, 24, 35, 13, 2,
+  1, 12, 23, 0, 34, 11, 22, 33,
+  60, 70, 69, 59, 58, 68, 48, 47,
+  57, 46, 45, 56, 67, 44, 55, 66,
+  80, 79, 78, 77, 90, 91, 89, 88,
+  99, 100, 101, 110, 102, 111, 112, 113,
+  73, 72, 62, 83, 71, 94, 82, 81,
+  93, 92, 103, 104, 105, 114, 115, 116,
+  84, 95, 106, 117, 118, 85, 96, 107,
+  119, 108, 97, 120, 86, 109, 98, 87,
 };
 
 /* Serial reception. */
@@ -229,7 +234,8 @@ static uint16_t pixel2out[16] =
 #ifdef DAYMODE
 { 0, 23, 89, 192, 332, 508, 719, 964, 1242, 1554, 1898, 2275, 2684, 3125, 3597, 4095 };
 #else
-{ 0, 1, 3, 5, 9, 15, 27, 48, 84, 147, 255, 445, 775, 1350, 2352, 4095 };
+//{ 0, 1, 3, 5, 9, 15, 27, 48, 84, 147, 255, 445, 775, 1350, 2352, 4095 };
+{ 0, 5, 27, 73, 150, 263, 414, 609, 851, 1142, 1486, 1886, 2344, 2863, 3446, 4095 };
 #endif
 
 static void
@@ -410,21 +416,20 @@ timer1_interrupt_a()
     /* Switch the MOSFETs to the next layer. */
     switch (cur_layer)
     {
-    case 0: pinA5_high(); pin7_low(); break;
-    case 1: pin7_high(); pin2_low(); break;
-    case 2: pin2_high(); pin5_low(); break;
-    case 3: pin5_high(); pin4_low(); break;
-    case 4: pin4_high(); pin3_low(); break;
-    case 5: pin3_high(); pinA0_low(); break;
-    case 6: pinA0_high(); pinA1_low(); break;
-    case 7: pinA1_high(); pinA2_low(); break;
-    case 8: pinA2_high(); pinA3_low(); break;
-    case 9: pinA3_high(); pinA4_low(); break;
-    case 10:pinA4_high(); pinA5_low(); break;
+    case 0: pinA0_high(); pin2_low(); break;
+    case 1: pin2_high(); pin3_low(); break;
+    case 2: pin3_high(); pin4_low(); break;
+    case 3: pin4_high(); pin5_low(); break;
+    case 4: pin5_high(); pin7_low(); break;
+    case 5: pin7_high(); pinA5_low(); break;
+    case 6: pinA5_high(); pinA4_low(); break;
+    case 7: pinA4_high(); pinA3_low(); break;
+    case 8: pinA3_high(); pinA2_low(); break;
+    case 9: pinA2_high(); pinA1_low(); break;
+    case 10:pinA1_high(); pinA0_low(); break;
     }
-    /* Hack: only 1st layer, while running without MOSFETs. */
-    if (cur_layer == 0)
-      pin_low(PIN_BLANK);
+
+    pin_low(PIN_BLANK);
   }
 
   cur_layer++;
@@ -736,8 +741,9 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
 
     if (onboard_animation)
     {
-      anim_solid(generate_frame, 15);
-      //anim_scan_plane(generate_frame);
+      //anim_solid(generate_frame, 15);
+      //anim_solid(generate_frame, 0);
+      anim_scan_plane(generate_frame);
       //anim_scan_plane_5(generate_frame);
       //cornercube_5(generate_frame);
     }
@@ -937,8 +943,8 @@ static void
 anim_solid(uint8_t f, uint8_t val)
 {
   static uint16_t count = 0;
-  //fast_clear(f, val);
-  fast_clear(f, (++count/32)%16);
+  fast_clear(f, val);
+  //fast_clear(f, (++count/10)%16);
 }
 
 static void

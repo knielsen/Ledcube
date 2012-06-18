@@ -2717,6 +2717,16 @@ testimg_show_greyscales_5(frame_xyz F, int frame, void **data)
 }
 
 static void
+testimg_show_greyscales(frame_xyz F, int frame, void **data)
+{
+  ef_clear(F, 0);
+  for (int x = 0; x < SIDE; ++x)
+    for (int y = 0; y < SIDE; ++y)
+      for (int z = 0; z < SIDE; ++z)
+        F[x][y][z] = (x+y+z)%16;
+}
+
+static void
 testimg_show_greyscales_bottom_5(frame_xyz F, int frame, void **data)
 {
   ef_clear(F, 0);
@@ -2738,7 +2748,7 @@ static void
 testimg_test_column(frame_xyz F, int frame, void **data)
 {
   ef_clear(F);
-  F[SIDE-1-((frame/(8*SIDE*SIDE))%SIDE)][(frame/(8*SIDE))%SIDE][(frame/8)%SIDE] = 11;
+  F[SIDE-1-((frame/(8*SIDE*SIDE))%SIDE)][(frame/(8*SIDE))%SIDE][(frame/8)%SIDE] = 15;
 }
 
 /* ****************************************************************** */
@@ -2929,6 +2939,7 @@ static struct anim_piece animation[] = {
   //{ testimg_test_lines, 100000, 0 },
   //{ testimg_test_column, 100000000, 0 },
   //{ testimg_solid, 1000000, 0 },
+  //{ testimg_show_greyscales, 1000000, 0 },
   { cornercube_11, 600, 0 },
   { fade_out, 16, 0 },
   { an_smoketail, 1400, 0 },
@@ -2989,7 +3000,7 @@ main(int argc, char *argv[])
       exit(1);
     }
   }
-  play_animation(animation5);
-  //play_animation(animation);
+  //play_animation(animation5);
+  play_animation(animation);
   return 0;
 }

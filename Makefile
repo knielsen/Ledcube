@@ -57,7 +57,7 @@ CFLAGS    += -std=gnu99 -fstrict-aliasing
 CFLAGS    += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
 ## Uncomment to create listing file
 #CFLAGS    += -Wa,-adhlns=$(<:.c=.lst)
-CFLAGS    += -Wall -Wextra -Wno-variadic-macros -pedantic
+CFLAGS    += -Wall -Wextra -Wno-unused -Wno-variadic-macros -pedantic
 
 LDFLAGS    = -Wl,--relax
 ## Uncomment to create a map file

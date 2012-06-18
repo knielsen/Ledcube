@@ -46,17 +46,20 @@ SIN   11    5940-26          DCPRG 5940-19  low=EEPROM high=DC register
 SOUT  12    5940-17          XERR  5940-16
 SCLK  13    5940-25
                 OUT0-15 5940-28,1-15
-FET1    7
-FET2    2
-FET3    5
-FET4    4
-FET5    3
-FET6   A0
-FET7   A1
-FET8   A2
-FET9   A3
-FET10  A4
-FET11  A5
+
+FET inputs with arduino flat-cable connections:
+
+FET1    2
+FET2    3
+FET3    4
+FET4    5
+FET5    7
+FET6   A5
+FET7   A4
+FET8   A3
+FET9   A2
+FET10  A1
+FET11  A0
 
 Print pinout (set fra komponentside):
 
@@ -70,5 +73,27 @@ Print pinout (set fra komponentside):
                                       K     K
 
 
-IC 6 pin 3: kortsluttet til GND
-IC 2 pin 15 + 28 er ikke forbundet (har glemt at lodde!)
+[Fikset: IC 2 pin 15 + 28 er ikke forbundet (har glemt at lodde!)]
+[Fikset: IC 6 pin 3: kortsluttet til GND - patchet til IC 8 pin 15]
+[Fikset: IC 7: ben 7 og 8 er kortsluttet med hinanden]
+[Fikset: Søjle (x,y)=(7,10) - fikset lodning på chip]
+
+Fejl:
+
+ - Kuben glitcher ved fuld knald på et lag med DC>2, for DC=12 crasher
+   den på en eller anden måde så det er nødvending at tage strømmen på
+   arduino (reset er ikke nok). For DC=2 kører det fint.
+
+ - Med Uno er der fejl på seriel. Med Duomi... kører den stabilt. Den
+   nye usb-to-seriel i Uno er åbentbart ikke gearet til 500kbit.
+   (eller kan det være driveren i Linux?)
+
+ - LED (9, 10, 9) lyser svagere end de andre. Hele (y,z)=(10,9) går
+   død ved meget lav strøm, men virker ved normal spændingstilføring.
+   (jeg tror den LED er lidt off-key - evt. lodningen. Kunne skifte den,
+   men det er ikke et stort problem i praksis.)
+
+ - i framerate_control.pl laver min select(..., timeout=0) 0.2 sek
+   delay hver 10. sekund. Det virker bare at fjerne den (men
+   ... hvorfor?)
+
