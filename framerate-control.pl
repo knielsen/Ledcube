@@ -7,7 +7,9 @@ use Time::HiRes;
 
 my $FRAMERATE= 50;
 
-open FH, '+<', '/dev/ttyUSB0' or die "open() failed: $!\n";
+my $device = $ARGV[0] || '/dev/ttyUSB0';
+
+open FH, '+<', $device or die "open() failed: $!\n";
 
 select FH; $| = 1; select STDOUT;
 binmode FH;
@@ -43,7 +45,7 @@ for (;;) {
   # Check what arduino reports back
   my $rin = '';
   vec($rin, fileno(FH), 1) = 1;
-  my $res = select($rin, undef, undef, 0);
+  my $res = -1;#select($rin, undef, undef, 0);
   if ($res > 0) {
     my $y = '';
     sysread(FH, $y, 128);
