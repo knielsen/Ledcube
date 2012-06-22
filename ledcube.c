@@ -685,6 +685,21 @@ err:
   }
 }
 
+static void
+fast_clear(uint8_t frame, uint8_t val)
+{
+  uint8_t v = (uint8_t)0x11 * (val & 0xf);
+  uint8_t *p= &frames[frame][4];
+  for (uint8_t i= 0; i < DATA_SIZE/16; i++)
+  {
+    *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v;
+    *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v;
+  }
+  for (uint8_t i= 0; i < DATA_SIZE % 16; i++)
+    *p++= v;
+}
+
+
 static void anim_solid(uint8_t f, uint8_t val);
 static void anim_scan_plane(uint8_t f);
 static void anim_scan_plane_5(uint8_t f);
@@ -701,9 +716,15 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
   uint8_t previous_receive_counter = 0;
   uint8_t previous_receive_timestamp = 0;
   uint8_t generate_counter= 0;
+  uint8_t i;
 
   init();
+  /* Wait a bit to allow TLC5940's and electronics power to settle. */
+  _delay_ms(1000);
   init_dc();
+  /* Clear the buffers. */
+  for (i = 0; i < NUM_FRAMES; ++i)
+    fast_clear(i, 0);
   sei();
 
   sleep_mode_idle();
@@ -741,28 +762,14 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
 
     if (onboard_animation)
     {
-      //anim_solid(generate_frame, 15);
+      anim_solid(generate_frame, 15);
       //anim_solid(generate_frame, 0);
-      anim_scan_plane(generate_frame);
+      //anim_scan_plane(generate_frame);
       //anim_scan_plane_5(generate_frame);
       //cornercube_5(generate_frame);
     }
     ++generate_counter;
   }
-}
-
-static void
-fast_clear(uint8_t frame, uint8_t val)
-{
-  uint8_t v = (uint8_t)0x11 * (val & 0xf);
-  uint8_t *p= &frames[frame][4];
-  for (uint8_t i= 0; i < DATA_SIZE/16; i++)
-  {
-    *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v;
-    *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v;
-  }
-  for (uint8_t i= 0; i < DATA_SIZE % 16; i++)
-    *p++= v;
 }
 
 static void
