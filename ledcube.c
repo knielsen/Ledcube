@@ -71,7 +71,7 @@ static const uint16_t led_map[] PROGMEM = {
 */
 static volatile uint8_t show_frame = 0;
 /* The frame currently being received over serial. */
-static uint8_t current_frame = 0;
+static uint8_t current_frame = 1;
 /* The count of bytes already received in current frame. */
 static uint16_t current_idx = 0;
 /* Count of bytes (<=255) to receive using the "fast path" code. */
@@ -406,7 +406,7 @@ timer1_interrupt_a()
   sei();
 
   /* First, switch layer, so we get a stable timing for this important step. */
-  /* But skip the very first time, when we have no data yet. */
+  /* But skip the very first time, when we have no data in the TLCs yet. */
   if (cur_layer < NUM_LAYERS)
   {
     pin_high(PIN_BLANK);
@@ -720,7 +720,7 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
 
   init();
   /* Wait a bit to allow TLC5940's and electronics power to settle. */
-  _delay_ms(1000);
+  _delay_ms(50);
   init_dc();
   /* Clear the buffers. */
   for (i = 0; i < NUM_FRAMES; ++i)
@@ -748,7 +748,7 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
       previous_receive_timestamp = cur_refresh_counter;
     }
     else if (!onboard_animation &&
-             (uint8_t)(cur_refresh_counter - previous_receive_timestamp) > 30)
+             (uint8_t)(cur_refresh_counter - previous_receive_timestamp) > 60)
     {
       /*
         Nothing received on serial for a while.
