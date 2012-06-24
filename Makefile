@@ -16,18 +16,18 @@ MODE     = $(MODE_RAW) $(MODE_8) $(MODE_N) $(MODE_1)# 8n1
 ## Uncomment your arduino version below
 
 ## Duemilanove
-MCU       = atmega328p
-F_CPU     = 16000000UL
-PORT      = /dev/ttyUSB0
-PROG      = arduino
-PROG_BAUD = 57600
-
-## Uno
 #MCU       = atmega328p
 #F_CPU     = 16000000UL
-#PORT      = /dev/ttyACM0
+#PORT      = /dev/ttyUSB0
 #PROG      = arduino
-#PROG_BAUD = 115200
+#PROG_BAUD = 57600
+
+## Uno
+MCU       = atmega328p
+F_CPU     = 16000000UL
+PORT      = /dev/ttyACM0
+PROG      = arduino
+PROG_BAUD = 115200
 
 CC      = avr-gcc
 OBJCOPY = avr-objcopy

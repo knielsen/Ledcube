@@ -762,9 +762,9 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
 
     if (onboard_animation)
     {
-      anim_solid(generate_frame, 15);
+      //anim_solid(generate_frame, 15);
       //anim_solid(generate_frame, 0);
-      //anim_scan_plane(generate_frame);
+      anim_scan_plane(generate_frame);
       //anim_scan_plane_5(generate_frame);
       //cornercube_5(generate_frame);
     }
