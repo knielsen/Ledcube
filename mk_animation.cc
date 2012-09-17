@@ -24,6 +24,25 @@ drand(double n)
   return (double)rand() / ((double)RAND_MAX/n);
 }
 
+/* Random unit vector of length a, uniform distribution in angular space. */
+static void
+vrand(double a, double *x, double *y, double *z)
+{
+  /*
+    Sample a random direction uniformly.
+
+    Uses the fact that cylinder projection of the sphere is area preserving,
+    so sample uniformly the cylinder, and project onto the sphere.
+  */
+  double v = drand(2*M_PI);
+  double u = drand(2.0) - 1.0;
+  double r = sqrt(1.0 - u*u);
+  *x = a*r*cos(v);
+  *y = a*r*sin(v);
+  *z = a*u;
+}
+
+
 typedef uint8_t frame_xyz[SIDE][SIDE][SIDE];
 
 struct anim_piece {
@@ -680,18 +699,13 @@ an_fireworks(frame_xyz F, int frame, void **data)
         if (c->num_phase2 >= max_phase2)
           break;            /* No more room */
         int j = c->num_phase2++;
-        /*
-          Sample a random direction uniformly.
-          Uses the fact that cylinder projection of the sphere is area
-          preserving, so sample uniformly the cylinder, and project onto
-          the sphere.
-        */
-        double v = drand(2*M_PI);
-        double u = drand(2.0) - 1.0;
-        double r = sqrt(1.0 - u*u);
-        double vx = V*r*cos(v);
-        double vy = V*r*sin(v);
-        double vz = V*u;
+
+        /* Sample a random direction uniformly. */
+        double vx;
+        double vy;
+        double vz;
+        vrand(V, &vx, &vy, &vz);
+
         c->p2[j].x = c->p1[i].x[0];
         c->p2[j].y = c->p1[i].y[0];
         c->p2[j].z = c->p1[i].z[0];
@@ -2626,6 +2640,109 @@ an_smoketail(frame_xyz F, int frame, void **data)
   c->idx = (c->idx+1) % (sizeof(c->p)/sizeof(c->p[0]));
 }
 
+#define N_FUZZYBALLS 4
+struct st_fuzzyballs {
+  double r;
+  double x, y, z;
+  double vx, vy, vz;
+  double ax, ay, az;
+};
+
+static void
+an_fuzzyballs(frame_xyz F, int frame, void **data)
+{
+  if (frame == 0)
+    *data = malloc(N_FUZZYBALLS * sizeof(struct st_fuzzyballs));
+  struct st_fuzzyballs *c = static_cast<struct st_fuzzyballs *>(*data);
+
+  for (int l = 0; l < N_FUZZYBALLS; ++l)
+  {
+    if (frame == 0 ||
+        c[l].x*c[l].x + c[l].y*c[l].y + c[l].z*c[l].z > 2*SIDE*SIDE+2)
+    {
+      /* Select random radius, position, velocity, acceleration. */
+      c[l].r = 1.2 + drand(1.3);
+      c[l].x = 1 + drand(SIDE-3) - (SIDE-1)/2.0;
+      c[l].y = 1 + drand(SIDE-3) - (SIDE-1)/2.0;
+      c[l].z = 1 + drand(SIDE-3) - (SIDE-1)/2.0;
+      vrand(0.02+drand(0.03), &c[l].vx, &c[l].vy, &c[l].vz);
+      vrand(0.0002+drand(0.0003), &c[l].ax, &c[l].ay, &c[l].az);
+
+      /*
+        Now shift, so we start outside the cube but pass through the randomly
+        selected state.
+      */
+      double M = c[l].r + 2 + (SIDE+1)/2.0;
+      double s,t;
+      if (c[l].vx < -1e-6)
+        s = (c[l].x + M) / c[l].vx;
+      else if (c[l].vx > 1e-6)
+        s = -(c[l].x + M) / c[l].vx;
+      else
+        s = -1e12;
+
+      if (c[l].vy < -1e-6)
+        t = (c[l].y + M) / c[l].vy;
+      else if (c[l].vy > 1e-6)
+        t = -(c[l].y + M) / c[l].vy;
+      else
+        t = -1e12;
+      if (t > s)
+        s = t;
+
+      if (c[l].vz < -1e-6)
+        t = (c[l].z + M) / c[l].vz;
+      else if (c[l].vz > 1e-6)
+        t = -(c[l].z + M) / c[l].vz;
+      else
+        t = -1e12;
+      if (t > s)
+        s = t;
+
+      c[l].x = 0.5*c[l].ax*s*s + c[l].vx*s + c[l].x;
+      c[l].y = 0.5*c[l].ay*s*s + c[l].vy*s + c[l].y;
+      c[l].z = 0.5*c[l].az*s*s + c[l].vz*s + c[l].z;
+      c[l].vx = c[l].ax*s + c[l].vx;
+      c[l].vy = c[l].ay*s + c[l].vy;
+      c[l].vz = c[l].az*s + c[l].vz;
+    }
+  }
+
+  ef_clear(F);
+
+  for (int i = 0; i < SIDE; ++i)
+    for (int j = 0; j < SIDE; ++j)
+      for (int k = 0; k < SIDE; ++k)
+      {
+        int col= 0;
+        for (int l = 0; l < N_FUZZYBALLS; ++l)
+        {
+          int t = 0;
+          double dx = c[l].x + (SIDE-1)/2 - i;
+          double dy = c[l].y + (SIDE-1)/2 - j;
+          double dz = c[l].z + (SIDE-1)/2 - k;
+          double dr = sqrt(dx*dx + dy*dy + dz*dz) - c[l].r;
+          if (dr < 0)
+            t = 15;
+          else if (dr <= 1)
+            t = floor(15 * (1-dr));
+          if (t > col)
+            col = t;
+        }
+        F[i][j][k]= col;
+      }
+
+  for (int l = 0; l < N_FUZZYBALLS; ++l)
+  {
+    c[l].x += c[l].vx;
+    c[l].y += c[l].vy;
+    c[l].z += c[l].vz;
+    c[l].vx += c[l].ax;
+    c[l].vy += c[l].ay;
+    c[l].vz += c[l].az;
+  }
+}
+
 
 /* Highligt x-axis (y=z=0) */
 static void
@@ -2940,6 +3057,7 @@ static struct anim_piece animation[] = {
   //{ testimg_test_column, 100000000, 0 },
   //{ testimg_solid, 1000000, 0 },
   //{ testimg_show_greyscales, 1000000, 0 },
+  { an_fuzzyballs, 1600, 0 },
   { cornercube_11, 600, 0 },
   { fade_out, 16, 0 },
   { an_smoketail, 1400, 0 },
