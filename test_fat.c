@@ -95,7 +95,7 @@ handle_res(int res, struct ev_file_status *st)
             (unsigned)st->st_stream_bytes.len, res, errno, strerror(errno));
     exit(1);
   }
-  dump_buffer(buf, 512);
+  dump_buffer(buf, st->st_stream_bytes.len);
   for (i = 0; i < st->st_stream_bytes.len; ++i)
     if (ev_file_stream_bytes(buf[i], st))
       break;
