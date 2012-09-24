@@ -538,8 +538,12 @@ init_dc(void)
   uint8_t i, j, k;
   uint8_t mask;
   uint8_t *p, *q;
+  uint8_t attempts= 0;
 
+try_again:
   /* Init SPI */
+  _delay_ms(400);
+  ++attempts;
   pin_mode_output(PIN_SIN);
   pin_mode_output(PIN_SCLK);
   pin_mode_input(PIN_SOUT);
@@ -672,6 +676,8 @@ init_dc(void)
 err:
   while (byte != DC_VALUE)
   {
+    if (attempts < 3)
+      goto try_again;
     /* Flash the status LED forever to show our unhappiness */
     pin_mode_output(13);
     pin_high(13);
