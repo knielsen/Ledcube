@@ -40,7 +40,10 @@ struct ev_file_status {
 
   /* Current cluster of current file. */
   uint32_t file_cluster;
-  /* The sector number of the location of the FAT. */
+  /*
+    The sector number of the location of the FAT.
+    (Temporarily also used to save start of first partition during init).
+  */
   uint32_t fat_first_sector;
   /* The sector number of the first data cluster. */
   uint32_t data_first_sector;

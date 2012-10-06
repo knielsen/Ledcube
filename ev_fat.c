@@ -146,6 +146,11 @@ ev_file_get_first_block(const char *filename, struct ev_file_status *st)
       DEBUG(("Not FAT in sector 0, try first BIOS partion\n"));
       if (!(st->locate_fat.flags & FL_FAT_PART1))
         return EV_FILE_ST_EBADFS;
+      /*
+        Save partition start temporarily, as partition_start_lba will be
+        overwritten during the next sector read.
+      */
+      st->fat_first_sector = st->locate_fat.partition_start_lba;
       st->st_stream_bytes.sec = st->locate_fat.partition_start_lba;
       st->st_stream_bytes.offset = 0;
       st->st_stream_bytes.len = 512;
@@ -170,7 +175,7 @@ ev_file_get_first_block(const char *filename, struct ev_file_status *st)
       part of our structure if it looks ok.
     */
     uint32_t base_sector = (state == ST_STREAM_PART_BLOCK_0 ?
-                            st->locate_fat.partition_start_lba : 0);
+                            st->fat_first_sector : 0);
     uint32_t remain_sectors = st->locate_fat.number_of_sectors;
 
     if (st->locate_fat.reserved_sectors >= remain_sectors)
