@@ -80,6 +80,8 @@ static uint8_t remain_bytes= 0;
 static uint8_t *cur_data_ptr;
 /* Running checksum. */
 static uint8_t checksum = 0;
+/* Set to 0 by serial interrupt for each received byte. */
+static volatile uint8_t serial_idle = 0;
 
 /*
   Do the less often run serial stuff here, to keep the most serial interrupts
@@ -96,11 +98,14 @@ static uint8_t checksum = 0;
 /*
 serial_interrupt_rx()
 {
+  serial_idle = 0;
   int8_t r = remain_bytes;
   if (r > 0)
   {
     remain_bytes= r-1;
-    *cur_data_ptr++ = serial_read();
+    int8_t b = serial_read();
+    *cur_data_ptr++ = b;
+    checksum ^= b;
   }
   else
     serial_interrupt_slow_part();
@@ -118,6 +123,8 @@ serial_interrupt_rx_naked()
     "push r30\n\t"
     "push r31\n\t"
 
+    "clr  r30\n\t"
+    "sts  serial_idle, r30\n\t"
     "lds  r30, remain_bytes\n\t"
     "subi r30, 1\n\t"
     "brcs 1f\n\t"              /* if remain_bytes was 0, do it the slow way */
@@ -222,10 +229,8 @@ serial_interrupt_slow_part(void)
 static void
 serial_reset(void)
 {
-  cli();
   current_idx = 0;
   remain_bytes = 0;
-  sei();
 }
 
 
@@ -720,8 +725,8 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
   uint8_t onboard_animation = 0;
   uint8_t cur_receive_counter;
   uint8_t previous_receive_counter = 0;
-  uint8_t previous_receive_timestamp = 0;
   uint8_t generate_counter= 0;
+  uint8_t previous_active_timestamp;
   uint8_t i;
 
   init();
@@ -732,6 +737,8 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
   for (i = 0; i < NUM_FRAMES; ++i)
     fast_clear(i, 0);
   sei();
+
+  previous_active_timestamp = frame_refresh_counter;
 
   sleep_mode_idle();
   for (;;)
@@ -751,19 +758,6 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
       /* We received a new frame on serial. */
       onboard_animation= 0;
       previous_receive_counter = cur_receive_counter;
-      previous_receive_timestamp = cur_refresh_counter;
-    }
-    else if (!onboard_animation &&
-             (uint8_t)(cur_refresh_counter - previous_receive_timestamp) > 60)
-    {
-      /*
-        Nothing received on serial for a while.
-        Switch to on-board animation, and reset the serial state so that it
-        will recover when communication resumes.
-      */
-      serial_reset();
-      onboard_animation = 1;
-      generate_frame = (show_frame + (NUM_FRAMES - 1)) % NUM_FRAMES;
     }
 
     if (onboard_animation)
@@ -775,6 +769,41 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
       //cornercube_5(generate_frame);
     }
     ++generate_counter;
+
+    /*
+      Reset the serial state machine if it has been idle for a while.
+      This makes for a simple way to sync up the sender and the receiver:
+      simply make a small pause before sending the next frame.
+
+      We also switch to on-board animation when serial is detected idle.
+    */
+    cli();
+    uint8_t idle_flag = serial_idle;
+    if (!idle_flag)
+    {
+      serial_idle = 1;
+      sei();
+      previous_active_timestamp = cur_refresh_counter;
+    }
+    else if (idle_flag == 1 &&
+             (uint8_t)(cur_refresh_counter - previous_active_timestamp) > 60)
+    {
+      /*
+        No bytes received on serial for a while.
+        Reset the serial state, so we're in sync for when data starts
+        arriving again. And switch to on-board animation.
+
+        We only need to reset once, then we can leave it until serial starts
+        receiving data again.
+      */
+      serial_reset();
+      idle_flag = 2;
+      sei();
+      onboard_animation = 1;
+      generate_frame = (show_frame + (NUM_FRAMES - 1)) % NUM_FRAMES;
+    }
+    else
+      sei();
   }
 }
 
