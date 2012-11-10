@@ -10,6 +10,9 @@
 #include <arduino/sleep.h>
 #include <arduino/spi.h>
 
+/* Lookup table for the cosine plane animation. */
+#include "lookup_tables.h"
+
 /* This is the current through each LED, relative to MAX, 0..63. */
 #define DC_VALUE 2
 /*#define DEBUG_OUTPUT_STATUS_INFO_REGISTER*/
@@ -715,6 +718,7 @@ static void anim_solid(uint8_t f, uint8_t val);
 static void anim_scan_plane(uint8_t f);
 static void anim_scan_plane_5(uint8_t f);
 static void cornercube_5(uint8_t f);
+static void anim_cosine_plane(uint8_t f);
 
 int
 main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
@@ -764,9 +768,10 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
     {
       //anim_solid(generate_frame, 15);
       //anim_solid(generate_frame, 0);
-      anim_scan_plane(generate_frame);
+      //anim_scan_plane(generate_frame);
       //anim_scan_plane_5(generate_frame);
       //cornercube_5(generate_frame);
+      anim_cosine_plane(generate_frame);
     }
     ++generate_counter;
 
@@ -1019,4 +1024,24 @@ anim_scan_plane_5(uint8_t f)
     }
   }
   ++count;
+}
+
+static void
+anim_cosine_plane(uint8_t f)
+{
+  static uint8_t frame_counter = 0;
+  uint8_t i,j;
+
+  fast_clear(f, 0);
+  for (i = 0; i <= 10; ++i)
+  {
+    for (j = 0; j <= 10; ++j)
+    {
+      uint8_t k = cosplane_get_k(i, j, frame_counter);
+      pixel11(f, i, j, k, 15);
+    }
+  }
+  ++frame_counter;
+  if (frame_counter == 210)
+    frame_counter = 0;
 }

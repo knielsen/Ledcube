@@ -7,3 +7,4 @@ core
 tlc5947.pdf
 tlc5947.tar.gz
 ev_fat.o
+lookup_tables.h
