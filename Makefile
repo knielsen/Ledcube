@@ -1,6 +1,6 @@
 ## Name your project
 NAME = ledcube
-#FILES = ledcube.c
+FILES = ledcube.c lookup_tables.h
 
 ## Point this to the directory where you did
 ##   git clone git://github.com/esmil/oniudra-headers.git arduino
@@ -16,18 +16,18 @@ MODE     = $(MODE_RAW) $(MODE_8) $(MODE_N) $(MODE_1)# 8n1
 ## Uncomment your arduino version below
 
 ## Duemilanove
-MCU       = atmega328p
-F_CPU     = 16000000UL
-PORT      = /dev/ttyUSB0
-PROG      = arduino
-PROG_BAUD = 57600
-
-## Uno
 #MCU       = atmega328p
 #F_CPU     = 16000000UL
-#PORT      = /dev/ttyACM0
+#PORT      = /dev/ttyUSB0
 #PROG      = arduino
-#PROG_BAUD = 115200
+#PROG_BAUD = 57600
+
+## Uno
+MCU       = atmega328p
+F_CPU     = 16000000UL
+PORT      = /dev/ttyACM0
+PROG      = arduino
+PROG_BAUD = 115200
 
 CC      = avr-gcc
 OBJCOPY = avr-objcopy
@@ -57,7 +57,7 @@ CFLAGS    += -std=gnu99 -fstrict-aliasing
 CFLAGS    += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
 ## Uncomment to create listing file
 #CFLAGS    += -Wa,-adhlns=$(<:.c=.lst)
-CFLAGS    += -Wall -Wextra -Wno-variadic-macros -pedantic
+CFLAGS    += -Wall -Wextra -Wno-unused -Wno-variadic-macros -pedantic
 
 LDFLAGS    = -Wl,--relax
 ## Uncomment to create a map file
@@ -118,3 +118,6 @@ cat: $(PORT)
 
 clean:
 	rm -f *.elf *.hex *.bin *.map *.lst *.lss *.sym
+
+lookup_tables.h: mk_ledcube_tables.pl
+	perl mk_ledcube_tables.pl > lookup_tables.h
