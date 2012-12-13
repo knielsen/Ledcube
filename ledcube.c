@@ -1,17 +1,123 @@
+#include <stdint.h>
+#include <stdlib.h>
+
 #include <util/delay.h>
 #include <avr/sleep.h>
 #include <avr/pgmspace.h>
-#include <stdlib.h>
+#include <avr/io.h>
+#include <avr/interrupt.h>
 
-#include <arduino/pins.h>
-#include <arduino/serial.h>
-#include <arduino/timer0.h>
-#include <arduino/timer1.h>
-#include <arduino/sleep.h>
-#include <arduino/spi.h>
+//#include <arduino/pins.h>
+//#include <arduino/serial.h>
+//#include <arduino/timer0.h>
+//#include <arduino/timer1.h>
+//#include <arduino/sleep.h>
+//#include <arduino/spi.h>
 
-/* Lookup table for the cosine plane animation. */
-#include "lookup_tables.h"
+#define pin_mode_output_(nr) pin##nr##_mode_output()
+#define pin_mode_output(nr) pin_mode_output_(nr)
+#define pin_mode_input_(nr) pin##nr##_mode_input()
+#define pin_mode_input(nr) pin_mode_input_(nr)
+#define pin_high_(nr) pin##nr##_high()
+#define pin_high(nr) pin_high_(nr)
+#define pin_low_(nr) pin##nr##_low()
+#define pin_low(nr) pin_low_(nr)
+#define define_pin_basic(nr, ddr, port, pinx, bit)\
+	static __attribute__((always_inline)) inline void\
+	pin##nr##_mode_output(void) { ddr  |= _BV(bit); }\
+	static __attribute__((always_inline)) inline void\
+	pin##nr##_mode_input(void)  { ddr  &= ~(_BV(bit)); }\
+	static __attribute__((always_inline)) inline void\
+	pin##nr##_high(void)        { port |= _BV(bit); }\
+	static __attribute__((always_inline)) inline void\
+	pin##nr##_low(void)         { port &= ~(_BV(bit)); }\
+	static __attribute__((always_inline)) inline void\
+	pin##nr##_toggle(void)      { pinx |= _BV(bit); }\
+	static inline uint8_t\
+	pin##nr##_is_high(void)	{ return pinx & _BV(bit); }
+
+define_pin_basic( 0, DDRD, PORTD, PIND, 0)
+define_pin_basic( 1, DDRD, PORTD, PIND, 1)
+define_pin_basic( 2, DDRD, PORTD, PIND, 2)
+define_pin_basic( 3, DDRD, PORTD, PIND, 3)
+define_pin_basic( 4, DDRD, PORTD, PIND, 4)
+define_pin_basic( 5, DDRD, PORTD, PIND, 5)
+define_pin_basic( 6, DDRD, PORTD, PIND, 6)
+define_pin_basic( 7, DDRD, PORTD, PIND, 7)
+
+define_pin_basic( 8, DDRB, PORTB, PINB, 0)
+define_pin_basic( 9, DDRB, PORTB, PINB, 1)
+define_pin_basic(10, DDRB, PORTB, PINB, 2)
+define_pin_basic(11, DDRB, PORTB, PINB, 3)
+define_pin_basic(12, DDRB, PORTB, PINB, 4)
+define_pin_basic(13, DDRB, PORTB, PINB, 5)
+
+define_pin_basic(A0, DDRC, PORTC, PINC, 0)
+define_pin_basic(A1, DDRC, PORTC, PINC, 1)
+define_pin_basic(A2, DDRC, PORTC, PINC, 2)
+define_pin_basic(A3, DDRC, PORTC, PINC, 3)
+define_pin_basic(A4, DDRC, PORTC, PINC, 4)
+define_pin_basic(A5, DDRC, PORTC, PINC, 5)
+
+#define serial_interrupt_rx_naked()  ISR(USART_RX_vect, ISR_NAKED)
+static inline uint8_t
+serial_read(void)           { return UDR0; }
+static inline void
+serial_write(uint8_t c) { UDR0 = c; }
+static inline void
+serial_baud_500k(void)
+{
+	UCSR0A &= ~(_BV(FE0) | _BV(DOR0) | _BV(UPE0) | _BV(U2X0));
+	UBRR0 = 1;
+}
+/* combined mode settings */
+static inline void
+serial_mode_8n1(void)
+{
+	UCSR0B &= ~(_BV(UCSZ02));
+	UCSR0C = (UCSR0C & ~(_BV(UPM01) | _BV(UPM00) | _BV(USBS0)))
+	       | _BV(UCSZ01) | _BV(UCSZ00);
+}
+static inline void
+serial_transmitter_enable(void)  { UCSR0B |= _BV(TXEN0); }
+static inline void
+serial_receiver_enable(void)     { UCSR0B |= _BV(RXEN0); }
+static inline void
+serial_interrupt_rx_enable(void)   { UCSR0B |= _BV(RXCIE0); }
+static inline void
+timer1_count_set(uint16_t n)     { TCNT1 = n; }
+static inline void
+timer1_clock_d1(void)
+{
+	TCCR1B = (TCCR1B & ~(_BV(CS12) | _BV(CS11))) | _BV(CS10);
+}
+static inline void
+timer1_mode_ctc(void)
+{
+	TCCR1A &= ~(_BV(WGM11) | _BV(WGM10));
+	TCCR1B = (TCCR1B & ~(_BV(WGM13))) | _BV(WGM12);
+}
+static inline void
+timer1_compare_a_set(uint16_t v)     { OCR1A = v; }
+static inline void
+timer1_interrupt_a_enable(void)    { TIMSK1 |= _BV(OCIE1A); }
+#define timer1_interrupt_a() ISR(TIMER1_COMPA_vect)
+/* set sleep mode */
+static inline void
+sleep_mode_idle(void)
+{
+	SMCR = SMCR & ~(_BV(SM2) | _BV(SM1) | _BV(SM0));
+}
+
+static inline void
+spi_disable(void)             { SPCR &= ~(_BV(SPE)); }
+static inline uint8_t
+spi_read(void)                 { return SPDR; }
+static inline void
+spi_write(uint8_t c)           { SPDR = c; }
+static inline uint8_t
+spi_interrupt_flag(void)       { return SPSR & _BV(SPIF); }
+
 
 /* This is the current through each LED, relative to MAX, 0..63. */
 #define DC_VALUE 2
@@ -770,8 +876,7 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
       //anim_solid(generate_frame, 0);
       //anim_scan_plane(generate_frame);
       //anim_scan_plane_5(generate_frame);
-      //cornercube_5(generate_frame);
-      anim_cosine_plane(generate_frame);
+      cornercube_5(generate_frame);
     }
     ++generate_counter;
 
@@ -1024,24 +1129,4 @@ anim_scan_plane_5(uint8_t f)
     }
   }
   ++count;
-}
-
-static void
-anim_cosine_plane(uint8_t f)
-{
-  static uint8_t frame_counter = 0;
-  uint8_t i,j;
-
-  fast_clear(f, 0);
-  for (i = 0; i <= 10; ++i)
-  {
-    for (j = 0; j <= 10; ++j)
-    {
-      uint8_t k = cosplane_get_k(i, j, frame_counter);
-      pixel11(f, i, j, k, 15);
-    }
-  }
-  ++frame_counter;
-  if (frame_counter == 210)
-    frame_counter = 0;
 }
