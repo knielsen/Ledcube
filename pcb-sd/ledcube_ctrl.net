@@ -1,0 +1,335 @@
+# EESchema Netlist Version 1.1 created  2012-12-31T01:19:25 CET
+(
+ ( /504FA7EA SM0805 C1 22p
+  ( 1 GND )
+  ( 2 /16u2_xtal2 )
+ )
+ ( /504FA7EC SM0805 C2 22p
+  ( 1 GND )
+  ( 2 /16u2_xtal1 )
+ )
+ ( /504FAA42 SM0805 C3 1u
+  ( 1 /vcap )
+  ( 2 GND )
+ )
+ ( /504FADA6 SM0805 C4 100n
+  ( 1 GND )
+  ( 2 +5V )
+ )
+ ( /504FADD1 SM0805 C5 100n
+  ( 1 +5V )
+  ( 2 GND )
+ )
+ ( /504FA7AE SM0805 C6 22p
+  ( 1 /xtal1_328 )
+  ( 2 GND )
+ )
+ ( /504FA7C3 SM0805 C7 22p
+  ( 1 /xtal2_328 )
+  ( 2 GND )
+ )
+ ( /50AFF9C7 SM0805 C8 1u
+  ( 1 +5V )
+  ( 2 GND )
+ )
+ ( /50AFFA05 SM0805 C9 10n
+  ( 1 /bypass )
+  ( 2 GND )
+ )
+ ( /50AFFA2C SM0805 C10 2.2u
+  ( 1 VCC )
+  ( 2 GND )
+ )
+ ( /50B1EEC9 SM0805 C11 100n
+  ( 1 GND )
+  ( 2 VCC )
+ )
+ ( /50DF3C40 SM1206 C12 100u
+  ( 1 GND )
+  ( 2 +5V )
+ )
+ ( /504E1446 TQFP32 IC1 ATMEGA16U2
+  ( 1 /16u2_xtal1 )
+  ( 2 /16u2_xtal2 )
+  ( 3 GND )
+  ( 4 +5V )
+  ( 5 ? )
+  ( 6 ? )
+  ( 7 ? )
+  ( 8 /u2s_recv )
+  ( 9 /u2s_send )
+  ( 10 ? )
+  ( 11 ? )
+  ( 12 ? )
+  ( 13 /u2s_reset )
+  ( 14 /cs )
+  ( 15 /sclk )
+  ( 16 /mosi )
+  ( 17 /miso )
+  ( 18 ? )
+  ( 19 /cd )
+  ( 20 N-000056 )
+  ( 21 N-000030 )
+  ( 22 ? )
+  ( 23 ? )
+  ( 24 /reset )
+  ( 25 ? )
+  ( 26 ? )
+  ( 27 /vcap )
+  ( 28 GND )
+  ( 29 /usb_rd+ )
+  ( 30 /usb_rd- )
+  ( 31 +5V )
+  ( 32 +5V )
+ )
+ ( /504F5FFA TQFP32 IC2 ATMEGA328-A
+  ( 1 /pd3 )
+  ( 2 /pd4 )
+  ( 3 GND )
+  ( 4 +5V )
+  ( 5 GND )
+  ( 6 +5V )
+  ( 7 /xtal1_328 )
+  ( 8 /xtal2_328 )
+  ( 9 /pd5 )
+  ( 10 /pd6 )
+  ( 11 /pd7 )
+  ( 12 /pb0 )
+  ( 13 /pb1 )
+  ( 14 /pb2 )
+  ( 15 /pb3 )
+  ( 16 /pb4 )
+  ( 17 /pb5 )
+  ( 18 +5V )
+  ( 19 ? )
+  ( 20 ? )
+  ( 21 GND )
+  ( 22 ? )
+  ( 23 /pc0 )
+  ( 24 /pc1 )
+  ( 25 /pc2 )
+  ( 26 /pc3 )
+  ( 27 /pc4 )
+  ( 28 /pc5 )
+  ( 29 /u2s_reset )
+  ( 30 /u2s_send )
+  ( 31 /u2s_recv )
+  ( 32 /pd2 )
+ )
+ ( /505B752E SM0603 L1 30@100MHz
+  ( 1 GND )
+  ( 2 /usb_shield )
+ )
+ ( /50AFEA3B SD_502774 P1 MICRO-SD
+  ( 1 ? )
+  ( 2 /cs33 )
+  ( 3 /di33 )
+  ( 4 VCC )
+  ( 5 /sclk33 )
+  ( 6 GND )
+  ( 7 /miso )
+  ( 8 ? )
+  ( 9 GND )
+  ( 10 /cd )
+  ( 11 ? )
+ )
+ ( /50E02601 lcctrlpad P2 CONN_1
+  ( 1 +5V )
+ )
+ ( /504FA689 lcctrlpad6 P3 CONN_6
+  ( 1 /pc0 )
+  ( 2 /pc1 )
+  ( 3 /pc2 )
+  ( 4 /pc3 )
+  ( 5 /pc4 )
+  ( 6 /pc5 )
+ )
+ ( /504FA6A2 lcctrlpad6 P4 CONN_6
+  ( 1 /pd2 )
+  ( 2 /pd3 )
+  ( 3 /pd4 )
+  ( 4 /pd5 )
+  ( 5 /pd6 )
+  ( 6 /pd7 )
+ )
+ ( /504FA665 lcctrlpad6 P5 CONN_6
+  ( 1 /pb0 )
+  ( 2 /pb1 )
+  ( 3 /pb2 )
+  ( 4 /pb3 )
+  ( 5 /pb4 )
+  ( 6 /pb5 )
+ )
+ ( /50504CB4 lcctrlpad2 P6 CONN_2
+  ( 1 GND )
+  ( 2 +5V )
+ )
+ ( /50DF3B25 lcctrlpad2 P7 CONN_2
+  ( 1 GND )
+  ( 2 +5V )
+ )
+ ( /50DF3BD7 lcctrlpad P8 CONN_1
+  ( 1 /reset )
+ )
+ ( /50E0B531 lcctrlpad2 P9 CONN_2
+  ( 1 N-000030 )
+  ( 2 N-000056 )
+ )
+ ( /50E0D922 pad P10 CONN_1
+  ( 1 /u2s_reset )
+ )
+ ( /50E0D93B pad P11 CONN_1
+  ( 1 /sclk )
+ )
+ ( /50E0D937 pad P12 CONN_1
+  ( 1 /mosi )
+ )
+ ( /50E0D927 pad P13 CONN_1
+  ( 1 /miso )
+ )
+ ( /504FAB84 SM1206 R1 22
+  ( 1 /usb_d- )
+  ( 2 /usb_rd- )
+ )
+ ( /504FAB8F SM1206 R2 22
+  ( 1 /usb_d+ )
+  ( 2 /usb_rd+ )
+ )
+ ( /504FAE44 SM0805 R3 10k
+  ( 1 +5V )
+  ( 2 /reset )
+ )
+ ( /504FABF8 SM0805 R4 10k
+  ( 1 +5V )
+  ( 2 /u2s_reset )
+ )
+ ( /50AFC80C 10103594-0001LF U1 KNUSB
+  ( 1 ? )
+  ( 2 /usb_d- )
+  ( 3 /usb_d+ )
+  ( 4 ? )
+  ( 5 GND )
+  ( 6 /usb_shield )
+ )
+ ( /50AFED50 SO16E U2 4050
+  ( 1 VCC )
+  ( 8 GND )
+  ( 9 /cs )
+  ( 10 /cs33 )
+  ( 11 /sclk )
+  ( 12 /sclk33 )
+  ( 14 /mosi )
+  ( 15 /di33 )
+ )
+ ( /50AFF8B9 SOT23-5 U3 LP2985LV
+  ( 1 +5V )
+  ( 2 GND )
+  ( 3 +5V )
+  ( 4 /bypass )
+  ( 5 VCC )
+ )
+ ( /504E2ECC Crystal_HC49-SD_SMD_RevA_09Aug2010 X1 16MHz
+  ( 1 /16u2_xtal1 )
+  ( 2 /16u2_xtal2 )
+ )
+ ( /504F5D83 Crystal_HC49-SD_SMD_RevA_09Aug2010 X2 16MHz
+  ( 1 /xtal2_328 )
+  ( 2 /xtal1_328 )
+ )
+)
+*
+{ Allowed footprints by component:
+$component C1
+ SM*
+ C?
+ C1-1
+$endlist
+$component C2
+ SM*
+ C?
+ C1-1
+$endlist
+$component C3
+ SM*
+ C?
+ C1-1
+$endlist
+$component C4
+ SM*
+ C?
+ C1-1
+$endlist
+$component C5
+ SM*
+ C?
+ C1-1
+$endlist
+$component C6
+ SM*
+ C?
+ C1-1
+$endlist
+$component C7
+ SM*
+ C?
+ C1-1
+$endlist
+$component C8
+ SM*
+ C?
+ C1-1
+$endlist
+$component C9
+ SM*
+ C?
+ C1-1
+$endlist
+$component C10
+ SM*
+ C?
+ C1-1
+$endlist
+$component C11
+ SM*
+ C?
+ C1-1
+$endlist
+$component C12
+ SM*
+ C?
+ C1-1
+$endlist
+$component IC2
+ 28DIP-ELL600
+ 28dip600
+$endlist
+$component R1
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$component R2
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$component R3
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$component R4
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$endfootprintlist
+}

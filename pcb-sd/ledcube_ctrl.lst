@@ -1,0 +1,51 @@
+eeschema (2012-apr-16-27)-stable  >> Creation date: 2012-09-12T11:16:34 CEST
+
+#Cmp ( order = Reference )
+| C1         22p         
+| C2         22p         
+| C3         100n        
+| C4         100n        
+| C5         100n        
+| C6         22p         
+| C7         22p         
+| IC1        ATMEGA16U2  
+| IC2        ATMEGA328-A 
+| P1         CONN_4      
+| P2         CONN_7      
+| P3         CONN_6      
+| P4         CONN_6      
+| P5         CONN_6      
+| P6         CONN_2      
+| R1         22          
+| R2         22          
+| R3         10k         
+| R4         10k         
+| X1         16MHz       
+| X2         16MHz       
+#End Cmp
+
+#Cmp ( order = Value )
+| 100n         C3        
+| 100n         C4        
+| 100n         C5        
+| 10k          R3        
+| 10k          R4        
+| 16MHz        X1        
+| 16MHz        X2        
+| 22           R1        
+| 22           R2        
+| 22p          C1        
+| 22p          C2        
+| 22p          C6        
+| 22p          C7        
+| ATMEGA16U2   IC1       
+| ATMEGA328-A  IC2       
+| CONN_2       P6        
+| CONN_4       P1        
+| CONN_6       P3        
+| CONN_6       P4        
+| CONN_6       P5        
+| CONN_7       P2        
+#End Cmp
+
+#End List
