@@ -1,4 +1,4 @@
-EESchema Schematic File Version 2  date 2012-12-30T22:43:42 CET
+EESchema Schematic File Version 2  date 2012-12-31T11:56:28 CET
 LIBS:power
 LIBS:device
 LIBS:transistors
@@ -38,7 +38,7 @@ $Descr A4 11700 8267
 encoding utf-8
 Sheet 1 1
 Title ""
-Date "30 dec 2012"
+Date "31 dec 2012"
 Rev ""
 Comp ""
 Comment1 ""
@@ -46,6 +46,12 @@ Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
+Connection ~ 5800 4500
+Wire Wire Line
+	6100 4500 5800 4500
+Connection ~ 5750 3250
+Wire Wire Line
+	5750 3600 5750 3250
 Wire Wire Line
 	5400 2850 5550 2850
 Wire Wire Line
@@ -370,6 +376,54 @@ Wire Wire Line
 	5350 2450 5400 2450
 Wire Wire Line
 	5400 2450 5400 2750
+Wire Wire Line
+	6000 3600 6000 3350
+Connection ~ 6000 3350
+Wire Wire Line
+	5600 3600 5600 3150
+Connection ~ 5600 3150
+$Comp
+L CONN_1 P?
+U 1 1 50E0D93B
+P 6000 3750
+AR Path="/50E0D922" Ref="P?"  Part="1" 
+AR Path="/50E0D93B" Ref="P11"  Part="1" 
+F 0 "P11" H 6080 3750 40  0000 L CNN
+F 1 "CONN_1" H 6000 3805 30  0001 C CNN
+	1    6000 3750
+	0    1    1    0   
+$EndComp
+$Comp
+L CONN_1 P?
+U 1 1 50E0D937
+P 5750 3750
+AR Path="/50E0D922" Ref="P?"  Part="1" 
+AR Path="/50E0D937" Ref="P12"  Part="1" 
+F 0 "P12" H 5830 3750 40  0000 L CNN
+F 1 "CONN_1" H 5750 3805 30  0001 C CNN
+	1    5750 3750
+	0    1    1    0   
+$EndComp
+$Comp
+L CONN_1 P?
+U 1 1 50E0D927
+P 5600 3750
+AR Path="/50E0D922" Ref="P?"  Part="1" 
+AR Path="/50E0D927" Ref="P13"  Part="1" 
+F 0 "P13" H 5680 3750 40  0000 L CNN
+F 1 "CONN_1" H 5600 3805 30  0001 C CNN
+	1    5600 3750
+	0    1    1    0   
+$EndComp
+$Comp
+L CONN_1 P10
+U 1 1 50E0D922
+P 6250 4500
+F 0 "P10" H 6330 4500 40  0000 L CNN
+F 1 "CONN_1" H 6250 4555 30  0001 C CNN
+	1    6250 4500
+	1    0    0    -1  
+$EndComp
 $Comp
 L CONN_2 P9
 U 1 1 50E0B531

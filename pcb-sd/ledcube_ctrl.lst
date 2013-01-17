@@ -1,51 +1,83 @@
-eeschema (2012-apr-16-27)-stable  >> Creation date: 2012-09-12T11:16:34 CEST
+eeschema (2012-apr-16-27)-stable  >> Creation date: 2013-01-03T22:00:26 CET
 
 #Cmp ( order = Reference )
 | C1         22p         
 | C2         22p         
-| C3         100n        
+| C3         1u          
 | C4         100n        
 | C5         100n        
 | C6         22p         
 | C7         22p         
+| C8         1u          
+| C9         10n         
+| C10        2.2u        
+| C11        100n        
+| C12        100u        
 | IC1        ATMEGA16U2  
 | IC2        ATMEGA328-A 
-| P1         CONN_4      
-| P2         CONN_7      
+| L1         30@100MHz   
+| P1         MICRO-SD    
+| P2         CONN_1      
 | P3         CONN_6      
 | P4         CONN_6      
 | P5         CONN_6      
 | P6         CONN_2      
+| P7         CONN_2      
+| P8         CONN_1      
+| P9         CONN_2      
+| P10        CONN_1      
+| P11        CONN_1      
+| P12        CONN_1      
+| P13        CONN_1      
 | R1         22          
 | R2         22          
 | R3         10k         
 | R4         10k         
+| U1         KNUSB       
+| U2         4050        
+| U3         LP2985LV    
 | X1         16MHz       
 | X2         16MHz       
 #End Cmp
 
 #Cmp ( order = Value )
-| 100n         C3        
 | 100n         C4        
 | 100n         C5        
+| 100n         C11       
+| 100u         C12       
 | 10k          R3        
 | 10k          R4        
+| 10n          C9        
 | 16MHz        X1        
 | 16MHz        X2        
+| 1u           C3        
+| 1u           C8        
+| 2.2u         C10       
 | 22           R1        
 | 22           R2        
 | 22p          C1        
 | 22p          C2        
 | 22p          C6        
 | 22p          C7        
+| 30@100MHz    L1        
+| 4050         U2        
 | ATMEGA16U2   IC1       
 | ATMEGA328-A  IC2       
+| CONN_1       P2        
+| CONN_1       P8        
+| CONN_1       P10       
+| CONN_1       P11       
+| CONN_1       P12       
+| CONN_1       P13       
 | CONN_2       P6        
-| CONN_4       P1        
+| CONN_2       P7        
+| CONN_2       P9        
 | CONN_6       P3        
 | CONN_6       P4        
 | CONN_6       P5        
-| CONN_7       P2        
+| KNUSB        U1        
+| LP2985LV     U3        
+| MICRO-SD     P1        
 #End Cmp
 
 #End List
