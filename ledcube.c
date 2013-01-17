@@ -184,13 +184,13 @@ static uint8_t current_frame = 1;
 /* The count of bytes already received in current frame. */
 static uint16_t current_idx = 0;
 /* Count of bytes (<=255) to receive using the "fast path" code. */
-static uint8_t remain_bytes= 0;
+uint8_t remain_bytes= 0;
 /* Position to write next byte received in the "fast path" code. */
-static uint8_t *cur_data_ptr;
+uint8_t *cur_data_ptr;
 /* Running checksum. */
-static uint8_t checksum = 0;
+uint8_t checksum = 0;
 /* Set to 0 by serial interrupt for each received byte. */
-static volatile uint8_t serial_idle = 0;
+volatile uint8_t serial_idle = 0;
 
 /*
   Do the less often run serial stuff here, to keep the most serial interrupts
@@ -268,7 +268,7 @@ serial_interrupt_rx_naked()
     "push r25\n\t"
     "push r26\n\t"
     "push r27\n\t"
-    "call serial_interrupt_slow_part\n\t"
+    "call _ZL26serial_interrupt_slow_partv\n\t"
     "pop  r27\n\t"
     "pop  r26\n\t"
     "pop  r25\n\t"
@@ -344,7 +344,7 @@ serial_reset(void)
 
 
 /* 12-bit output values used for different pixel values. */
-static uint16_t pixel2out[16] =
+uint16_t pixel2out[16] =
 #ifdef DAYMODE
 { 0, 23, 89, 192, 332, 508, 719, 964, 1242, 1554, 1898, 2275, 2684, 3125, 3597, 4095 };
 #else
@@ -391,8 +391,8 @@ shift_out_frame_spi(uint8_t *frame_start, uint16_t start)
   */
   asm volatile
   (
-  "ldi  r30, lo8(led_map)\n\t"
-  "ldi  r31, hi8(led_map)\n\t"
+  "ldi  r30, lo8(_ZL7led_map)\n\t"
+  "ldi  r31, hi8(_ZL7led_map)\n\t"
   "ldi  r22, lo8(pixel2out)\n\t"
   "ldi  r23, hi8(pixel2out)\n\t"
   "ldi  r16, 0\n"                 /* dummy initial shift-out of zeros. */
@@ -572,7 +572,7 @@ timer1_interrupt_a()
 
 
 static void
-init(void) {
+my_init(void) {
   pin_mode_output(PIN_SCLK);
   pin_low(PIN_SCLK);
   pin_mode_output(PIN_SIN);
@@ -839,7 +839,7 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
   uint8_t previous_active_timestamp;
   uint8_t i;
 
-  init();
+  my_init();
   /* Wait a bit to allow TLC5940's and electronics power to settle. */
   _delay_ms(50);
   init_dc();
