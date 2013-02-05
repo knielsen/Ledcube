@@ -85,6 +85,8 @@ static uint8_t *cur_data_ptr;
 static uint8_t checksum = 0;
 /* Set to 0 by serial interrupt for each received byte. */
 static volatile uint8_t serial_idle = 0;
+/* Frame number of frame currently being received over serial. */
+static volatile uint8_t serial_frame_no;
 
 /*
   Do the less often run serial stuff here, to keep the most serial interrupts
@@ -198,6 +200,8 @@ serial_interrupt_slow_part(void)
   c = serial_read();
   frames[cur][current_idx] = c;
   checksum ^= c;
+  if (current_idx == 1)
+    serial_frame_no = c;
   current_idx++;
 
   if (current_idx >= 4 && current_idx < FRAME_SIZE-2)
@@ -218,7 +222,7 @@ serial_interrupt_slow_part(void)
     {
       /* Frame error. Skip this frame and send error to peer. */
 #ifndef DEBUG_OUTPUT_STATUS_INFO_REGISTER
-      serial_write(frames[cur][1] | 0x80);
+      serial_write(serial_frame_no | 0x80);
 #endif
       checksum = 0;
       return;
@@ -234,6 +238,7 @@ serial_reset(void)
 {
   current_idx = 0;
   remain_bytes = 0;
+  checksum = 0;
 }
 
 
@@ -802,7 +807,7 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
         receiving data again.
       */
       serial_reset();
-      idle_flag = 2;
+      serial_idle = 2;
       sei();
       onboard_animation = 1;
       generate_frame = (show_frame + (NUM_FRAMES - 1)) % NUM_FRAMES;
