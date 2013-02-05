@@ -11,9 +11,6 @@ my $FRAMERATE= 50;
 my $device = $ARGV[0] || '/dev/ttyUSB0';
 
 open FH, '+<', $device or die "open() failed: $!\n";
-# Sleep a bit to let Arduino boot up, otherwise we loose part of
-# the first frame(s), and need to sync up (Uno).
-sleep 1;
 
 select FH; $| = 1; select STDOUT;
 binmode FH;
@@ -75,7 +72,7 @@ for (;;) {
 
   # Check what arduino reports back
   my $y = '';
-  my $res= sysread(PIPE, $y, 128);
+  my $res= sysread(PIPE, $y, 4096);
   if ($res) {
     my $err= undef;
     for (0 .. length($y)-1) {
@@ -90,6 +87,9 @@ for (;;) {
         # just pause for a bit, then cube will reset serial, so this is a cheap
         # hack to get back in sync.
         sleep 1;
+        # Flush any queued-up errors.
+        my $dummy;
+        sysread(PIPE, $dummy, 4096);
     }
     if (($last_cnt % 64) > ($cnt % 64))
     {
