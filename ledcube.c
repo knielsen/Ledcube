@@ -471,7 +471,7 @@ timer1_interrupt_a()
 
 
 static void
-init(void) {
+cube_init(void) {
   pin_mode_output(PIN_SCLK);
   pin_low(PIN_SCLK);
   pin_mode_output(PIN_SIN);
@@ -709,12 +709,14 @@ fast_clear(uint8_t frame, uint8_t val)
 {
   uint8_t v = (uint8_t)0x11 * (val & 0xf);
   uint8_t *p= &frames[frame][4];
-  for (uint8_t i= 0; i < DATA_SIZE/16; i++)
+  uint8_t i;
+
+  for (i= 0; i < DATA_SIZE/16; i++)
   {
     *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v;
     *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v; *p++= v;
   }
-  for (uint8_t i= 0; i < DATA_SIZE % 16; i++)
+  for (i= 0; i < DATA_SIZE % 16; i++)
     *p++= v;
 }
 
@@ -725,8 +727,8 @@ static void anim_scan_plane_5(uint8_t f);
 static void cornercube_5(uint8_t f);
 static void anim_cosine_plane(uint8_t f);
 
-int
-main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
+void
+run_cube(void)
 {
   uint8_t previous_refresh_counter;
   uint8_t generate_frame = 0;
@@ -738,7 +740,7 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
   uint8_t previous_active_timestamp;
   uint8_t i;
 
-  init();
+  cube_init();
   /* Wait a bit to allow TLC5940's and electronics power to settle. */
   _delay_ms(50);
   init_dc();
@@ -816,6 +818,16 @@ main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
       sei();
   }
 }
+
+
+#ifndef ARDUINO
+int
+main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
+{
+  run_cube();
+}
+#endif
+
 
 static void
 pixel5(uint8_t f, uint8_t x, uint8_t y, uint8_t z, uint8_t val)
@@ -899,7 +911,8 @@ cornercube_5(uint8_t f)
     int col= (int)((float)ccd.col +
                    expand_factor * ((float)ccd.target_col - (float)ccd.col) + 0.5);
     int side_len= (int)(expand_factor * 4 + 0.5);
-    for (int i= 0; i <= side_len; i++)
+    int i;
+    for (i= 0; i <= side_len; i++)
     {
       int end_x= ccd.base_x+ccd.dir_x*side_len;
       int end_y= ccd.base_y+ccd.dir_y*side_len;
@@ -967,7 +980,8 @@ cornercube_5(uint8_t f)
     int col= (int)((float)ccd.col +
                    expand_factor * ((float)ccd.target_col - (float)ccd.col) + 0.5);
     int side_len= (int)(expand_factor * 4 + 0.5);
-    for (int i= 0; i <= side_len; i++)
+    int i;
+    for (i= 0; i <= side_len; i++)
     {
       int end_x= ccd.base_x+ccd.dir_x*side_len;
       int end_y= ccd.base_y+ccd.dir_y*side_len;
