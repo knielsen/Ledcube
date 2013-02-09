@@ -26,6 +26,10 @@
 #define NUM_FRAMES 2
 #define SHIFT_OUT_SIZE 128
 
+/* Side length of 5x5x5 cube. */
+#define SIDE5 5
+
+
 static uint8_t frames[NUM_FRAMES][FRAME_SIZE];
 
 /* Mapping: for each LED, which nibble to take the grayscale value from. */
@@ -745,7 +749,7 @@ err:
   }
 }
 
-static void
+void
 fast_clear(uint8_t frame, uint8_t val)
 {
   uint8_t v = (uint8_t)0x11 * (val & 0xf);
@@ -762,14 +766,58 @@ fast_clear(uint8_t frame, uint8_t val)
 }
 
 
-static void anim_solid(uint8_t f, uint8_t val);
-static void anim_scan_plane(uint8_t f);
-static void anim_scan_plane_5(uint8_t f);
-static void cornercube_5(uint8_t f);
-static void anim_cosine_plane(uint8_t f);
+void
+ef_afterglow(uint8_t frame, uint8_t subtract)
+{
+  int i, j, k;
+  uint8_t *p = &frames[frame][4];
+  for (i = 0; i < SIDE5; ++i)
+  {
+    for (j = 0; j < SIDE5; ++j)
+    {
+      for (k = 0; k < SIDE5; ++k)
+      {
+        uint16_t idx = i*LEDS_PER_LAYER + LEDS_PER_LAYER - 25 + j*SIDE5 + k;
+        uint8_t v = p[idx/2];
+        uint8_t u;
+        if (idx % 2)
+        {
+          u = v & 0xf;
+          u = (u > subtract ? u - subtract : 0);
+          v = (v & 0xf0) | u;
+        }
+        else
+        {
+          u = v & 0xf0;
+          u = (u > (subtract<<4) ? u - (subtract<<4) : 0);
+          v = (v & 0xf) | u;
+        }
+        p[idx/2] = v;
+      }
+    }
+  }
+}
+
+
+static const struct ledcube_anim default_animation11[] PROGMEM = {
+  { anim_cosine_plane, 15, 2100 },
+  { NULL, 0, 0 },
+};
+
+static const struct ledcube_anim default_animation5[] PROGMEM = {
+  { anim_rotate_plane5, 5, 2000 },
+  { anim_wobbly_plane5, 5, 2000 },
+  { anim_cosine_plane5, 22, 800 },
+  { anim_test_float, 15, 500 },
+  { anim_stripes5, 4, 2400 },
+  { anim_cornercube_5, 52, 2400 },
+  { anim_scan_plane_5, 15, 2400 },
+  { NULL, 0, 0 },
+};
 
 void
-run_cube(const uint16_t *lmp, uint8_t dc_value, uint8_t num_tlcs)
+run_cube(const uint16_t *lmp, uint8_t dc_value, uint8_t num_tlcs,
+         const struct ledcube_anim *anim_table)
 {
   uint8_t previous_refresh_counter;
   uint8_t generate_frame = 0;
@@ -780,6 +828,11 @@ run_cube(const uint16_t *lmp, uint8_t dc_value, uint8_t num_tlcs)
   uint8_t generate_counter= 0;
   uint8_t previous_active_timestamp;
   uint8_t i;
+  uint8_t current_animation = 0;
+  uint16_t anim_frame_counter = 0;
+
+  if (!anim_table)
+    anim_table = default_animation11;
 
   led_map_ptr = lmp;
   cube_init();
@@ -815,12 +868,27 @@ run_cube(const uint16_t *lmp, uint8_t dc_value, uint8_t num_tlcs)
 
     if (onboard_animation)
     {
-      //anim_solid(generate_frame, 15);
-      //anim_solid(generate_frame, 0);
-      //anim_scan_plane(generate_frame);
-      //anim_scan_plane_5(generate_frame);
-      cornercube_5(generate_frame);
-      //anim_cosine_plane(generate_frame);
+      void (*anim_func)(uint8_t, uint16_t, uint16_t);
+      uint16_t anim_data;
+      uint16_t anim_duration;
+
+      anim_func = (void (*)(uint8_t, uint16_t, uint16_t))
+        pgm_read_word(&anim_table[current_animation].anim_function);
+      anim_data = pgm_read_word(&anim_table[current_animation].data);
+
+      (*anim_func)(generate_frame, anim_frame_counter, anim_data);
+      ++anim_frame_counter;
+
+      anim_duration = pgm_read_word(&anim_table[current_animation].duration);
+      if (anim_frame_counter >= anim_duration)
+      {
+        anim_frame_counter = 0;
+        ++current_animation;
+        anim_func = (void (*)(uint8_t, uint16_t, uint16_t))
+          pgm_read_word(&anim_table[current_animation].anim_function);
+        if (!anim_func)
+          current_animation = 0;
+      }
     }
     ++generate_counter;
 
@@ -866,12 +934,13 @@ run_cube(const uint16_t *lmp, uint8_t dc_value, uint8_t num_tlcs)
 int
 main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
 {
-  run_cube(&led_map_knielsen_11_5[0], DC_VALUE, 8);
+  run_cube(&led_map_knielsen_11x11x11[0], DC_VALUE, 8, default_animation11);
+  //run_cube(&led_map_knielsen_11_5[0], DC_VALUE, 8, default_animation5);
 }
 #endif
 
 
-static void
+void
 pixel5(uint8_t f, uint8_t x, uint8_t y, uint8_t z, uint8_t val)
 {
   uint8_t *p;
@@ -889,7 +958,7 @@ pixel5(uint8_t f, uint8_t x, uint8_t y, uint8_t z, uint8_t val)
     *p = (v & 0x0f) | (val & 0xf)<<4;
 }
 
-static void
+void
 pixel11(uint8_t f, uint8_t x, uint8_t y, uint8_t z, uint8_t val)
 {
   uint8_t *p;
@@ -906,6 +975,46 @@ pixel11(uint8_t f, uint8_t x, uint8_t y, uint8_t z, uint8_t val)
     *p = (v & 0x0f) | (val & 0xf)<<4;
 }
 
+/*
+  Draw a plane (5x5x5 cube) given starting point R0 and normal vector N.
+  For now, requires that the plane is "mostly horizontal", meaning that the
+  largest component of the normal is in the z direction. Later we will
+  generalise to arbitrary normal, by selecting the two driving directions
+  to be the smaller two components of the normal.
+*/
+void
+draw_plane5(uint8_t f, float x0, float y0, float z0,
+            float nx, float ny, float nz, uint8_t col)
+{
+  int i,j;
+  if (nx > nz || ny > nz)
+    return; /* ToDo */
+
+  /*
+    We span the plane with the two vectors A=(1,0,-nx/nz) and B=(0,1,-ny/nz).
+
+    These are normal to N and linearly independent, so they _do_span the plane.
+    And they are convenient for scan conversion, as they have unit component
+    in the x respectively y direction.
+
+    We shift the starting point to
+        Q0 = R0 - x0*A - y0*B = (0, 0, z0-x0*nx/nz-y0*ny/nz)
+    Then we can generate the points of the plane as simply
+        R = Q0 + u*A + v*B = (u, v, z0+(u-x0)*nx/nz+(v-y0)*ny/nz)
+    This makes it easy to scan-convert with one voxel per column.
+  */
+
+  for (i = 0; i < SIDE5; ++i)
+  {
+    for (j = 0; j < SIDE5; ++j)
+    {
+      int k = round(z0 + (i-x0)*nx/nz + (j-y0)*ny/nz);
+      if (k >= 0 && k < SIDE5)
+        pixel5(f, i, j, k, col);
+    }
+  }
+}
+
 #define RAND_N(n) (rand()/(RAND_MAX/(n)+1))
 
 /* Animation: corner-cube */
@@ -917,13 +1026,13 @@ struct cornercube_data {
   int corner;
 };
 
-static struct cornercube_data ccd;
-static int cc_frame= -1;
 
-static void
-cornercube_5(uint8_t f)
+void
+anim_cornercube_5(uint8_t f, uint16_t counter, uint16_t speed)
 {
-  static const int base_count= 46;
+  static struct cornercube_data ccd;
+  static int cc_frame= -1;
+  int base_count = speed;
 
   fast_clear(f, 0);
   if (cc_frame < 0)
@@ -1047,51 +1156,50 @@ cornercube_5(uint8_t f)
     cc_frame= 0;
 }
 
-static void
-anim_solid(uint8_t f, uint8_t val)
+void
+anim_solid(uint8_t f, uint16_t counter, uint16_t val)
 {
-  static uint16_t count = 0;
   fast_clear(f, val);
-  //fast_clear(f, (++count/10)%16);
+  //fast_clear(f, (counter/10)%16);
 }
 
-static void
-anim_scan_plane(uint8_t f)
+void
+anim_scan_plane(uint8_t f, uint16_t counter, uint16_t data)
 {
-  static unsigned int count = 0;
   int i, j;
+  uint8_t colour = (uint8_t)data;
   fast_clear(f, 0);
   for (i = 0; i < 11; ++i)
   {
     for (j = 0; j < 11; ++j)
     {
-      pixel11(f, i, (count/32)%11, j, 15);
+      pixel11(f, i, (counter/32)%11, j, colour);
     }
   }
-  ++count;
 }
 
-static void
-anim_scan_plane_5(uint8_t f)
+void
+anim_scan_plane_5(uint8_t f, uint16_t counter, uint16_t data)
 {
-  static unsigned int count = 0;
+  uint8_t colour = (uint8_t)data;
   int i, j;
   fast_clear(f, 0);
   for (i = 0; i < 5; ++i)
   {
     for (j = 0; j < 5; ++j)
     {
-      pixel5(f, i, (count/32)%5, j, 15);
+      pixel5(f, i, (counter/32)%5, j, colour);
     }
   }
-  ++count;
 }
 
-static void
-anim_cosine_plane(uint8_t f)
+
+void
+anim_cosine_plane(uint8_t f, uint16_t counter, uint16_t data)
 {
   static uint8_t frame_counter = 0;
   uint8_t i,j;
+  uint8_t colour = (uint8_t)data;
 
   fast_clear(f, 0);
   for (i = 0; i <= 10; ++i)
@@ -1099,10 +1207,141 @@ anim_cosine_plane(uint8_t f)
     for (j = 0; j <= 10; ++j)
     {
       uint8_t k = cosplane_get_k(i, j, frame_counter);
-      pixel11(f, i, j, k, 15);
+      pixel11(f, i, j, k, colour);
     }
   }
   ++frame_counter;
   if (frame_counter == 210)
     frame_counter = 0;
+}
+
+
+void
+anim_stripes5(uint8_t f, uint16_t counter, uint16_t speed)
+{
+  static const int N = 13;
+  int i,j,k;
+
+  for (i = 0; i < SIDE5; ++i)
+  {
+    for (j = 0; j < SIDE5; ++j)
+    {
+      for (k = 0; k < SIDE5; ++k)
+      {
+        int d = (i+j+k+counter*speed/20) % (2*N-1);
+        int col;
+        if (d <= N)
+          col = d + (15-N);
+        else
+          col = 15 - (d - N);
+        pixel5(f, i, j, k, col);
+      }
+    }
+  }
+}
+
+
+void
+anim_test_float(uint8_t fram, uint16_t counter, uint16_t data)
+{
+  uint8_t col = (uint8_t)data;
+  float f = counter / (2*3.14);
+  fast_clear(fram, 0);
+  int x = 2*sin(f)+2.5;
+  int y = 2*cos(f)+2.5;
+  pixel5(fram, x, y, 2, col);
+}
+
+
+void
+anim_cosine_plane5(uint8_t f, uint16_t counter, uint16_t data)
+{
+  int i,j;
+  float speed = data;
+  ef_afterglow(f, 3);
+  for (i = 0; i <SIDE5; ++i)
+  {
+    for (j = 0; j<SIDE5; ++j)
+    {
+      float x = i - ((float)SIDE5-1)/2;
+      float y = j - ((float)SIDE5-1)/2;
+      float r = pow(x*x+y*y, 0.65);
+      float z = 0.95*SIDE5/2.0*cos(0.48*M_PI - counter/speed*M_PI +
+                              r/pow(SIDE5*SIDE5/4.0, 0.65)*0.6*M_PI);
+      int k = round(z + ((float)SIDE5-1)/2);
+      if (k >= 0 && k < SIDE5)
+        pixel5(f, i, j, k, 15);
+    }
+  }
+}
+
+
+void
+anim_wobbly_plane5(uint8_t f, uint16_t counter, uint16_t speed)
+{
+  float spin_factor = (float)speed/100.0;
+  uint16_t start_up_down = 2500/speed;
+  float up_down_factor = spin_factor/2;
+  float wobble_factor = spin_factor/6;
+  float wobble_amplitude = 0.5;
+
+  fast_clear(f, 0);
+  float amp_delta = counter / 200.0;
+  if (amp_delta > 0.4)
+    amp_delta = 0.4;
+  float nx = wobble_amplitude*(amp_delta+fabs(sin(wobble_factor*counter)))*cos(counter * spin_factor);
+  float ny = wobble_amplitude*(amp_delta+fabs(sin(wobble_factor*counter)))*sin(counter * spin_factor);
+  float nz = 1;
+  float x0 = ((float)SIDE5 -1)/2;
+  float y0 = ((float)SIDE5 -1)/2;
+  float z0 = ((float)SIDE5 -1)/2;
+  if (counter >= start_up_down)
+    z0 += (float)SIDE5/4*sin(counter * up_down_factor);
+  draw_plane5(f, x0, y0, z0, nx, ny, nz, 15);
+}
+
+
+void
+anim_rotate_plane5(uint8_t f, uint16_t counter, uint16_t speed)
+{
+  int i, j;
+  float angspeed = (float)speed/100.0;
+
+  float angle = fmod(counter * angspeed, M_PI) - M_PI/4;
+  int orientation = floor(fmod(counter * angspeed, 3*4*2*M_PI) / (4*2*M_PI));
+  ef_afterglow(f, 2);
+  if (angle <= M_PI/4)
+  {
+    float slope = tan(angle);
+    for (i = 0; i < SIDE5; ++i)
+    {
+      int a = round(((float)SIDE5-1)/2 + slope*((float)i-((float)SIDE5-1)/2));
+      for (j= 0; j < SIDE5; ++j)
+      {
+        switch (orientation)
+        {
+        case 0: pixel5(f, i, a, j, 15); break;
+        case 1: pixel5(f, i, j, a, 15); break;
+        case 2: pixel5(f, j, i, a, 15); break;
+        }
+      }
+    }
+  }
+  else
+  {
+    float slope = 1/tan(angle);
+    for (i = 0; i < SIDE5; ++i)
+    {
+      int a = round(((float)SIDE5-1)/2 + slope*((float)i-((float)SIDE5-1)/2));
+      for (j= 0; j < SIDE5; ++j)
+      {
+        switch (orientation)
+        {
+        case 0: pixel5(f, a, i, j, 15); break;
+        case 1: pixel5(f, a, j, i, 15); break;
+        case 2: pixel5(f, j, a, i, 15); break;
+        }
+      }
+    }
+  }
 }

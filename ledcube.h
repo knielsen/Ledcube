@@ -43,6 +43,14 @@
 #define PIN_SCLK 13
 
 
+/* An array of these is passed in to define the animations to show. */
+struct ledcube_anim {
+  void (*anim_function)(uint8_t frame, uint16_t counter, uint16_t data);
+  uint16_t data;
+  uint16_t duration;
+};
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -87,11 +95,44 @@ extern "C" {
     the second is used for the front rightmost column, then the array should
     end with { ..., 116, 0x8000 } for 5x5x5, and { ..., 110, 0x8000 } for
     11x11x11.
+
+    anim_table is a pointer to a NULL-terminated array of struct
+    ledcube_anim defining which animations to show. Passing NULL gives a
+    default animation.
   */
 
   void run_cube(const uint16_t * ledmap,
                 uint8_t dc_value,
-                uint8_t num_tlcs);
+                uint8_t num_tlcs,
+                const struct ledcube_anim *anim_table);
+
+  /* Pixel plotting (for 5x5x5 respectively 11x11x11 cube). */
+  void pixel5(uint8_t f, uint8_t x, uint8_t y, uint8_t z, uint8_t val);
+  void pixel11(uint8_t f, uint8_t x, uint8_t y, uint8_t z, uint8_t val);
+
+  /* Used to clear the framebuffer at the start of animation functions. */
+  void fast_clear(uint8_t frame, uint8_t val);
+  /*
+    Used to make previous frames fade out, creating a nice warm afterglow
+    effect.
+  */
+  void ef_afterglow(uint8_t frame, uint8_t subtract);
+
+  /* Drawing planes on the 5x5x5 cube. */
+  void draw_plane5(uint8_t f, float x0, float y0, float z0,
+                   float nx, float ny, float nz, uint8_t col);
+
+  /* Various animation functions. */
+  void anim_solid(uint8_t f, uint16_t counter, uint16_t val);
+  void anim_scan_plane(uint8_t f, uint16_t counter, uint16_t data);
+  void anim_scan_plane_5(uint8_t f, uint16_t counter, uint16_t data);
+  void anim_cornercube_5(uint8_t f, uint16_t counter, uint16_t speed);
+  void anim_cosine_plane(uint8_t f, uint16_t counter, uint16_t data);
+  void anim_stripes5(uint8_t frame, uint16_t counter, uint16_t speed);
+  void anim_test_float(uint8_t f, uint16_t counter, uint16_t data);
+  void anim_cosine_plane5(uint8_t f, uint16_t counter, uint16_t data);
+  void anim_wobbly_plane5(uint8_t f, uint16_t counter, uint16_t speed);
+  void anim_rotate_plane5(uint8_t f, uint16_t counter, uint16_t speed);
 
 #ifdef __cplusplus
 }
