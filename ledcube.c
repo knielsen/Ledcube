@@ -1,7 +1,5 @@
 #include <util/delay.h>
 #include <avr/sleep.h>
-#include <avr/pgmspace.h>
-#include <stdlib.h>
 
 #include <arduino/pins.h>
 #include <arduino/serial.h>
@@ -10,20 +8,14 @@
 #include <arduino/sleep.h>
 #include <arduino/spi.h>
 
+#include <ledcube.h>
+
 /* Lookup table for the cosine plane animation. */
 #include "lookup_tables.h"
 
 /* This is the current through each LED, relative to MAX, 0..63. */
 #define DC_VALUE 2
 /*#define DEBUG_OUTPUT_STATUS_INFO_REGISTER*/
-
-#define PIN_GSCLK 6
-#define PIN_VPRG 9
-#define PIN_XLAT 10
-#define PIN_SIN  11
-#define PIN_BLANK 8
-#define PIN_SCLK 13
-#define PIN_SOUT 12
 
 #define NUM_LEDS 1331
 #define NUM_LAYERS 11
@@ -32,14 +24,15 @@
 #define DATA_SIZE ((NUM_LEDS*BITS_PER_LED+7)/8)
 #define FRAME_SIZE (DATA_SIZE + 6)
 #define NUM_FRAMES 2
+#define SHIFT_OUT_SIZE 128
 
 static uint8_t frames[NUM_FRAMES][FRAME_SIZE];
 
 /* Mapping: for each LED, which nibble to take the grayscale value from. */
-/* For the fast SPI output, the size should be divisible by two. */
+/* Must contain SHIFT_OUT_SIZE entries, which should be divisible by two. */
 /* Note: pin 3 (output 4 of 16) of IC 6 is re-mapped to pin 15 (output 16) */
 /* of IC 8, due to shorted pad - this is nibble 103. */
-static const uint16_t led_map[] PROGMEM = {
+static const uint16_t led_map_knielsen_11x11x11[] PROGMEM = {
   15, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 52,
   63, 74, 75, 64, 53, 76, 65, 54,
   40, 41, 42, 43, 30, 29, 31, 32,
@@ -57,6 +50,55 @@ static const uint16_t led_map[] PROGMEM = {
   84, 95, 106, 117, 118, 85, 96, 107,
   119, 108, 97, 120, 86, 109, 98, 87,
 };
+
+/* For 5x5x5 emulation on 11x11x11 cube. */
+static const uint16_t led_map_knielsen_11_5[] PROGMEM = {
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  96, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+
+  103, 107, 111, 102, 106, 0x8000, 97, 0x8000,
+  101, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  116, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+
+  108, 114, 119, 113, 118, 0x8000, 112, 117,
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  120, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+
+  99, 104, 98, 105, 109, 0x8000, 110, 115,
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  100, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+};
+
+/* Zapro's 5x5x5. */
+static const uint16_t led_map_zapro_5x5x5[] PROGMEM = {
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+
+  105, 100, 99, 104, 98, 103, 97, 102,
+  96, 101, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+  106, 111, 116, 117, 112, 107, 118, 113,
+  108, 119, 114, 109, 120, 115, 110, 0x8000,
+};
+
+
+static const uint16_t *led_map_ptr;
 
 /* Serial reception. */
 
@@ -255,8 +297,9 @@ static void
 shift_out_frame_spi(uint8_t *frame_start, uint16_t start)
 {
   register uint8_t *frame_start_r asm("r20") = frame_start;
-  register uint8_t leds asm("r25") = sizeof(led_map)/sizeof(led_map[0])/2;
+  register uint8_t leds asm("r25") = SHIFT_OUT_SIZE/2;
   register uint16_t start_r asm("r18") = start;
+  register const uint16_t *lmp asm("r30") = led_map_ptr;
 
   /* Init SPI */
   pin_mode_output(11);  /* MOSI */
@@ -290,8 +333,6 @@ shift_out_frame_spi(uint8_t *frame_start, uint16_t start)
   */
   asm volatile
   (
-  "ldi  r30, lo8(led_map)\n\t"
-  "ldi  r31, hi8(led_map)\n\t"
   "ldi  r22, lo8(pixel2out)\n\t"
   "ldi  r23, hi8(pixel2out)\n\t"
   "ldi  r16, 0\n"                 /* dummy initial shift-out of zeros. */
@@ -394,13 +435,13 @@ shift_out_frame_spi(uint8_t *frame_start, uint16_t start)
 "12:\n\t"
   "dec r17\n\t"            /* 1 */
   "brne 12b\n\t"           /* 2 / 1 */
-  : "+r" (leds)
-  : "r" (start_r), "r" (frame_start_r), "i" (&led_map[0]), "i" (&pixel2out[0])
+  : "+r" (leds), "+r" (lmp)
+  : "r" (start_r), "r" (frame_start_r), "i" (&pixel2out[0])
   /* We do not clobber memory, but we do read it. I couldn't easily figure out
      how to specify exactly what we read (the frames[][] array, and it's not
      time critical, so a generic "memory" clobber will serve.
   */
-  : "r0", "r16", "r17", "r22", "r23", "r24", "r26", "r27", "r30", "r31", "memory"
+  : "r0", "r16", "r17", "r22", "r23", "r24", "r26", "r27", "memory"
   );
 
   /* De-init SPI */
@@ -429,17 +470,17 @@ timer1_interrupt_a()
     /* Switch the MOSFETs to the next layer. */
     switch (cur_layer)
     {
-    case 0: pinA0_high(); pin2_low(); break;
-    case 1: pin2_high(); pin3_low(); break;
-    case 2: pin3_high(); pin4_low(); break;
-    case 3: pin4_high(); pin5_low(); break;
-    case 4: pin5_high(); pin7_low(); break;
-    case 5: pin7_high(); pinA5_low(); break;
-    case 6: pinA5_high(); pinA4_low(); break;
-    case 7: pinA4_high(); pinA3_low(); break;
-    case 8: pinA3_high(); pinA2_low(); break;
-    case 9: pinA2_high(); pinA1_low(); break;
-    case 10:pinA1_high(); pinA0_low(); break;
+    case 0: pin_high(PIN_LAYER10); pin_low(PIN_LAYER0); break;
+    case 1: pin_high(PIN_LAYER0); pin_low(PIN_LAYER1); break;
+    case 2: pin_high(PIN_LAYER1); pin_low(PIN_LAYER2); break;
+    case 3: pin_high(PIN_LAYER2); pin_low(PIN_LAYER3); break;
+    case 4: pin_high(PIN_LAYER3); pin_low(PIN_LAYER4); break;
+    case 5: pin_high(PIN_LAYER4); pin_low(PIN_LAYER5); break;
+    case 6: pin_high(PIN_LAYER5); pin_low(PIN_LAYER6); break;
+    case 7: pin_high(PIN_LAYER6); pin_low(PIN_LAYER7); break;
+    case 8: pin_high(PIN_LAYER7); pin_low(PIN_LAYER8); break;
+    case 9: pin_high(PIN_LAYER8); pin_low(PIN_LAYER9); break;
+    case 10: pin_high(PIN_LAYER9); pin_low(PIN_LAYER10); break;
     }
 
     pin_low(PIN_BLANK);
@@ -481,28 +522,28 @@ cube_init(void) {
   pin_mode_output(PIN_BLANK);
   pin_high(PIN_BLANK);    /* All leds are off initially */
 
-  pin_high(2);
-  pin_mode_output(2);
-  pin_high(3);
-  pin_mode_output(3);
-  pin_high(4);
-  pin_mode_output(4);
-  pin_high(5);
-  pin_mode_output(5);
-  pin_high(7);
-  pin_mode_output(7);
-  pin_high(A0);
-  pin_mode_output(A0);
-  pin_high(A1);
-  pin_mode_output(A1);
-  pin_high(A2);
-  pin_mode_output(A2);
-  pin_high(A3);
-  pin_mode_output(A3);
-  pin_high(A4);
-  pin_mode_output(A4);
-  pin_high(A5);
-  pin_mode_output(A5);
+  pin_high(PIN_LAYER0);
+  pin_mode_output(PIN_LAYER0);
+  pin_high(PIN_LAYER1);
+  pin_mode_output(PIN_LAYER1);
+  pin_high(PIN_LAYER2);
+  pin_mode_output(PIN_LAYER2);
+  pin_high(PIN_LAYER3);
+  pin_mode_output(PIN_LAYER3);
+  pin_high(PIN_LAYER4);
+  pin_mode_output(PIN_LAYER4);
+  pin_high(PIN_LAYER5);
+  pin_mode_output(PIN_LAYER5);
+  pin_high(PIN_LAYER6);
+  pin_mode_output(PIN_LAYER6);
+  pin_high(PIN_LAYER7);
+  pin_mode_output(PIN_LAYER7);
+  pin_high(PIN_LAYER8);
+  pin_mode_output(PIN_LAYER8);
+  pin_high(PIN_LAYER9);
+  pin_mode_output(PIN_LAYER9);
+  pin_high(PIN_LAYER10);
+  pin_mode_output(PIN_LAYER10);
 
   /* NOTE: pin 6 is used for GSCLK. */
   pin_high(PIN_GSCLK);
@@ -545,7 +586,7 @@ cube_init(void) {
   IREF resistor.
 */
 static void
-init_dc(void)
+init_dc(uint8_t dc_value, uint8_t num_tlcs)
 {
   uint8_t byte;
   uint8_t i, j, k;
@@ -574,9 +615,9 @@ try_again:
 
   mask = 0x80;
   byte = 0;
-  for (i= 0; i < 128; ++i)
+  for (i= 0; i < num_tlcs*16; ++i)
   {
-    uint8_t v= DC_VALUE;
+    uint8_t v= dc_value;
     int8_t bit;
     for (bit = 5; bit >= 0; --bit)
     {
@@ -626,7 +667,7 @@ try_again:
   _delay_us(1.51 + 0.125);
 
   p = &frames[0][0];
-  for (i = 0; i < 192*8/8; ++i)
+  for (i = 0; i < 192*num_tlcs/8; ++i)
   {
     spi_write(0);
     while (!spi_interrupt_flag())
@@ -659,7 +700,7 @@ try_again:
     or hardware errors, potentially frying the LEDs.
   */
   p= &frames[0][0];
-  for (i = 0; i < 8; ++i)
+  for (i = 0; i < num_tlcs; ++i)
   {
     /* The first 3 bytes are LOD and TEF error flags. */
     p+= 3;
@@ -680,14 +721,14 @@ try_again:
           ++p;
         }
       }
-      if (byte != DC_VALUE)
+      if (byte != dc_value)
         goto err;
     }
     /* The last 9 bytes are reserved. */
     p+= 9;
   }
 err:
-  while (byte != DC_VALUE)
+  while (byte != dc_value)
   {
     if (attempts < 3)
       goto try_again;
@@ -728,7 +769,7 @@ static void cornercube_5(uint8_t f);
 static void anim_cosine_plane(uint8_t f);
 
 void
-run_cube(void)
+run_cube(const uint16_t *lmp, uint8_t dc_value, uint8_t num_tlcs)
 {
   uint8_t previous_refresh_counter;
   uint8_t generate_frame = 0;
@@ -740,10 +781,11 @@ run_cube(void)
   uint8_t previous_active_timestamp;
   uint8_t i;
 
+  led_map_ptr = lmp;
   cube_init();
   /* Wait a bit to allow TLC5940's and electronics power to settle. */
   _delay_ms(50);
-  init_dc();
+  init_dc(dc_value, num_tlcs);
   /* Clear the buffers. */
   for (i = 0; i < NUM_FRAMES; ++i)
     fast_clear(i, 0);
@@ -777,8 +819,8 @@ run_cube(void)
       //anim_solid(generate_frame, 0);
       //anim_scan_plane(generate_frame);
       //anim_scan_plane_5(generate_frame);
-      //cornercube_5(generate_frame);
-      anim_cosine_plane(generate_frame);
+      cornercube_5(generate_frame);
+      //anim_cosine_plane(generate_frame);
     }
     ++generate_counter;
 
@@ -824,7 +866,7 @@ run_cube(void)
 int
 main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
 {
-  run_cube();
+  run_cube(&led_map_knielsen_11_5[0], DC_VALUE, 8);
 }
 #endif
 
@@ -881,7 +923,7 @@ static int cc_frame= -1;
 static void
 cornercube_5(uint8_t f)
 {
-  static const int base_count= 23;
+  static const int base_count= 46;
 
   fast_clear(f, 0);
   if (cc_frame < 0)

@@ -1,6 +1,6 @@
 ## Name your project
 NAME = ledcube
-FILES = ledcube.c lookup_tables.h
+FILES = ledcube.c ledcube.h lookup_tables.h
 
 ## Point this to the directory where you did
 ##   git clone git://github.com/esmil/oniudra-headers.git arduino

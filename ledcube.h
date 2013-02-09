@@ -1,3 +1,100 @@
+/*
+  Configuration for the LED cube.
+*/
+
+#ifndef LEDCUBE_H
+#define LEDCUBE_H
+
+#include <avr/pgmspace.h>
+#include <stdlib.h>
+
+/*
+  Output pins for the layers.
+  Layer 0 is the bottom layer.
+  The code always uses 11 layers. All layers not in use can be set to any
+  free GPIO.
+*/
+#define PIN_LAYER0 2
+#define PIN_LAYER1 3
+#define PIN_LAYER2 4
+#define PIN_LAYER3 5
+#define PIN_LAYER4 7
+#define PIN_LAYER5 A5
+#define PIN_LAYER6 A4
+#define PIN_LAYER7 A3
+#define PIN_LAYER8 A2
+#define PIN_LAYER9 A1
+#define PIN_LAYER10 A0
+
+/* VPRG, XLAT, and BLANK can be on any available GPIO pin. */
+#define PIN_VPRG 9
+#define PIN_XLAT 10
+#define PIN_BLANK 8
+
+/*
+  GSCLK must be on pin 6, as it uses the PWM of timer 0.
+  To change, modifications of the code in ledcube.c will be necessary.
+*/
+#define PIN_GSCLK 6
+
+/* SIN, SOUT, and SCLK must use pin 11-13, which is where hardware SPI is. */
+#define PIN_SIN  11
+#define PIN_SOUT 12
+#define PIN_SCLK 13
+
+
+#ifdef __cplusplus
 extern "C" {
-  void run_cube(void);
+#endif
+
+  /*
+    This function runs the cube code.
+    It should be called from a main() function (don't use setup() and loop()).
+
+    dc_value is the dot correction value, 63 is maximum current.
+    num_tlcs is the number of TLC5940 chips attached.
+
+    led_map gives the mapping of TLC outputs to LED columns.
+    It must contain 128 numbers declared to be in flash like this:
+
+        static const uint16_t led_map[] PROGMEM = { 0x8000, 100, ... };
+
+    The entries correspond to the outputs of the TLC5940 ICs in reverse order.
+    So the first number is the last output of the last TLC5940. The last number
+    (led_map[127] is the first output on the first TLC5940.
+
+    The numbering for the LED columns is like this (viewed from above)
+
+                               For 11x11x11:
+                                10  21  32  43  54  65  76  87  98 109 120
+                                 9  20  31  42  53  64  75  86  97 108 119
+                                 8  19  30  41  52  63  74  85  96 107 118
+                                 7  18  29  40  51  62  73  84  95 106 117
+                                 6  17  28  39  50  61  72  83  94 105 116
+       For 5x5x5x:               5  16  27  38  49  60  71  82  93 104 115
+       100  99  98  97  96       4  15  26  37  48  59  70  81  92 103 114
+       105 104 103 102 101       3  14  25  36  47  58  69  80  91 102 113
+       110 109 108 107 106       2  13  24  35  46  57  68  79  80 101 112
+       115 114 113 112 111       1  12  23  34  45  56  67  78  89 100 111
+       120 119 118 117 116       0  11  22  33  44  55  66  77  88  99 110
+             FRONT                                  FRONT
+
+    Putting one of these numbers into the led_map assigns the corresponding
+    TLC5940 output to that LED column. Putting 0x8000 turns that output off
+    permanently.
+
+    So for example, if the first output of the first TLC5940 is unused, and
+    the second is used for the front rightmost column, then the array should
+    end with { ..., 116, 0x8000 } for 5x5x5, and { ..., 110, 0x8000 } for
+    11x11x11.
+  */
+
+  void run_cube(const uint16_t * ledmap,
+                uint8_t dc_value,
+                uint8_t num_tlcs);
+
+#ifdef __cplusplus
 }
+#endif
+
+#endif  /* LEDCUBE_H */
