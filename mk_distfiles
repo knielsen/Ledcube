@@ -1,0 +1,16 @@
+#! /bin/sh
+
+set -ex
+
+rm -Rf dist-tmp
+mkdir -p dist-tmp/oniudra dist-tmp/ledcube
+cp oniudra/oniudra.h dist-tmp/oniudra/
+mkdir dist-tmp/oniudra/arduino
+cp -r arduino/* dist-tmp/oniudra/arduino/
+cp ledcube.c ledcube.h lookup_tables.h dist-tmp/ledcube/
+cp *.ino dist-tmp/
+cd dist-tmp/
+zip -r oniudra oniudra
+rm -Rf oniudra
+zip -r ledcube ledcube
+rm -Rf ledcube
