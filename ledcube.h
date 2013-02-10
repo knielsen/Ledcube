@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 /*
-  Output pins for the layers.
+  Output pins for the layers. Can use any available GPIO.
   Layer 0 is the bottom layer.
   The code always uses 11 layers. All layers not in use can be set to any
   free GPIO.
@@ -37,7 +37,17 @@
 */
 #define PIN_GSCLK 6
 
-/* SIN, SOUT, and SCLK must use pin 11-13, which is where hardware SPI is. */
+/*
+  SIN, SOUT, and SCLK must use pin 11-13, which is where hardware SPI is.
+
+  Note that SIN is input to the TLC5940, so it corresponds to the output MOSI
+  on the Atmega328. Similarly, SOUT is data coming out of TLC5940, so it
+  corresponds to input MISO.
+
+  Note that in addition to these, pin 10 must be configured as an output, or
+  SPI will not function correctly (this is normally not a problem, as every
+  signal we use except SOUT is an output).
+*/
 #define PIN_SIN  11
 #define PIN_SOUT 12
 #define PIN_SCLK 13

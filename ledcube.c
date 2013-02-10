@@ -8,6 +8,8 @@
 #include <arduino/sleep.h>
 #include <arduino/spi.h>
 
+#include <math.h>
+
 #include <ledcube.h>
 
 /* Lookup table for the cosine plane animation. */

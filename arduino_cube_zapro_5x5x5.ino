@@ -50,6 +50,6 @@ static const struct ledcube_anim animation[] PROGMEM = {
 };
 
 int main(int argc, char *argv[]) {
-  run_cube(led_map_zapro_5x5x5, 1, 8, animation);
+  run_cube(led_map_zapro_5x5x5, 32, 2, animation);
 }
 
