@@ -8,6 +8,8 @@
 #include <avr/pgmspace.h>
 #include <stdlib.h>
 
+#ifdef ARDUINO
+
 /*
   Output pins for the layers. Can use any available GPIO.
   Layer 0 is the bottom layer.
@@ -30,6 +32,25 @@
 #define PIN_VPRG 9
 #define PIN_XLAT 10
 #define PIN_BLANK 8
+
+#else  /* !ARDUINO */
+
+#define PIN_LAYER0 A5
+#define PIN_LAYER1 A4
+#define PIN_LAYER2 A3
+#define PIN_LAYER3 A2
+#define PIN_LAYER4 A1
+#define PIN_LAYER5 4
+#define PIN_LAYER6 5
+#define PIN_LAYER7 7
+#define PIN_LAYER8 8
+#define PIN_LAYER9 9
+#define PIN_LAYER10 10
+#define PIN_VPRG A0
+#define PIN_XLAT 2
+#define PIN_BLANK 3
+
+#endif  /* ARDUINO */
 
 /*
   GSCLK must be on pin 6, as it uses the PWM of timer 0.

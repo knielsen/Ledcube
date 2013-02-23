@@ -16,7 +16,7 @@
 #include "lookup_tables.h"
 
 /* This is the current through each LED, relative to MAX, 0..63. */
-#define DC_VALUE 2
+#define DC_VALUE 9
 /*#define DEBUG_OUTPUT_STATUS_INFO_REGISTER*/
 
 #define NUM_LEDS 1331
